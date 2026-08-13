@@ -27,6 +27,21 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Add team deadline countdown
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          banner = '''<div id="frCountdown" style="width:100%;padding:10px 16px;text-align:center;background:#10201b;border-bottom:1px solid #294b40;color:#f5f0e5;font:700 14px Inter,system-ui,sans-serif;letter-spacing:.02em"><span style="color:#e0b85d">Chiusura squadre:</span> <span id="frCountdownText">calcolo...</span></div>'''
+          script = '''<script>
+          (()=>{const deadline=new Date('2026-08-20T00:00:00+02:00').getTime();const el=()=>document.getElementById('frCountdownText');function tick(){const n=Date.now(),x=el();if(!x)return;if(n>=deadline){x.textContent='SQUADRE CHIUSE';x.style.color='#df7068';return}let d=deadline-n;const days=Math.floor(d/86400000);d%=86400000;const h=Math.floor(d/3600000);d%=3600000;const m=Math.floor(d/60000);const sec=Math.floor((d%60000)/1000);x.textContent=`${days}g ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(sec).padStart(2,'0')}s`; }tick();setInterval(tick,1000)})();
+          </script>'''
+          if 'id="frCountdown"' not in s:
+              s = s.replace('</header>', '</header>' + banner, 1)
+              s = s.replace('</body>', script + '</body>', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
