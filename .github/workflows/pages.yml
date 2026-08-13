@@ -42,13 +42,26 @@ jobs:
               s = s.replace('</body>', script + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
+      - name: Add Day 2 scoring tier
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('admin-patch.js')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace("const ranks=['top-128','top-64','top-32','top-16','top-8','top-4','top-2','top-1'];", "const ranks=['day-2','top-128','top-64','top-32','top-16','top-8','top-4','top-2','top-1'];")
+          s = s.replace("${i===7?'♛':'◆'}", "${i===8?'♛':id==='day-2'?'✦':'◆'}")
+          s = s.replace('<small>solo miglior risultato</small>', "<small>${id==='day-2'?'accesso al Day 2':'solo miglior risultato'}</small>")
+          s = s.replace('grid-template-columns:repeat(8,1fr)', 'grid-template-columns:repeat(9,minmax(0,1fr))')
+          s = s.replace('Se un player ottiene più piazzamenti, viene assegnato soltanto il punteggio del risultato migliore.', 'Day 2 e i piazzamenti successivi non sono cumulabili: viene assegnato soltanto il punteggio del miglior risultato raggiunto.')
+          p.write_text(s, encoding='utf-8')
+          PY
       - name: Load admin scoring controls
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="admin-patch.js?v=20260813-2"></script>'
+          tag = '<script src="admin-patch.js?v=20260813-3"></script>'
           if tag not in s:
               s = s.replace('</body>', tag + '</body>', 1)
           p.write_text(s, encoding='utf-8')
