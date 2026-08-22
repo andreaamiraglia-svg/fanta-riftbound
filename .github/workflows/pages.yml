@@ -61,8 +61,8 @@ jobs:
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="admin-patch.js?v=20260813-3"></script><script src="leader-patch.js?v=20260820-1"></script><script src="admin-users-patch.js?v=20260820-1"></script>'
-          if 'admin-users-patch.js' not in s:
+          tag = '<script src="admin-patch.js?v=20260813-3"></script><script src="leader-patch.js?v=20260820-1"></script><script src="admin-users-patch.js?v=20260820-1"></script><script src="player-points-patch.js?v=20260823-1"></script>'
+          if 'player-points-patch.js' not in s:
               s = s.replace('</body>', tag + '</body>', 1)
           p.write_text(s, encoding='utf-8')
           PY
