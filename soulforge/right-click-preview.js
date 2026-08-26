@@ -1,0 +1,119 @@
+(()=>{
+const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
+const ART={kael:'kael.webp',lyrandel:'lyrandel.webp',lucertola_fuoco:'lucertola_fuoco.webp',taglio_fiammante:'taglio_fiammante.webp',sfera_incandescente:'sfera_incandescente.webp',corazza_esplosiva:'corazza_esplosiva.webp',occhio_di_drago:'occhio_di_drago.webp',mano_del_caos:'mano_del_caos.webp',nube_di_fuoco:'nube_di_fuoco.webp',tornado_bollente:'tornado_bollente.webp',fendente_di_fuoco:'fendente_di_fuoco.webp',berserk:'berserk.webp',taglio_ninjitsu:'taglio_ninjitsu.webp',stupido:'stupido.webp',riflesso:'riflesso.webp',tutto_per_la_festa:'tutto_per_la_festa.webp',alta_marea:'alta_marea.webp',doppia_katana:'doppia_katana.webp',albero_della_vita:'albero_della_vita.webp',sguardo_ninjitsu:'sguardo_ninjitsu.webp',mille_lame:'mille_lame.webp'};
+const FILE_TO_ID=Object.fromEntries(Object.entries(ART).map(([id,file])=>[file,id]));
+const cardUrl=id=>ART[id]?BASE+ART[id]:'';
+let open=false;
+
+function ensureBox(){
+  let box=document.getElementById('sfRightPreview');
+  if(!box){
+    box=document.createElement('div');
+    box.id='sfRightPreview';
+    box.className='sf-preview';
+    box.style.zIndex='10050';
+    document.body.appendChild(box);
+  }
+  return box;
+}
+
+function escSafe(v){
+  try{return typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]))}catch{return String(v??'')}
+}
+
+function idFromImg(img){
+  if(!img)return null;
+  const src=img.currentSrc||img.src||'';
+  const file=decodeURIComponent(src.split('/').pop()?.split('?')[0]||'');
+  return FILE_TO_ID[file]||null;
+}
+
+function idFromTarget(target){
+  if(!(target instanceof Element))return null;
+  const preview=target.closest('[data-preview-card]');
+  if(preview?.dataset.previewCard)return preview.dataset.previewCard;
+  const hand=target.closest('[data-hand-card]');
+  if(hand?.dataset.handCard)return hand.dataset.handCard;
+  const select=target.closest('[data-select-card]');
+  if(select?.dataset.selectCard)return select.dataset.selectCard;
+  const champ=target.closest('[data-champ-id]');
+  if(champ?.dataset.champId)return champ.dataset.champId;
+  const mon=target.closest('[data-monster-uid]');
+  if(mon?.dataset.monsterUid){
+    try{return session.state?.board?.monsters?.find(m=>m.uid===mon.dataset.monsterUid)?.cardId||null}catch{}
+  }
+  const image=target.closest('img');
+  return idFromImg(image);
+}
+
+function infoFor(id){
+  try{
+    const card=session.state?.cardDefs?.[id];
+    if(card)return {kind:'card',...card};
+    const monster=session.state?.monsterDefs?.[id];
+    if(monster)return {kind:'monster',...monster};
+    for(const p of [1,2]){
+      const champ=session.state?.players?.[String(p)]?.champions?.find(c=>c.id===id);
+      if(champ)return {kind:'champion',...champ};
+    }
+  }catch{}
+  return {kind:'image',id,name:id.replaceAll('_',' ')};
+}
+
+function speedName(s){
+  try{return typeof speedLabel==='function'?speedLabel(s):s||''}catch{return s||''}
+}
+
+function detailsHtml(c){
+  if(c.kind==='card'){
+    const meta=[c.type,speedName(c.speed)].filter(Boolean).join(' • ');
+    return `<h3>${escSafe(c.name)}</h3><div class="tag">${escSafe(meta)}</div><p>${escSafe(c.text||'')}</p>`;
+  }
+  if(c.kind==='monster'){
+    const color=c.color==='red'?'Rosso':c.color==='green'?'Verde':c.color||'';
+    return `<h3>${escSafe(c.name)}</h3><div class="tag">Mostro${color?' • '+escSafe(color):''}</div><p>POW <b>${escSafe(c.pow??'—')}</b></p>`;
+  }
+  if(c.kind==='champion'){
+    const left=(c.hp??0)-(c.wounds??0);
+    return `<h3>${escSafe(c.name)}</h3><div class="tag">Campione</div><p>POW <b>${escSafe(c.pow??c.basePow??'—')}</b><br>HP <b>${escSafe(left)}/${escSafe(c.hp??'—')}</b><br>Danni <b>${escSafe(c.damage??0)}</b><br>Ferite <b>${escSafe(c.wounds??0)}</b></p>`;
+  }
+  return `<h3>${escSafe(c.name||c.id)}</h3>`;
+}
+
+function showRightPreview(id,x,y){
+  if(!id||!ART[id])return;
+  const c=infoFor(id),box=ensureBox();
+  box.innerHTML=`<img src="${cardUrl(id)}" alt="${escSafe(c.name||id)}"><div class="ptext">${detailsHtml(c)}<div class="tiny" style="margin-top:12px">Click sinistro o ESC per chiudere</div></div>`;
+  const width=Math.min(720,window.innerWidth*.92),height=Math.min(440,window.innerHeight*.9);
+  let left=x+18,top=y-80;
+  if(left+width>window.innerWidth-16)left=Math.max(16,x-width-18);
+  if(top+height>window.innerHeight-16)top=Math.max(16,window.innerHeight-height-16);
+  if(top<16)top=16;
+  box.style.left=left+'px';
+  box.style.top=top+'px';
+  box.style.setProperty('display','flex','important');
+  box.style.pointerEvents='none';
+  box.classList.add('show');
+  open=true;
+}
+
+function closeRightPreview(){
+  const box=document.getElementById('sfRightPreview');
+  if(!box)return;
+  box.classList.remove('show');
+  box.style.removeProperty('display');
+  open=false;
+}
+
+document.addEventListener('contextmenu',e=>{
+  const id=idFromTarget(e.target);
+  if(!id||!ART[id])return;
+  e.preventDefault();
+  e.stopPropagation();
+  showRightPreview(id,e.clientX,e.clientY);
+},true);
+
+document.addEventListener('click',()=>{if(open)closeRightPreview()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&open)closeRightPreview()},true);
+window.addEventListener('blur',()=>{if(open)closeRightPreview()});
+})();
