@@ -3,23 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Soulforge — Online Playtest</title>
+<title>Champion of the Souls — Online Playtest</title>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0c0e12;color:#f5f7fb;font-family:system-ui,sans-serif}.box{text-align:center;padding:24px}.err{color:#ff9aa2;max-width:680px}</style>
 </head>
-<body><div class="box"><h2>Caricamento Soulforge…</h2><p id="status">Connessione al server di gioco.</p></div>
+<body><div class="box"><h2>Caricamento Champion of the Souls…</h2><p id="status">Connessione al server di gioco.</p></div>
 <script>
 (async()=>{
   const BACKEND='https://gmunayvayjzzyrigaesx.supabase.co/functions/v1/soulforge';
+  const CARD_BASE='../champion-of-the-souls-carte-ottimizzate/cards/';
+  const ART={
+    kael:'kael.webp',lyrandel:'lyrandel.webp',lucertola_fuoco:'lucertola_fuoco.webp',
+    taglio_fiammante:'taglio_fiammante.webp',sfera_incandescente:'sfera_incandescente.webp',
+    corazza_esplosiva:'corazza_esplosiva.webp',occhio_di_drago:'occhio_di_drago.webp',
+    mano_del_caos:'mano_del_caos.webp',nube_di_fuoco:'nube_di_fuoco.webp',
+    tornado_bollente:'tornado_bollente.webp',fendente_di_fuoco:'fendente_di_fuoco.webp',berserk:'berserk.webp',
+    taglio_ninjitsu:'taglio_ninjitsu.webp',stupido:'stupido.webp',riflesso:'riflesso.webp',
+    tutto_per_la_festa:'tutto_per_la_festa.webp',alta_marea:'alta_marea.webp',doppia_katana:'doppia_katana.webp',
+    albero_della_vita:'albero_della_vita.webp',sguardo_ninjitsu:'sguardo_ninjitsu.webp',mille_lame:'mille_lame.webp'
+  };
   try{
     const r=await fetch(BACKEND,{cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
     let html=await r.text();
     html=html.replace("const API=location.pathname;","const API='"+BACKEND+"';");
-    const fixes={
-      'â€¢':'•','â€”':'—','â†’':'→','â€™':'’','â€¦':'…','â†‘':'↑','â†“':'↓',
-      'PrioritÃ ':'Priorità','sarÃ ':'sarà','lâ€™':'l’'
-    };
+    const fixes={'â€¢':'•','â€”':'—','â†’':'→','â€™':'’','â€¦':'…','â†‘':'↑','â†“':'↓','PrioritÃ ':'Priorità','sarÃ ':'sarà','lâ€™':'l’'};
     for(const [bad,good] of Object.entries(fixes)) html=html.split(bad).join(good);
+    const css=`\n.sf-art{display:block;width:100%;height:auto;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.3);cursor:zoom-in;background:#111}.card-art{margin-bottom:8px}.champ-art{max-width:220px;margin:0 auto 10px}.monster-art{max-width:150px;margin:0 auto 8px}.card{min-height:0}.zoom-card{width:min(480px,92vw);margin:auto}.zoom-card .sf-art{width:100%}@media(max-width:520px){.champ-art{max-width:190px}}\n`;
+    html=html.replace('</style>',css+'</style>');
+    const patch=`\nconst SF_ART=${JSON.stringify(ART)};\nconst SF_BASE=${JSON.stringify(CARD_BASE)};\nfunction sfArt(k,c=''){const f=SF_ART[k];return f?'<img class="sf-art '+c+'" data-sf="'+k+'" src="'+SF_BASE+f+'" alt="'+k+'" loading="lazy">':''}\nfunction sfOpen(k){const f=SF_ART[k];if(f)showModal('Carta','<div class="zoom-card"><img class="sf-art" src="'+SF_BASE+f+'" alt="'+k+'"></div>')}\nconst sfCardHtml=cardHtml; cardHtml=function(card,selectMode=false){let h=sfCardHtml(card,selectMode);const art=sfArt(card.id,'card-art');return art?h.replace(/(<div class="card[^>]*>)/,'$1'+art):h};\nconst sfChampHtml=champHtml; champHtml=function(c,owner,isOwn){let h=sfChampHtml(c,owner,isOwn);if(!c)return h;const art=sfArt(c.id,'champ-art');return art?h.replace(/(<div class="champ[^>]*>)/,'$1'+art):h};\nconst sfMonsterHtml=monsterHtml; monsterHtml=function(m){let h=sfMonsterHtml(m);const art=sfArt(m.cardId,'monster-art');return art?h.replace(/(<div class="monster[^>]*>)/,'$1'+art):h};\nconst sfBind=bind; bind=function(){sfBind();document.querySelectorAll('.sf-art[data-sf]').forEach(x=>x.onclick=e=>{e.stopPropagation();sfOpen(x.dataset.sf)})};\n`;
+    html=html.replace('(async function init(){',patch+'\n(async function init(){');
     document.open();document.write(html);document.close();
   }catch(e){
     document.getElementById('status').className='err';
