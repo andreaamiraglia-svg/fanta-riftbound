@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Soulforge — Online Playtest</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0c0e12;color:#f5f7fb;font-family:system-ui,sans-serif}.box{text-align:center;padding:24px}.err{color:#ff9aa2;max-width:680px}</style>
+</head>
+<body><div class="box"><h2>Caricamento Soulforge…</h2><p id="status">Connessione al server di gioco.</p></div>
+<script>
+(async()=>{
+  const BACKEND='https://gmunayvayjzzyrigaesx.supabase.co/functions/v1/soulforge';
+  try{
+    const r=await fetch(BACKEND,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    let html=await r.text();
+    html=html.replace("const API=location.pathname;","const API='"+BACKEND+"';");
+    const fixes={
+      'â€¢':'•','â€”':'—','â†’':'→','â€™':'’','â€¦':'…','â†‘':'↑','â†“':'↓',
+      'PrioritÃ ':'Priorità','sarÃ ':'sarà','lâ€™':'l’'
+    };
+    for(const [bad,good] of Object.entries(fixes)) html=html.split(bad).join(good);
+    document.open();document.write(html);document.close();
+  }catch(e){
+    document.getElementById('status').className='err';
+    document.getElementById('status').textContent='Errore nel caricamento: '+e.message;
+  }
+})();
+</script></body></html>
