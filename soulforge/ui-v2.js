@@ -91,7 +91,7 @@ bind=function(){
 };
 document.addEventListener('mousemove',e=>{if(!attackSource)return;const r=attackSource.el.getBoundingClientRect(),l=document.querySelector('#sfAttackLine');if(!l)return;l.setAttribute('x1',r.left+r.width/2);l.setAttribute('y1',r.top+r.height/2);l.setAttribute('x2',e.clientX);l.setAttribute('y2',e.clientY);l.setAttribute('opacity','1')});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){attackSource=null;document.body.classList.remove('attack-mode');document.querySelector('#sfAttackLine')?.setAttribute('opacity','0')}});
-async function autoPass(){if(busy||!session.state||session.state.status!=='main'||autoPassVersion===session.version)return;const s=session.state;let yes=false;if(s.priority===session.player&&s.stack.length&&s.stack[s.stack.length-1].actor===session.player)yes=true;else if(s.priority===session.player&&s.combat&&!s.stack.length&&s.combat.initiator===session.player)yes=true;if(yes){autoPassVersion=session.version;await move({type:'pass_priority'})}}
+async function autoPass(){if(busy||!session.state||session.state.status!=='main'||autoPassVersion===session.version)return;const s=session.state;if(s.combatSpellPriority===session.player)return;let yes=false;if(s.priority===session.player&&s.stack.length&&s.stack[s.stack.length-1].actor===session.player)yes=true;else if(s.priority===session.player&&s.combat&&!s.stack.length&&s.combat.initiator===session.player)yes=true;if(yes){autoPassVersion=session.version;await move({type:'pass_priority'})}}
 const baseRender=render;render=function(){baseRender();ensureUi();bindPreview();setTimeout(autoPass,80)};
 ensureUi();if(session.state)render();
 })();
