@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView } from "./game-v15.ts";
+import { newState, newPlayer, act, publicView } from "./game-v16.ts";
 
 const APP_URL="https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/base-app.html";
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'GET, POST, OPTIONS'};
