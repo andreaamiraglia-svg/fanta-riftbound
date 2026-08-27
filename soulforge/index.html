@@ -18,7 +18,7 @@
     const fixes={'â€¢':'•','â€”':'—','â†’':'→','â€™':'’','â€¦':'…','â†‘':'↑','â†“':'↓','PrioritÃ ':'Priorità','sarÃ ':'sarà','lâ€™':'l’'};
     for(const [bad,good] of Object.entries(fixes)) html=html.split(bad).join(good);
     html=html.replace('</head>','<link rel="stylesheet" href="/ui-v2.css?v=4"><link rel="stylesheet" href="/grave-targets-v4.css?v=1"><link rel="stylesheet" href="/interaction-v5.css?v=1"></head>');
-    html=html.replace('</body>','<script src="/ui-v2.js?v=5"><\/script><script src="/right-click-preview.js?v=2"><\/script><script src="/grave-targets-v4.js?v=1"><\/script><script src="/interaction-v5.js?v=2"><\/script></body>');
+    html=html.replace('</body>','<script src="/ui-v2.js?v=5"><\/script><script src="/right-click-preview.js?v=2"><\/script><script src="/grave-targets-v4.js?v=1"><\/script><script src="/interaction-v5.js?v=2"><\/script><script src="/sfera-hotfix-v6.js?v=1"><\/script></body>');
     document.open();document.write(html);document.close();
   }catch(e){
     document.getElementById('status').className='err';
