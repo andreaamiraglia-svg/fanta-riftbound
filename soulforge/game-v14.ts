@@ -12,7 +12,7 @@ import {
 
 // Regole aggiornate dalle nuove carte stampate.
 CARD_DEFS.berserk.text = 'Attiva un tuo Campione danneggiato e forniscigli +2 POW.';
-// Riutilizziamo internamente l\'effetto Albero (+2 POW); l\'attivazione viene completata nel wrapper.
+// Riutilizziamo internamente l'effetto Albero (+2 POW); l'attivazione viene completata nel wrapper.
 CARD_DEFS.berserk.effect = 'albero';
 CARD_DEFS.fendente_di_fuoco.text = 'Infliggi 2 danni ad un Nemico.';
 CARD_DEFS.occhio_di_drago.text = 'Metti 5 carte dal tuo mazzo nel Cimitero. Un tuo Campione ottiene +1 POW fino alla fine del turno.';
@@ -28,6 +28,7 @@ export { newState, newPlayer };
 const pl = (s:any,p:number) => s?.players?.[String(p)];
 const champ = (s:any,p:number,id:string) => pl(s,p)?.champions?.find((c:any)=>c.id===id);
 const countInGrave = (s:any,p:number,id:string) => (pl(s,p)?.grave || []).filter((x:string)=>x===id).length;
+const otherPlayer = (p:number) => p===1?2:1;
 
 function patchPublicCard(card:any){
   if(!card) return card;
@@ -70,7 +71,55 @@ function handleSalamandraAfterAttack(s:any, uids:string[]){
   }
 }
 
+function applyCombatOnlySpellEffect(s:any,item:any){
+  const combat=s?.combat;
+  if(!combat||!item) return;
+  if(item.cardId==='taglio_fiammante'){
+    const a=combat.attacker;
+    const dmg=1+(pl(s,item.actor)?.fireCloud?1:0)+Number(item.golemBoost||0);
+    damageChampion(s,a.player,a.champId,dmg,'Taglio Fiammante');
+  }else if(item.cardId==='alta_marea'){
+    const ownChamp=String(item.targets?.ownChamp||'');
+    const involved=(combat.attacker?.player===item.actor&&combat.attacker?.champId===ownChamp)||(combat.target?.type==='champion'&&combat.target?.player===item.actor&&combat.target?.champId===ownChamp);
+    if(involved){
+      combat.cancelled=true;
+      s.log.push('Alta Marea annulla il combattimento.');
+    }
+  }
+}
+
 export function act(s:any,p:number,a:any){
+  // Se una scelta di Lyrandel era stata aperta dalla risoluzione di una Magia in combattimento,
+  // dopo la scelta riapriamo la priorità al giocatore previsto invece di proseguire automaticamente.
+  const resumeCombatPriority = a?.type==='resolve_choice' && s?.pendingChoice?.type==='lyrandel' && s.pendingChoice.resume==='combat_priority';
+  const resumePriority = Number(s?.pendingChoice?.nextPriority||0);
+
+  // Questa priorità deve essere realmente giocabile: niente auto-pass del client.
+  if(s?.combatSpellPriority===p && (a?.type==='cast'||a?.type==='pass_priority')) delete s.combatSpellPriority;
+
+  // In combattimento la Catena ora si risolve una Magia alla volta.
+  // Dopo ogni risoluzione la priorità torna all'altro giocatore prima di proseguire.
+  const singleCombatResolution = a?.type==='pass_priority' && !!s?.combat && (s?.stack?.length||0)>0 && s?.priority===p && Number(s?.priorityPasses||0)>=1;
+  let combatCtx:any=null;
+  if(singleCombatResolution){
+    const fullStack=[...(s.stack||[])];
+    const top=fullStack[fullStack.length-1];
+    combatCtx={
+      combat:s.combat,
+      restStack:fullStack.slice(0,-1),
+      top,
+      stackInitiator:s.stackInitiator,
+      focus:s.focus,
+      mainPasses:s.mainPasses,
+      priority:s.priority,
+      priorityPasses:s.priorityPasses,
+    };
+    // Il motore base risolve tutta la Catena e poi il combattimento.
+    // Gli facciamo vedere solo la carta in cima e nascondiamo temporaneamente il combattimento.
+    s.stack=[top];
+    s.combat=null;
+  }
+
   // Validazioni nuove.
   if(a?.type==='cast' && a.cardId==='berserk'){
     const c=champ(s,p,String(a?.targets?.ownChamp||''));
@@ -129,10 +178,46 @@ export function act(s:any,p:number,a:any){
   }catch(e){
     for(const x of salamandras){const m=s?.board?.monsters?.find((z:any)=>z.uid===x.uid);if(m)m.cardId='salamandra_vulcanica';}
     if(limitFirstTurn){for(const q of [1,2]){const player=pl(s,q);if(player&&savedDecks[q])player.monsterDeck=savedDecks[q];}}
+    if(combatCtx){
+      s.combat=combatCtx.combat;
+      s.stack=[...combatCtx.restStack,combatCtx.top];
+      s.stackInitiator=combatCtx.stackInitiator;
+      s.focus=combatCtx.focus;
+      s.mainPasses=combatCtx.mainPasses;
+      s.priority=combatCtx.priority;
+      s.priorityPasses=combatCtx.priorityPasses;
+    }
     CARD_DEFS.alta_marea.speed=oldMareaSpeed;
     throw e;
   }
   CARD_DEFS.alta_marea.speed=oldMareaSpeed;
+
+  // Ripristina il combattimento e le eventuali carte sotto quella appena risolta.
+  if(combatCtx){
+    out.combat=combatCtx.combat;
+    out.stack=[...combatCtx.restStack];
+    out.stackInitiator=combatCtx.stackInitiator;
+    out.focus=combatCtx.focus;
+    out.mainPasses=0;
+
+    // Taglio Fiammante e Alta Marea leggono direttamente s.combat nel motore base:
+    // applico qui il loro effetto perché il combattimento era stato nascosto durante la singola risoluzione.
+    applyCombatOnlySpellEffect(out,combatCtx.top);
+
+    if(out.status!=='gameover'){
+      const nextPriority=otherPlayer(Number(combatCtx.top?.actor||p));
+      if(out.pendingChoice?.type==='lyrandel' && out.pendingChoice.resume==='continue'){
+        out.pendingChoice.resume='combat_priority';
+        out.pendingChoice.nextPriority=nextPriority;
+        out.priority=null;
+        out.priorityPasses=0;
+      }else{
+        out.priority=nextPriority;
+        out.priorityPasses=0;
+        out.combatSpellPriority=nextPriority;
+      }
+    }
+  }
 
   // Ripristina i Monster Deck dopo la limitazione del primo turno.
   if(limitFirstTurn){
@@ -181,6 +266,16 @@ export function act(s:any,p:number,a:any){
       if(c) out.log.push(`${player?.name||'Il giocatore'} mette 5 carte dal mazzo nel Cimitero. ${c.name} ottiene +1 POW fino alla fine del turno.`);
     }
   }
+
+  if(resumeCombatPriority && out.status==='main' && out.combat && resumePriority){
+    out.priority=resumePriority;
+    out.priorityPasses=0;
+    out.mainPasses=0;
+    out.combatSpellPriority=resumePriority;
+  }
+
+  // Pulizia di sicurezza quando il combattimento è terminato.
+  if(!out.combat) delete out.combatSpellPriority;
 
   return out;
 }
