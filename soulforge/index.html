@@ -18,7 +18,7 @@
     const fixes={'â€¢':'•','â€”':'—','â†’':'→','â€™':'’','â€¦':'…','â†‘':'↑','â†“':'↓','PrioritÃ ':'Priorità','sarÃ ':'sarà','lâ€™':'l’'};
     for(const [bad,good] of Object.entries(fixes)) html=html.split(bad).join(good);
     html=html.replace('</head>','<link rel="stylesheet" href="/ui-v2.css?v=4"></head>');
-    html=html.replace('</body>','<script src="/ui-v2.js?v=4"><\/script><script src="/right-click-preview.js?v=1"><\/script></body>');
+    html=html.replace('</body>','<script src="/ui-v2.js?v=5"><\/script><script src="/right-click-preview.js?v=2"><\/script></body>');
     document.open();document.write(html);document.close();
   }catch(e){
     document.getElementById('status').className='err';
