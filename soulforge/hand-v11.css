@@ -1,0 +1,25 @@
+/* Hand interaction v11 */
+.hand-wrap{overflow:visible!important}
+.hand-fan{perspective:1200px;isolation:isolate}
+.hand-card{
+  transition:transform .24s cubic-bezier(.2,.75,.2,1),filter .2s ease,opacity .2s ease!important;
+  will-change:transform,filter;
+  transform-style:preserve-3d;
+}
+.hand-card img{
+  transition:box-shadow .22s ease,filter .22s ease!important;
+  backface-visibility:hidden;
+}
+.hand-card.sf-hand-focus{z-index:120!important;filter:none!important}
+.hand-card.sf-hand-focus img{
+  filter:brightness(1.08) saturate(1.08);
+  box-shadow:0 24px 58px rgba(0,0,0,.72),0 0 0 2px rgba(255,255,255,.16),0 0 28px rgba(255,214,112,.16)!important;
+}
+.hand-card.sf-hand-near img{filter:brightness(.96)}
+.hand-fan.sf-hand-active .hand-card:not(.sf-hand-focus):not(.sf-hand-near){filter:brightness(.78) saturate(.84)}
+@media(max-width:800px){
+  .hand-card{transition:transform .18s ease,filter .18s ease!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hand-card,.hand-card img{transition:none!important}
+}
