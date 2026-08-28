@@ -121,6 +121,7 @@ function finalizeEndTurn(s) { s.endTurnPending = false; for (const p of [1, 2]) 
     for (const c of q.champions) {
         c.damage = 0;
         c.tempPow = 0;
+        c.armor = 0;
         c.cantAttackTurn = null;
         if (!c.defeated)
             c.tapped = false;
@@ -135,6 +136,7 @@ function finalizeEndTurn(s) { s.endTurnPending = false; for (const p of [1, 2]) 
 } for (const m of s.board.monsters) {
     m.damage = 0;
     m.tempPow = 0;
+    m.armor = 0;
 } s.turn++; s.status = 'select'; s.focus = s.turn % 2 ? 1 : 2; s.priority = null; s.mainPasses = 0; s.stack = []; s.stackInitiator = null; s.combat = null; s.pendingChoice = null; s.triggerQueue = []; log(s, `Fine turno. Scegliete le carte per il turno ${s.turn}.`); }
 function validateCardTargets(s, p, c, t) { const own = (id) => { const x = champ(s, p, id); return !!x && !x.defeated; }; const mon = (u) => !!monster(s, u); if (['corazza', 'mano', 'occhio', 'berserk', 'katana', 'albero', 'mille', 'collasso', 'fino_alla_morte'].includes(c.effect) && !own(String(t?.ownChamp || '')))
     throw new Error('Campione bersaglio non valido.'); if (c.effect === 'berserk' && Number(champ(s, p, t.ownChamp)?.damage || 0) <= 0)
