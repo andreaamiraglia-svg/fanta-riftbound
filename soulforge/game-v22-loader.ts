@@ -1,6 +1,11 @@
 const urls=['https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p01.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p02.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p03.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p04.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p05.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p06.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p07.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p08.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p09.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p10.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p11.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p12.txt'];
 const chunks=await Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('Game chunk HTTP '+r.status);return r.text()}));
-const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(chunks.join('')));
+let source=chunks.join('');
+source=source.replace(
+ "const q = pl(s, p); if (!q || !COLORS.includes(color))\n    return; const before = q.souls[color] || 0;",
+ "const q = pl(s, p); if (!q || !COLORS.includes(color))\n    return; const allowedColors = Array.isArray(q.deckColors) && q.deckColors.length ? q.deckColors : (q.champions || []).map(c => c?.color).filter(Boolean); if (!allowedColors.includes(color))\n    return; const before = q.souls[color] || 0;"
+);
+const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(source));
 const COLORS=['red','green','black','blue'];
 function enforceSoulColorsOnPlayer(q:any){
  if(!q)return q;
