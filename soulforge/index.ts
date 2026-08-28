@@ -1,6 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView } from "./game-v22-loader.ts";
+import { newState, newPlayer, act, publicView, CARD_DEFS } from "./game-v22-loader.ts";
+
+if(CARD_DEFS?.sguardo_ninjitsu) CARD_DEFS.sguardo_ninjitsu.text='Uccidi un Mostro danneggiato.';
 
 const APP_URL="https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/base-app.html";
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'GET, POST, OPTIONS'};
@@ -26,6 +28,16 @@ Deno.serve(async(req:Request)=>{
  }
  const supplied=String(body.token||'');let p=0;if(supplied&&supplied===game.p1_token)p=1;else if(supplied&&supplied===game.p2_token)p=2;else return err('Token giocatore non valido.',403);
  if(action==='get')return json({roomCode:code,player:p,state:publicView(game.state,p),version:game.version});
- if(action==='move'){if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);let state=game.state;try{state=act(state,p,body.move||{})}catch(e){return err(e instanceof Error?e.message:String(e))}const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('STATE_CONFLICT',409);return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version})}
+ if(action==='move'){
+  if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
+  let state=game.state;
+  if(body.move?.type==='cast'&&body.move?.cardId==='sguardo_ninjitsu'){
+   const uid=String(body.move?.targets?.monsterUid||'');
+   const target=state?.board?.monsters?.find((m:any)=>String(m.uid)===uid);
+   if(!target||Number(target.damage||0)<=0)return err('Tecnica dello Sguardo Ninjitsu richiede un Mostro danneggiato.');
+  }
+  try{state=act(state,p,body.move||{})}catch(e){return err(e instanceof Error?e.message:String(e))}
+  const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('STATE_CONFLICT',409);return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version})
+ }
  return err('Azione sconosciuta.');
 });
