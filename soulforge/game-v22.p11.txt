@@ -1,0 +1,126 @@
+ = { initiator: p, attacker: { player: p, champId: c.id }, target: a.target, cancelled: false };
+        s.stackInitiator = p;
+        s.priority = other(p);
+        s.mainPasses = 0;
+        log(s, `${pl(s, p).name} dichiara un attacco con ${c.name}.`);
+        for (const m of s.board.monsters.filter((x) => x.cardId === 'vecchio_delle_nevi'))
+            s.triggerQueue.push({ actor: m.owner, sourceCardId: m.cardId, effectId: 'vecchio_pow', effectName: 'Effetto — Vecchio delle Nevi', meta: { attacker: { player: p, champId: c.id } } });
+        prepareTriggers(s);
+        return s;
+    }
+    if (a.type === 'cast') {
+        const q = pl(s, p), c = CARD_DEFS[a.cardId];
+        if (!c || !q.hand.includes(c.id))
+            throw new Error('Carta non disponibile in mano.');
+        if (s.stack.length) {
+            if (s.priority !== p)
+                throw new Error('Non hai priorità nella Catena.');
+            if (c.speed !== 'instant')
+                throw new Error('Durante una Catena puoi giocare solo Istantanee.');
+        }
+        else if (s.combat) {
+            if (s.priority !== p)
+                throw new Error('Non hai priorità nel combattimento.');
+            if (c.speed !== 'response' && c.speed !== 'instant')
+                throw new Error('Durante un combattimento puoi giocare una Risposta o un’Istantanea.');
+        }
+        else if (s.focus !== p)
+            throw new Error('Non hai il Focus.');
+        validateCardTargets(s, p, c, a.targets || {});
+        if (!canPay(s, p, c))
+            throw new Error('Anime insufficienti.');
+        const cost = pay(s, p, c);
+        q.hand = q.hand.filter((id) => id !== c.id);
+        s.stack.push({ uid: uid(), kind: 'card', actor: p, cardId: c.id, targets: a.targets || {}, paidCost: cost });
+        if (s.stackInitiator == null)
+            s.stackInitiator = s.combat?.initiator ?? p;
+        s.priority = other(p);
+        s.mainPasses = 0;
+        log(s, `${q.name} gioca ${c.name}${cost ? ` pagando ${cost} Anima${cost === 1 ? '' : 'e'} ${colorLabel(c.color)}` : ''}.`);
+        return s;
+    }
+    if (a.type === 'activate_champion') {
+        if (s.priority || s.stack.length || s.combat || s.focus !== p)
+            throw new Error('Puoi usare questa abilità solo con il Focus e senza Catene.');
+        const c = champ(s, p, String(a.champId || ''));
+        if (!c || c.id !== 'divoratore_campione' || c.defeated || c.tapped)
+            throw new Error('Campione non disponibile.');
+        if (!pl(s, p).killedMonsterThisTurn)
+            throw new Error('Devi aver ucciso almeno un Mostro in questo turno.');
+        const id = String(a.graveCardId || '');
+        if (!pl(s, p).grave.includes(id))
+            throw new Error('Carta del Cimitero non valida.');
+        c.tapped = true;
+        s.stackInitiator = p;
+        s.stack.push({ uid: uid(), kind: 'effect', actor: p, sourceCardId: 'divoratore_campione', effectId: 'ritorno_anime', effectName: 'Ritorno delle Anime', targets: { graveCardId: id }, meta: {} });
+        s.priority = other(p);
+        log(s, `${c.name} attiva Ritorno delle Anime.`);
+        return s;
+    }
+    if (a.type === 'revive_phoenix') {
+        if (s.priority || s.stack.length || s.combat || s.focus !== p)
+            throw new Error('Puoi rianimare la Fenice solo con il Focus e senza Catene.');
+        const q = pl(s, p), i = q.monsterGrave.indexOf('fenice_cremisi'), color = COLORS.includes(a.color) ? a.color : null;
+        if (i < 0)
+            throw new Error('Fenice Cremisi non è nel tuo Cimitero Mostri.');
+        if (!color || q.souls[color] < 1)
+            throw new Error('Devi pagare 1 Anima disponibile.');
+        q.souls[color]--;
+        q.monsterGrave.splice(i, 1);
+        addMonsterToBoard(s, 'fenice_cremisi', p);
+        log(s, `${q.name} paga 1 Anima ${colorLabel(color)} e gioca Fenice Cremisi dal Cimitero.`);
+        s.stackInitiator = p;
+        processEnterQueue(s);
+        if (!s.pendingChoice)
+            prepareTriggers(s);
+        return s;
+    }
+    if (a.type === 'pass_priority') {
+        if (s.priority !== p)
+            throw new Error('Non hai priorità.');
+        if (s.stack.length) {
+            s.priority = null;
+            resolveTop(s);
+            return s;
+        }
+        if (s.combat) {
+            s.priority = null;
+            resolveCombat(s);
+            return s;
+        }
+        throw new Error('Non c’è una priorità da passare.');
+    }
+    if (a.type === 'pass') {
+        if (s.priority || s.stack.length || s.combat)
+            throw new Error('Usa Passa priorità durante combattimenti o Catene.');
+        if (s.focus !== p)
+            throw new Error('Non hai il Focus.');
+        s.mainPasses++;
+        log(s, `${pl(s, p).name} passa.`);
+        if (s.mainPasses >= 2)
+            beginEndTurn(s);
+        else
+            s.focus = other(p);
+        return s;
+    }
+    if (a.type === 'recycle') {
+        if (s.priority || s.stack.length || s.combat || s.focus !== p)
+            throw new Error('Puoi Riciclare solo con il Focus e senza Catene.');
+        const q = pl(s, p), cost = q.recycleCount + 1, pays = { red: Number(a.red || 0), green: Number(a.green || 0), black: Number(a.black || 0), blue: Number(a.blue || 0) };
+        if (COLORS.reduce((n, k) => n + pays[k], 0) !== cost || COLORS.some(k => pays[k] < 0 || pays[k] > q.souls[k]))
+            throw new Error('Pagamento del Riciclo non valido.');
+        if (!q.grave.length)
+            throw new Error('Il Cimitero è vuoto.');
+        for (const k of COLORS)
+            q.souls[k] -= pays[k];
+        q.deck = shuffle([...q.deck, ...q.grave]);
+        q.grave = [];
+        q.recycleCount++;
+        log(s, `${q.name} Ricicla il Cimitero pagando ${cost} Anime.`);
+        s.focus = other(p);
+        s.mainPasses = 0;
+        return s;
+    }
+    throw new Error('Azione sconosciuta.');
+}
+export function publicView(state, p) { normalizeState(state); const s = clone(state); delete s._damageEvent; delete s.tr
