@@ -49,41 +49,34 @@ function openGrave(owner,kind){
  if(kind==='cards'){
   const cards=pl.graveCards||[];
   const cost=own?(pl.recycleCount||0)+1:0;
-  const enough=own&&(pl.souls.red+pl.souls.green>=cost);
-  const action=own&&cards.length?`<div class="sf-grave-action"><button class="btn primary sf-recycle-grave" ${(!canUseOwnGrave()||!enough)?'disabled':''}>Rimetti tutte le carte nel Mazzo — ${cost} Anime</button><span class="tiny">Scegli tu quante Anime Rosse e Verdi usare.</span></div>`:'';
+  const available=(pl.deckColors||[]).reduce((n,c)=>n+Number(pl.souls?.[c]||0),0);
+  const enough=own&&available>=cost;
+  const action=own&&cards.length?`<div class="sf-grave-action"><button class="btn primary sf-recycle-grave" ${(!canUseOwnGrave()||!enough)?'disabled':''}>Rimetti tutte le carte nel Mazzo — ${cost} Anime</button><span class="tiny">Scegli tu quali Anime usare.</span></div>`:'';
   showModal(`${own?'Il tuo':'Cimitero di '+pl.name} — Carte`,`${action}<div class="sf-grave-grid">${cards.length?cards.map(c=>tile(c)).join(''):'<div class="sub">Cimitero vuoto.</div>'}</div>`);
  }else{
   const monsters=pl.monsterGraveCards||((pl.monsterGrave||[]).map(id=>session.state.monsterDefs?.[id]).filter(Boolean));
   showModal(`${own?'Il tuo':'Cimitero di '+pl.name} — Mostri`,`<div class="sf-grave-grid">${monsters.length?monsters.map(m=>{
-   const action=own&&m.id==='fenice_cremisi'?`<button class="btn red sf-phoenix-grave" ${(!canUseOwnGrave()||!(pl.souls.red+pl.souls.green))?'disabled':''}>Gioca dal Cimitero — 1 Anima</button>`:'';
+   const hasSoul=(pl.deckColors||[]).some(c=>(pl.souls?.[c]||0)>0);
+   const action=own&&m.id==='fenice_cremisi'?`<button class="btn red sf-phoenix-grave" ${(!canUseOwnGrave()||!hasSoul)?'disabled':''}>Gioca dal Cimitero — 1 Anima</button>`:'';
    return tile(m,action);
   }).join(''):'<div class="sub">Cimitero Mostri vuoto.</div>'}</div>`);
  }
 }
 function recyclePayment(){
- const me=playerState(session.player),cost=(me.recycleCount||0)+1;
- showModal('Riciclo del Cimitero',`<p>Rimetti tutte le carte del Cimitero nel Mazzo. Costo: <b>${cost}</b> Anime.</p>
- <div class="sf-payment">
-  <label>Anime Rosse<input id="sfPayRed" type="number" min="0" max="${me.souls.red}" value="${Math.min(cost,me.souls.red)}"></label>
-  <label>Anime Verdi<input id="sfPayGreen" type="number" min="0" max="${me.souls.green}" value="${Math.max(0,cost-Math.min(cost,me.souls.red))}"></label>
- </div>
- <div class="tiny">La somma deve essere esattamente ${cost}.</div>
- <div class="controls"><button id="sfDoRecycle" class="btn primary">Paga e rimetti nel Mazzo</button></div>`);
+ const me=playerState(session.player),cost=(me.recycleCount||0)+1,colors=(me.deckColors||[]).filter(c=>(me.souls?.[c]||0)>=0);
+ const labels={red:'Rosse',green:'Verdi',black:'Nere',blue:'Blu'};
+ showModal('Riciclo del Cimitero',`<p>Rimetti tutte le carte del Cimitero nel Mazzo. Costo: <b>${cost}</b> Anime.</p><div class="sf-payment">${colors.map(c=>`<label>Anime ${labels[c]||c}<input data-sf-pay-color="${c}" type="number" min="0" max="${me.souls?.[c]||0}" value="0"></label>`).join('')}</div><div class="tiny">La somma deve essere esattamente ${cost}.</div><div class="controls"><button id="sfDoRecycle" class="btn primary">Paga e rimetti nel Mazzo</button></div>`);
  document.querySelector('#sfDoRecycle').onclick=()=>{
-  const r=Number(document.querySelector('#sfPayRed').value||0),g=Number(document.querySelector('#sfPayGreen').value||0);
-  if(r+g!==cost){alert(`Devi pagare esattamente ${cost} Anime.`);return}
-  if(r>me.souls.red||g>me.souls.green){alert('Non hai abbastanza Anime.');return}
-  closeModal();move({type:'recycle',red:r,green:g});
+  const pay={red:0,green:0,black:0,blue:0};document.querySelectorAll('[data-sf-pay-color]').forEach(el=>pay[el.dataset.sfPayColor]=Number(el.value||0));
+  const total=Object.values(pay).reduce((a,b)=>a+b,0);if(total!==cost){alert(`Devi pagare esattamente ${cost} Anime.`);return}
+  if(colors.some(c=>pay[c]>(me.souls?.[c]||0))){alert('Non hai abbastanza Anime.');return}
+  closeModal();move({type:'recycle',...pay});
  };
 }
 function phoenixPayment(){
- const me=playerState(session.player);
- showModal('Fenice Cremisi — scegli l’Anima',`<p>Scegli quale Anima spendere per giocare Fenice Cremisi dal Cimitero Mostri.</p><div class="sf-soul-choice">
-  <button id="sfPhoenixRed" class="btn red" ${me.souls.red<1?'disabled':''}>1 Anima Rossa</button>
-  <button id="sfPhoenixGreen" class="btn green" ${me.souls.green<1?'disabled':''}>1 Anima Verde</button>
- </div>`);
- document.querySelector('#sfPhoenixRed').onclick=()=>{closeModal();move({type:'revive_phoenix',color:'red'})};
- document.querySelector('#sfPhoenixGreen').onclick=()=>{closeModal();move({type:'revive_phoenix',color:'green'})};
+ const me=playerState(session.player),colors=(me.deckColors||[]).filter(c=>(me.souls?.[c]||0)>0),labels={red:'Rossa',green:'Verde',black:'Nera',blue:'Blu'};
+ showModal('Fenice Cremisi — scegli l’Anima',`<p>Scegli quale Anima spendere per giocare Fenice Cremisi dal Cimitero Mostri.</p><div class="sf-soul-choice">${colors.map(c=>`<button class="btn ${c}" data-sf-phoenix="${c}">1 Anima ${labels[c]||c}</button>`).join('')}</div>`);
+ document.querySelectorAll('[data-sf-phoenix]').forEach(b=>b.onclick=()=>{closeModal();move({type:'revive_phoenix',color:b.dataset.sfPhoenix})});
 }
 
 document.addEventListener('click',e=>{
@@ -99,22 +92,27 @@ function ensureArrowLayer(){
  return svg;
 }
 function mid(el){if(!el)return null;const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}}
+function stackEl(uid){const s=session.state?.stack||[],i=s.findIndex(x=>x.uid===uid);return i>=0?[...document.querySelectorAll('.stack-card')][i]:null}
 function targetEl(t){
  if(!t)return null;
  if(t.type==='champion')return document.querySelector(`[data-owner="${t.player}"][data-champ-id="${t.champId}"]`);
  if(t.type==='monster')return document.querySelector(`[data-monster-uid="${t.uid}"]`);
+ if(t.type==='stack')return stackEl(t.uid);
  return null;
 }
 function uniqueTargets(item){
  const out=[],t=item?.targets||{},effect=session.state?.cardDefs?.[item.cardId]?.effect;
  if(t.enemy)out.push(t.enemy);
+ if(t.character)out.push(t.character);
+ if(t.champion)out.push({type:'champion',player:Number(t.champion.player),champId:t.champion.champId});
  if(t.monsterUid)out.push({type:'monster',uid:t.monsterUid});
  if(t.ownChamp)out.push({type:'champion',player:item.actor,champId:t.ownChamp});
+ if(t.stackUid)out.push({type:'stack',uid:t.stackUid});
  if(effect==='taglio'&&session.state?.combat?.attacker){
   const a=session.state.combat.attacker;out.push({type:'champion',player:a.player,champId:a.champId});
  }
  const seen=new Set();
- return out.filter(x=>{const k=x.type==='monster'?`m:${x.uid}`:`c:${x.player}:${x.champId}`;if(seen.has(k))return false;seen.add(k);return true});
+ return out.filter(x=>{const k=x.type==='monster'?`m:${x.uid}`:x.type==='stack'?`s:${x.uid}`:`c:${x.player}:${x.champId}`;if(seen.has(k))return false;seen.add(k);return true});
 }
 function line(a,b,color,marker){
  if(!a||!b)return'';
