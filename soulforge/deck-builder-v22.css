@@ -1,2 +1,3 @@
-.deck-pick.blue.selected{box-shadow:0 0 0 3px #56c6ff,0 0 28px rgba(64,183,255,.35)}
+.deck-pick.blue{border-color:#296c8f}
+.deck-pick.blue.selected{border-color:#56c6ff;box-shadow:0 0 0 3px #56c6ff,0 0 28px rgba(64,183,255,.35)}
 .blue-warning{border-color:rgba(76,190,255,.5)!important;background:rgba(25,115,170,.14)!important;color:#bfeaff!important}
