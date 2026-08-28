@@ -1,4 +1,4 @@
- = { initiator: p, attacker: { player: p, champId: c.id }, target: a.target, cancelled: false };
+ { initiator: p, attacker: { player: p, champId: c.id }, target: a.target, cancelled: false };
         s.stackInitiator = p;
         s.priority = other(p);
         s.mainPasses = 0;
@@ -123,4 +123,29 @@
     }
     throw new Error('Azione sconosciuta.');
 }
-export function publicView(state, p) { normalizeState(state); const s = clone(state); delete s._damageEvent; delete s.tr
+export function publicView(state, p) { normalizeState(state); const s = clone(state); delete s._damageEvent; delete s.triggerQueue; delete s.enterQueue; for (const qn of [1, 2]) {
+    const src = pl(state, qn), q = s.players[String(qn)];
+    if (!q)
+        continue;
+    q.champions = q.champions.map((c) => ({ ...c, pow: currentPow(state, qn, src.champions.find((x) => x.id === c.id)) }));
+    q.graveCards = src.grave.map((id) => CARD_DEFS[id]).filter(Boolean);
+    q.monsterGraveCards = src.monsterGrave.map((id) => MONSTER_DEFS[id]).filter(Boolean);
+    if (qn !== p) {
+        q.handCount = src.hand.length;
+        delete q.hand;
+        q.deckCount = src.deck.length;
+        delete q.deck;
+        q.graveCount = src.grave.length;
+        delete q.grave;
+        q.monsterDeckCount = src.monsterDeck.length;
+        delete q.monsterDeck;
+        q.monsterGraveCount = src.monsterGrave.length;
+        delete q.monsterGrave;
+        delete q.banishedMonsters;
+    }
+    else {
+        q.handCards = src.hand.map((id) => ({ ...CARD_DEFS[id], effectiveCost: dynamicCost(state, qn, CARD_DEFS[id]) })).filter(Boolean);
+        q.deckCards = src.deck.map((id) => CARD_DEFS[id]).filter(Boolean);
+    }
+} s.board.monsters = s.board.monsters.map((m) => ({ ...m, ...MONSTER_DEFS[m.cardId], pow: currentMonsterPow(state, m) })); s.cardDefs = CARD_DEFS; s.monsterDefs = MONSTER_DEFS; s.championDefs = CHAMPION_DEFS; s.deckRules = DECK_RULES; s.you = p; if (s.pendingChoice && s.pendingChoice.player !== p)
+    s.pendingChoice = { type: s.pendingChoice.type, player: s.pendingChoice.player, hidden: true }; return s; }
