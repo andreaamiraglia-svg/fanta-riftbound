@@ -1,0 +1,103 @@
+ === 'marea' && (!s.combat || !own(String(t?.ownChamp || ''))))
+    throw new Error('Alta Marea richiede un tuo Campione nel combattimento.'); if (['stupido', 'taglio_ninjitsu', 'sguardo', 'anima_esplosiva', 'spacca_ossa', 'flusso_gelido', 'ali_protettore'].includes(c.effect) && !mon(String(t?.monsterUid || '')))
+    throw new Error('Mostro bersaglio non valido.'); if (c.effect === 'freddo_puro') {
+    const m = monster(s, String(t?.monsterUid || ''));
+    if (!m || currentMonsterPow(s, m) > 2)
+        throw new Error('Freddo Puro richiede un Mostro con 2 o meno POW.');
+} if (c.effect === 'sacrificio') {
+    const m = monster(s, String(t?.monsterUid || ''));
+    if (!m || m.owner !== p)
+        throw new Error('Sacrificio richiede un Mostro sotto il tuo controllo.');
+} if (c.effect === 'riflesso' && (!own(String(t?.ownChamp || '')) || !mon(String(t?.monsterUid || ''))))
+    throw new Error('Bersagli non validi.'); if (['sfera', 'fendente', 'eclipse_fang', 'staffa_mare', 'custode_deboli'].includes(c.effect) && !validEnemyTarget(s, p, t?.enemy))
+    throw new Error('Nemico bersaglio non valido.'); if (c.effect === 'in_guardia' && !validCharacter(s, t?.character))
+    throw new Error('Personaggio bersaglio non valido.'); if (c.effect === 'distruzione_totale') {
+    const x = t?.champion;
+    if (!x || x.type !== 'champion' || ![1, 2].includes(Number(x.player)) || !champ(s, Number(x.player), String(x.champId)) || champ(s, Number(x.player), String(x.champId)).defeated)
+        throw new Error('Campione bersaglio non valido.');
+} if (c.effect === 'specchio_acqua' && !eligibleCounterTarget(s, String(t?.stackUid || '')))
+    throw new Error('Specchio d’Acqua richiede una Magia in Catena che costa 1 Anima o meno.'); if (c.effect === 'evocatore_anime_vacue') {
+    const id = String(t?.graveMonsterId || '');
+    if (!pl(s, p).monsterGrave.includes(id) || !MONSTER_DEFS[id] || MONSTER_DEFS[id].pow > 2)
+        throw new Error('Mostro del Cimitero non valido.');
+} if (c.effect === 'ammazza_morte') {
+    const x = t?.champion;
+    if (!x || ![1, 2].includes(Number(x.player)) || !champ(s, Number(x.player), String(x.champId)) || champ(s, Number(x.player), String(x.champId)).defeated)
+        throw new Error('Campione bersaglio non valido.');
+} if (c.effect === 'occhio' && pl(s, p).deck.length < 5)
+    throw new Error('Occhio di Drago richiede almeno 5 carte nel mazzo.'); }
+function resolvePendingChoice(s, p, a) { const pc = s.pendingChoice; if (!pc || pc.player !== p)
+    throw new Error('C’è una scelta in attesa.'); if (pc.type === 'festa') {
+    const q = pl(s, p), top = pc.top, discard = (a.discard || []).filter((id) => top.includes(id)), remain = top.filter((id) => !discard.includes(id)), order = a.order || [];
+    if (order.length !== remain.length || order.some((id) => !remain.includes(id)))
+        throw new Error('Ordine non valido.');
+    q.monsterDeck = [...order, ...q.monsterDeck.slice(top.length)];
+    q.monsterGrave.push(...discard);
+    s.pendingChoice = null;
+    log(s, `${q.name} scarta ${discard.length} Mostr${discard.length === 1 ? 'o' : 'i'} e riordina gli altri.`);
+    afterTopResolution(s);
+    return s;
+} if (pc.type === 'trigger_target') {
+    const id = String(a.choice || a.monsterUid || a.champId || a.color || '');
+    if (!pc.options.some((x) => String(x.id) === id))
+        throw new Error('Scelta non valida.');
+    const tr = pc.trigger;
+    s.pendingChoice = null;
+    pushEffect(s, tr, id);
+    prepareTriggers(s);
+    return s;
+} if (pc.type === 'cerbero') {
+    const id = String(a.cardId || a.choice || '');
+    if (!pc.cardIds.includes(id) || !pl(s, p).monsterGrave.includes(id) || MONSTER_DEFS[id]?.pow !== 2)
+        throw new Error('Mostro non valido.');
+    s.pendingChoice = null;
+    reviveFromGrave(s, p, id);
+    processEnterQueue(s);
+    if (!s.pendingChoice)
+        afterTopResolution(s);
+    return s;
+} throw new Error('Scelta non valida.'); }
+export function act(s, p, a) {
+    normalizeState(s);
+    if (s.status === 'gameover')
+        throw new Error('La partita è terminata.');
+    if (s.pendingChoice) {
+        if (a.type !== 'resolve_choice')
+            throw new Error('C’è una scelta in attesa.');
+        return resolvePendingChoice(s, p, a);
+    }
+    if (a.type === 'select_cards') {
+        if (s.status !== 'select')
+            throw new Error('Non è il momento di scegliere le carte.');
+        const q = pl(s, p);
+        if (q.selected)
+            throw new Error('Hai già confermato.');
+        const ids = [...new Set((a.cardIds || []).map((x) => String(x)))];
+        const need = Math.min(6, q.deck.length);
+        if (ids.length !== need || ids.some((id) => !q.deck.includes(id)))
+            throw new Error(need === 6 ? 'Devi scegliere esattamente 6 carte disponibili.' : `Devi scegliere tutte le ${need} carte disponibili.`);
+        q.hand = ids;
+        q.deck = q.deck.filter((id) => !ids.includes(id));
+        q.selected = true;
+        log(s, `${q.name} ha scelto ${ids.length} carte.`);
+        startMainIfReady(s);
+        return s;
+    }
+    if (s.status !== 'main')
+        throw new Error('La fase principale non è attiva.');
+    if (a.type === 'attack') {
+        if (s.priority || s.stack.length || s.combat)
+            throw new Error('Non puoi attaccare durante una Catena.');
+        if (s.focus !== p)
+            throw new Error('Non hai il Focus.');
+        const c = champ(s, p, String(a.champId || ''));
+        if (!c || c.defeated || c.tapped || c.cantAttackTurn === s.turn)
+            throw new Error('Campione non disponibile.');
+        if (!validateAttackTarget(s, p, a.target))
+            throw new Error('Devi attaccare un difensore con Provocazione, se presente.');
+        for (const m of [...s.board.monsters].filter((x) => x.cardId === 'salamandra_vulcanica')) {
+            m.tempPow = (m.tempPow || 0) - 1;
+            log(s, 'Salamandra Vulcanica perde 1 POW fino alla fine del turno.');
+        }
+        c.tapped = true;
+        s.combat =
