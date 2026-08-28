@@ -1,0 +1,13 @@
+const urls=['https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p01.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p02.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p03.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p04.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p05.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p06.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p07.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p08.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p09.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p10.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p11.txt','https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p12.txt'];
+const chunks=await Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('Game chunk HTTP '+r.status);return r.text()}));
+const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(chunks.join('')));
+export const CARD_DEFS=mod.CARD_DEFS;
+export const MONSTER_DEFS=mod.MONSTER_DEFS;
+export const CHAMPION_DEFS=mod.CHAMPION_DEFS;
+export const DECK_RULES=mod.DECK_RULES;
+export const STARTER_DECK=mod.STARTER_DECK;
+export const STARTER_MONSTERS=mod.STARTER_MONSTERS;
+export const newState=mod.newState;
+export const newPlayer=mod.newPlayer;
+export const act=mod.act;
+export const publicView=mod.publicView;
