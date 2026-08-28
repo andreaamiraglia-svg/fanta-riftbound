@@ -20,5 +20,6 @@ Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.
   return `<div class="souls">${colors.filter(c=>allowed.includes(c)).map(c=>`<div class="soul ${c}" title="Anime ${labels[c]}">${p?.souls?.[c]??0}</div>`).join('')}</div>`;
  };
  if(session?.state)render();
+ window.dispatchEvent(new Event('sf-blue-ready'));
 }).catch(e=>{console.error('blue-v22 loader',e);try{showError(e.message)}catch{}});
 })();
