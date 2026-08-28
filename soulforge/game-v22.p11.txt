@@ -1,4 +1,5 @@
  { initiator: p, attacker: { player: p, champId: c.id }, target: a.target, cancelled: false };
+        s.combatPasses = 0;
         s.stackInitiator = p;
         s.priority = other(p);
         s.mainPasses = 0;
@@ -32,6 +33,8 @@
         const cost = pay(s, p, c);
         q.hand = q.hand.filter((id) => id !== c.id);
         s.stack.push({ uid: uid(), kind: 'card', actor: p, cardId: c.id, targets: a.targets || {}, paidCost: cost });
+        if (s.combat)
+            s.combatPasses = 0;
         if (s.stackInitiator == null)
             s.stackInitiator = s.combat?.initiator ?? p;
         s.priority = other(p);
@@ -81,11 +84,22 @@
         if (s.stack.length) {
             s.priority = null;
             resolveTop(s);
+            if (!s.pendingChoice && s.combat) {
+                s.combatPasses = 0;
+                s.priority = s.combat.initiator;
+            }
             return s;
         }
         if (s.combat) {
-            s.priority = null;
-            resolveCombat(s);
+            s.combatPasses = Number(s.combatPasses || 0) + 1;
+            log(s, `${pl(s, p).name} passa priorità nel combattimento.`);
+            if (s.combatPasses >= 2) {
+                s.priority = null;
+                s.combatPasses = 0;
+                resolveCombat(s);
+            }
+            else
+                s.priority = other(p);
             return s;
         }
         throw new Error('Non c’è una priorità da passare.');
