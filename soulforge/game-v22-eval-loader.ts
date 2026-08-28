@@ -1,0 +1,27 @@
+const base='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/';
+const urls=Array.from({length:12},(_,i)=>base+`game-v22.p${String(i+1).padStart(2,'0')}.txt`);
+const chunks=await Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(`Impossibile caricare ${u}: HTTP ${r.status}`);return r.text()}));
+let source=chunks.join('');
+// Compatibilità con vecchie cache dei chunk e conversione del bundle ESM in codice valutabile nell'Edge Runtime.
+source=source.replace('s.combat = = {','s.combat = {');
+source=source.replace(/\bexport\s+const\s+/g,'const ').replace(/\bexport\s+function\s+/g,'function ');
+source+=`\nreturn {CARD_DEFS,MONSTER_DEFS,CHAMPION_DEFS,DECK_RULES,STARTER_DECK,STARTER_MONSTERS,other,shuffle,validateDeckConfig,newPlayer,newState,currentPow,currentMonsterPow,damageChampion,damageMonster,killMonster,act,publicView};`;
+const mod=(new Function(source))();
+export const CARD_DEFS=mod.CARD_DEFS;
+export const MONSTER_DEFS=mod.MONSTER_DEFS;
+export const CHAMPION_DEFS=mod.CHAMPION_DEFS;
+export const DECK_RULES=mod.DECK_RULES;
+export const STARTER_DECK=mod.STARTER_DECK;
+export const STARTER_MONSTERS=mod.STARTER_MONSTERS;
+export const other=mod.other;
+export const shuffle=mod.shuffle;
+export const validateDeckConfig=mod.validateDeckConfig;
+export const newPlayer=mod.newPlayer;
+export const newState=mod.newState;
+export const currentPow=mod.currentPow;
+export const currentMonsterPow=mod.currentMonsterPow;
+export const damageChampion=mod.damageChampion;
+export const damageMonster=mod.damageMonster;
+export const killMonster=mod.killMonster;
+export const act=mod.act;
+export const publicView=mod.publicView;
