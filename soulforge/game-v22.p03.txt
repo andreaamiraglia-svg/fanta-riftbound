@@ -1,0 +1,100 @@
+ndo entra in gioco, riduce a 0 il POW di tutti i Mostri. Poi ciascuno ottiene Armatura pari al POW perso.' },
+    leviatano: { id: 'leviatano', name: 'Leviatano', color: 'blue', pow: 4, text: 'Provocazione — Deve essere scelto come difensore, se possibile.', provocazione: true },
+    vecchio_delle_nevi: { id: 'vecchio_delle_nevi', name: 'Vecchio delle Nevi', color: 'blue', pow: 2, text: 'Quando un Campione attacca, riduce di 1 il suo POW per questo turno.' },
+};
+export const CHAMPION_DEFS = {
+    kael: { id: 'kael', name: 'Kael Infuocato', color: 'red', basePow: 3, hp: 3 },
+    lyrandel: { id: 'lyrandel', name: 'Lyrandel Spirito della Natura', color: 'green', basePow: 3, hp: 3 },
+    divoratore_campione: { id: 'divoratore_campione', name: 'Il Divoratore di Anime', color: 'black', basePow: 2, hp: 4 },
+    valtheris: { id: 'valtheris', name: 'Valtheris Spirito Eterno', color: 'blue', basePow: 3, hp: 3 },
+};
+export const DECK_RULES = { champions: 2, cards: 18, monsters: 12, maxColors: 2 };
+export const STARTER_DECK = Object.keys(CARD_DEFS);
+export const STARTER_MONSTERS = Object.keys(MONSTER_DEFS);
+const COLORS = ['red', 'green', 'black', 'blue'];
+const clone = (x) => JSON.parse(JSON.stringify(x));
+export const other = (p) => p === 1 ? 2 : 1;
+export const shuffle = (arr) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+} return a; };
+const pl = (s, p) => s.players[String(p)];
+const champ = (s, p, id) => pl(s, p)?.champions?.find((c) => c.id === id);
+const monster = (s, uid) => s.board.monsters.find((m) => m.uid === uid);
+const log = (s, msg) => { s.log.push(msg); if (s.log.length > 180)
+    s.log = s.log.slice(-180); };
+const colorLabel = (c) => c === 'red' ? 'Rossa' : c === 'green' ? 'Verde' : c === 'black' ? 'Nera' : 'Blu';
+const uid = () => crypto.randomUUID();
+function normalizeState(s) {
+    if (!s || typeof s !== 'object')
+        return s;
+    s.board ||= { monsters: [] };
+    s.board.monsters ||= [];
+    s.stack ||= [];
+    s.triggerQueue ||= [];
+    s.enterQueue ||= [];
+    s.delayedKills ||= [];
+    s.log ||= [];
+    s.pendingChoice ??= null;
+    s.combat ??= null;
+    s.stackInitiator ??= null;
+    s.endTurnPending = !!s.endTurnPending;
+    for (const p of [1, 2]) {
+        const q = pl(s, p);
+        if (!q)
+            continue;
+        q.souls ||= {};
+        for (const c of COLORS)
+            q.souls[c] = Number(q.souls[c] || 0);
+        q.deck ||= [];
+        q.grave ||= [];
+        q.hand ||= [];
+        q.monsterDeck ||= [];
+        q.monsterGrave ||= [];
+        q.banishedMonsters ||= [];
+        q.champions ||= [];
+        q.recycleCount = Number(q.recycleCount || 0);
+        q.fireCloud = !!q.fireCloud;
+        q.lyrandelUsed = !!q.lyrandelUsed;
+        q.killedMonsterThisTurn = !!q.killedMonsterThisTurn;
+        for (const c of q.champions) {
+            const d = CHAMPION_DEFS[c.id];
+            if (d) {
+                c.name = d.name;
+                c.color = d.color;
+                c.basePow = Number(c.basePow ?? d.basePow);
+                c.hp = Number(c.hp ?? d.hp);
+            }
+            c.wounds = Number(c.wounds || 0);
+            c.damage = Number(c.damage || 0);
+            c.tempPow = Number(c.tempPow || 0);
+            c.armor = Number(c.armor || 0);
+            c.tapped = !!c.tapped;
+            c.defeated = !!c.defeated;
+            c.cantAttackTurn ??= null;
+        }
+    }
+    for (const m of s.board.monsters) {
+        m.damage = Number(m.damage || 0);
+        m.tempPow = Number(m.tempPow || 0);
+        m.powMod = Number(m.powMod || 0);
+        m.armor = Number(m.armor || 0);
+    }
+    for (const x of s.stack)
+        if (!x.uid)
+            x.uid = uid();
+    return s;
+}
+function defaultDeckConfig() { const colors = ['red', 'green']; return { champions: ['kael', 'lyrandel'], cards: Object.values(CARD_DEFS).filter((x) => colors.includes(x.color)).map((x) => x.id), monsters: Object.values(MONSTER_DEFS).filter((x) => colors.includes(x.color)).map((x) => x.id) }; }
+function uniqueStrings(v) { return [...new Set((Array.isArray(v) ? v : []).map((x) => String(x)))]; }
+export function validateDeckConfig(input) { const raw = input && typeof input === 'object' ? input : defaultDeckConfig(); const champions = uniqueStrings(raw.champions), cards = uniqueStrings(raw.cards), monsters = uniqueStrings(raw.monsters); if (champions.length !== 2)
+    throw new Error('Il mazzo deve avere 2 Campioni diversi.'); if (cards.length !== 18)
+    throw new Error('Il mazzo deve avere 18 carte base tutte diverse.'); if (monsters.length !== 12)
+    throw new Error('Il Monster Deck deve avere 12 Mostri tutti diversi.'); if (champions.some(id => !CHAMPION_DEFS[id]))
+    throw new Error('Il mazzo contiene un Campione non valido.'); if (cards.some(id => !CARD_DEFS[id]))
+    throw new Error('Il mazzo contiene una carta base non valida.'); if (monsters.some(id => !MONSTER_DEFS[id]))
+    throw new Error('Il Monster Deck contiene un Mostro non valido.'); const championColors = [...new Set(champions.map(id => CHAMPION_DEFS[id].color))]; const colors = [...new Set([...championColors, ...cards.map(id => CARD_DEFS[id].color), ...monsters.map(id => MONSTER_DEFS[id].color)])]; if (colors.length > 2)
+    throw new Error('Puoi giocare al massimo 2 colori diversi.'); if (cards.some(id => !championColors.includes(CARD_DEFS[id].color)) || monsters.some(id => !championColors.includes(MONSTER_DEFS[id].color)))
+    throw new Error('Carte e Mostri devono appartenere ai colori dei Campioni scelti.'); return { champions, cards, monsters, colors: championColors }; }
+function freshChampion(id) { const d = CHAMPION_DEFS[id]; return { ...d, wounds: 0, damage: 0, tempPow: 0, armor: 0, tapped: false, defeated: false, cantAttackTurn: null }; }
+export function newPlayer(name, deckConfig) { const cfg = validateDeckConfig(deckConfig); const souls = { red: 0, green: 0, black: 0, blue: 0 }; for (const c of cfg.
