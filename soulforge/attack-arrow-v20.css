@@ -1,0 +1,15 @@
+#sfAttackOverlay{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10020;overflow:visible}
+#sfAttackOverlay .sf-attack-glow{fill:none;stroke:rgba(255,45,45,.28);stroke-width:12;stroke-linecap:round;filter:blur(4px)}
+#sfAttackOverlay .sf-attack-path{fill:none;stroke:#ff3b3b;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(255,40,40,.9))}
+#sfAttackOverlay.selecting .sf-attack-glow{stroke:rgba(255,195,55,.24)}
+#sfAttackOverlay.selecting .sf-attack-path{stroke:#ffd04f;stroke-dasharray:11 8;animation:sfAttackDash .65s linear infinite;filter:drop-shadow(0 0 6px rgba(255,208,79,.9))}
+@keyframes sfAttackDash{to{stroke-dashoffset:-19}}
+.sf-attack-source{outline:3px solid #ffd04f!important;outline-offset:4px;box-shadow:0 0 0 2px rgba(255,208,79,.22),0 0 28px rgba(255,208,79,.65)!important}
+.attack-mode .sf-attack-valid{cursor:crosshair!important;outline:2px solid rgba(255,80,80,.72);outline-offset:3px;transition:transform .12s ease,box-shadow .12s ease,outline-color .12s ease}
+.attack-mode .sf-attack-valid:hover,.sf-attack-hover{outline:4px solid #ff4141!important;outline-offset:4px!important;box-shadow:0 0 0 2px rgba(255,65,65,.24),0 0 34px rgba(255,65,65,.82)!important;transform:translateY(-3px) scale(1.025)}
+.sf-combat-target{outline:4px solid #ff4141!important;outline-offset:4px!important;box-shadow:0 0 0 2px rgba(255,65,65,.25),0 0 30px rgba(255,65,65,.7)!important}
+.sf-combat-source{outline:3px solid #ffb347!important;outline-offset:4px!important;box-shadow:0 0 24px rgba(255,179,71,.58)!important}
+#sfAttackHint{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10030;pointer-events:none;padding:10px 16px;border-radius:999px;background:rgba(10,12,18,.92);border:1px solid rgba(255,208,79,.55);box-shadow:0 8px 30px rgba(0,0,0,.45);font-weight:800;font-size:14px;color:#fff;opacity:0;transition:opacity .12s ease;white-space:nowrap}
+#sfAttackHint.show{opacity:1}
+#sfAttackHint.combat{border-color:rgba(255,65,65,.65)}
+@media(max-width:760px){#sfAttackHint{bottom:12px;font-size:12px;padding:8px 12px}.attack-mode .sf-attack-valid:hover,.sf-attack-hover{transform:none}}
