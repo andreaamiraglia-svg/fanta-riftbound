@@ -119,6 +119,12 @@ patch(
  'enter trigger resolution'
 );
 
+patch(
+ /function provocationsAgainst\(s, p\) \{[\s\S]*?\}\nfunction validateAttackTarget/,
+ `function provocationsAgainst(s, p) { const op = other(p); const ms = s.board.monsters.filter((m) => MONSTER_DEFS[m.cardId]?.provocazione).map((m) => ({ type: 'monster', uid: m.uid })); const cs = (pl(s, op)?.champions || []).filter((c) => !c.defeated && c.provocazione).map((c) => ({ type: 'champion', player: op, champId: c.id })); return [...ms, ...cs]; }\nfunction validateAttackTarget`,
+ 'global provocation monsters'
+);
+
 const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(source));
 const COLORS=['red','green','black','blue'];
 function enforceSoulColorsOnPlayer(q:any){
