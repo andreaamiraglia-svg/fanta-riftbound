@@ -90,7 +90,7 @@ function buildCandidates(pc){
   for(const el of graveCardsEls(ids))add(el,el.dataset.previewCard);
  }
  else {
-  // Generic future-proof mapping: try board characters, monsters, souls and visible grave cards by option id.
+  // Future-proof mapping: new trigger types automatically try the visible game objects first.
   for(const id of ids){
    const champ=document.querySelector(`.champ[data-champ-id="${CSS.escape(id)}"]`);
    const mon=document.querySelector(`[data-monster-uid="${CSS.escape(id)}"]`);
@@ -181,8 +181,9 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&active){e.preventDefault();clearUI(true);active=null}
 },true);
 
+// Watch DOM replacement/opening of graphical zones, but not class changes made by this layer itself.
 const observer=new MutationObserver(()=>queueMicrotask(sync));
-observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','data-preview-card']});
+observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-preview-card']});
 if(typeof render==='function'&&!render.__sfStd26){
  const previous=render;
  const wrapped=function(){const out=previous();setTimeout(sync,0);setTimeout(sync,30);return out};
