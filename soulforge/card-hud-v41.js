@@ -17,8 +17,13 @@ function normalizeStat(stat){
   if(kind==='armor'&&Number(String(value).replace(/[^0-9.-]/g,''))<=0)stat.classList.add('sf-hud-zero');
 }
 
+function removeLegacyStacks(scope=document){
+  scope.querySelectorAll?.('.sf-card-stat-stack').forEach(el=>el.remove());
+}
+
 function makeShell(card,art,stats,type){
   if(!card||!art||!stats)return;
+  removeLegacyStacks(card);
   let shell=card.querySelector(':scope > .sf-card-shell');
   if(!shell){
     shell=document.createElement('div');
@@ -49,6 +54,7 @@ function decorateMonster(card){
 function decorate(){
   scheduled=false;
   if(!document.body.classList.contains('sf-fantasy-game'))return;
+  removeLegacyStacks();
   document.querySelectorAll('.champ').forEach(decorateChampion);
   document.querySelectorAll('.monster').forEach(decorateMonster);
 }
@@ -62,6 +68,6 @@ const app=document.getElementById('app');
 if(app)new MutationObserver(schedule).observe(app,{childList:true,subtree:true});
 window.addEventListener('sf-blue-ready',schedule);
 window.addEventListener('resize',schedule);
-setInterval(schedule,1000);
+setInterval(schedule,500);
 schedule();
 })();
