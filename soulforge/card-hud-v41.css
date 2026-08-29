@@ -43,9 +43,10 @@ body.sf-fantasy-game .champ .sf-champ-shell .champ-art{
 }
 body.sf-fantasy-game .champ .sf-champ-shell .stats{
   position:absolute!important;
-  left:38%!important;
+  left:50%!important;
   top:43%!important;
   width:94%!important;
+  transform:translateX(-50%)!important;
   display:flex!important;
   flex-direction:column!important;
   flex-wrap:nowrap!important;
@@ -80,9 +81,10 @@ body.sf-fantasy-game .monster .sf-monster-shell .monster-art{
 }
 body.sf-fantasy-game .monster .sf-monster-shell .stats{
   position:absolute!important;
-  left:31%!important;
+  left:50%!important;
   top:49%!important;
   width:88%!important;
+  transform:translateX(-50%)!important;
   display:flex!important;
   flex-direction:column!important;
   flex-wrap:nowrap!important;
@@ -194,7 +196,7 @@ body.sf-fantasy-game .champ.sf-untap-anim .sf-champ-shell{
 
 @media(max-width:1450px){
   body.sf-fantasy-game .champ .sf-champ-shell{width:104px!important;height:153px!important}
-  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:37%!important;top:42%!important;width:96%!important;gap:4px!important}
+  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:50%!important;top:42%!important;width:96%!important;gap:4px!important}
   body.sf-fantasy-game .monster .sf-monster-shell{height:126px!important;flex-basis:126px!important}
   body.sf-fantasy-game .sf-card-shell .sf-hud-stat{height:22px!important;padding:0 7px!important;font-size:7px!important}
   body.sf-fantasy-game .sf-card-shell .sf-hud-value{font-size:11px!important}
@@ -202,7 +204,7 @@ body.sf-fantasy-game .champ.sf-untap-anim .sf-champ-shell{
 }
 @media(max-width:1099px){
   body.sf-fantasy-game .champ .sf-champ-shell{width:96px!important;height:142px!important}
-  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:35%!important;top:42%!important;width:98%!important}
+  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:50%!important;top:42%!important;width:98%!important}
 }
 @media(prefers-reduced-motion:reduce){
   body.sf-fantasy-game .champ .sf-champ-shell{transition:none!important;animation:none!important}
