@@ -6,7 +6,7 @@ const V18_ART={divoratore_campione:'il-divoratore-di-anime.webp',segugio_dei_mor
 const BLUE_ART={valtheris:'vecchio-delle-nevi.webp',squalo_delle_maree:'lupo-glaciale.webp',lupo_glaciale:'grifone-della-tempesta.webp',grifone_della_tempesta:'yeti.webp',yeti:'leviatano.webp',leviatano:'valtheris-spirito-eterno.webp',vecchio_delle_nevi:'squalo-delle-maree.webp',flusso_gelido:'flusso-gelido.webp',freddo_puro:'freddo-puro.webp',in_guardia:'in-guardia.webp',ali_del_protettore:'ali-del-protettore.webp',staffa_del_mare:'staffa-del-mare.webp',specchio_acqua:'specchio-d-acqua.webp',muro_di_ghiaccio:'muro-di-ghiaccio.webp',custode_dei_deboli:'custode-dei-deboli.webp',distruzione_totale:'distruzione-totale.webp'};
 const CHAMPION_TEXT={
  kael:'Finché non hai carte in mano durante la fase principale, Kael ottiene +3 POW.',
- lyrandel:'Una volta per turno, quando un Mostro subisce 1 danno da te, Lyrandel attiva il suo effetto: scegli uno di quei Mostri e infliggigli 1 danno.',
+ lyrandel:'Una volta per turno, quando uno o più Mostri subiscono danno da un tuo Campione o da una tua Magia, scegli uno dei Mostri ancora in gioco danneggiati da quell’evento e infliggigli 1 danno.',
  divoratore_campione:'Ritorno delle Anime — Se hai ucciso almeno un Mostro in questo turno, puoi tappare Il Divoratore di Anime per riprendere in mano una carta dal tuo Cimitero.',
  valtheris:'Protettore dell’Anima — All’inizio di ogni turno, Valtheris ottiene 1 Armatura.'
 };
