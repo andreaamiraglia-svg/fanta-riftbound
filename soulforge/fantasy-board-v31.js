@@ -15,8 +15,8 @@ function championStats(c){
  return html;
 }
 function monsterStats(m){
- const pow=n(m.pow),damage=n(m.damage),armor=n(m.armor),maxHp=Math.max(1,pow),curHp=Math.max(0,maxHp-damage);
- let html=stat('pow','Potere',pow)+stat('hp','HP',`${curHp}/${maxHp}`)+stat('damage','Danni',`${damage}/${maxHp}`);
+ const pow=n(m.pow),damage=n(m.damage),armor=n(m.armor);
+ let html=stat('pow','Potere',pow)+stat('damage','Danni',damage);
  if(armor>0)html+=stat('armor','Armatura',armor);
  return html;
 }
