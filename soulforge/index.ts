@@ -13,6 +13,24 @@ const cleanRoom=(v:any)=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').sl
 const roomCode=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const n of a)s+=chars[n%chars.length];return s;};
 const token=()=>crypto.randomUUID()+crypto.randomUUID().replaceAll('-','');
 const tossCoin=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return (a[0]&1)===0?'testa':'croce';};
+const otherPlayer=(p:number)=>p===1?2:1;
+const desiredFocus=(state:any)=>{const starter=Number(state?.startingPlayer)===2?2:1;return Number(state?.turn||1)%2===1?starter:otherPlayer(starter);};
+const alignFocusWithCoin=(state:any,beforeStatus:string,beforeTurn:number)=>{
+ if(!state||![1,2].includes(Number(state.startingPlayer)))return state;
+ const target=desiredFocus(state);
+ const enteredMain=beforeStatus==='select'&&state.status==='main';
+ const advancedTurn=beforeTurn!==Number(state.turn)&&state.status==='select';
+ if(enteredMain||advancedTurn)state.focus=target;
+ if(enteredMain&&Array.isArray(state.log)){
+  for(let i=state.log.length-1;i>=0;i--){
+   if(String(state.log[i]||'').startsWith('Inizia il turno ')){
+    state.log[i]=`Inizia il turno ${state.turn}. Il Focus è di ${state.players?.[String(target)]?.name||`Giocatore ${target}`}.`;
+    break;
+   }
+  }
+ }
+ return state;
+};
 Deno.serve(async(req:Request)=>{
  if(req.method==='OPTIONS')return new Response('ok',{headers:cors});
  if(req.method==='GET'){try{const r=await fetch(APP_URL+'?v='+Date.now());if(!r.ok)throw new Error('Frontend HTTP '+r.status);const html=await r.text();return new Response(html,{status:200,headers:{...cors,'content-type':'text/html; charset=utf-8','content-disposition':'inline','cache-control':'no-store, no-cache, must-revalidate','x-content-type-options':'nosniff'}})}catch(e){return new Response('Errore caricamento frontend: '+(e instanceof Error?e.message:String(e)),{status:500,headers:{...cors,'content-type':'text/plain; charset=utf-8'}})}}
@@ -44,12 +62,15 @@ Deno.serve(async(req:Request)=>{
  if(action==='move'){
   if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
   let state=game.state;
+  const beforeStatus=String(state?.status||'');
+  const beforeTurn=Number(state?.turn||0);
   if(body.move?.type==='cast'&&body.move?.cardId==='sguardo_ninjitsu'){
    const uid=String(body.move?.targets?.monsterUid||'');
    const target=state?.board?.monsters?.find((m:any)=>String(m.uid)===uid);
    if(!target||Number(target.damage||0)<=0)return err('Tecnica dello Sguardo Ninjitsu richiede un Mostro danneggiato.');
   }
   try{state=act(state,p,body.move||{})}catch(e){return err(e instanceof Error?e.message:String(e))}
+  state=alignFocusWithCoin(state,beforeStatus,beforeTurn);
   const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('STATE_CONFLICT',409);return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version})
  }
  return err('Azione sconosciuta.');
