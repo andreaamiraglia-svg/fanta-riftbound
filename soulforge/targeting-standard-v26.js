@@ -2,17 +2,21 @@
 let active=null;
 let mouse={x:null,y:null};
 let graveOpened=false;
+let resolving=false;
 
 function injectStyle(){
  if(document.getElementById('sfStdTargetStyle'))return;
  const s=document.createElement('style');
  s.id='sfStdTargetStyle';
  s.textContent=`
- .sf-std-valid{outline:3px solid #ffd166!important;outline-offset:3px!important;cursor:crosshair!important;filter:brightness(1.1)!important;box-shadow:0 0 0 4px rgba(255,209,102,.12),0 0 28px rgba(255,209,102,.24)!important;animation:sfStdPulse .85s ease-in-out infinite alternate}
- .sf-std-invalid{opacity:.48!important}
- #sfStdTargetHint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10040;background:#171b23;border:1px solid #ffd166;color:#fff4cf;border-radius:999px;padding:10px 18px;font-size:12px;font-weight:900;box-shadow:0 8px 30px rgba(0,0,0,.38);max-width:min(92vw,760px);text-align:center}
- #sfStdTargetArrow{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10038;overflow:visible}
- @keyframes sfStdPulse{from{filter:brightness(1.03)}to{filter:brightness(1.18)}}
+ .sf-std-valid{position:relative!important;z-index:10060!important;pointer-events:auto!important;outline:3px solid #ffd166!important;outline-offset:3px!important;cursor:crosshair!important;filter:brightness(1.12)!important;box-shadow:0 0 0 4px rgba(255,209,102,.16),0 0 34px rgba(255,209,102,.34)!important;animation:sfStdPulse .85s ease-in-out infinite alternate}
+ .sf-std-invalid{opacity:.42!important}
+ #sfStdTargetHint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10070;background:#171b23;border:1px solid #ffd166;color:#fff4cf;border-radius:999px;padding:10px 18px;font-size:12px;font-weight:900;box-shadow:0 8px 30px rgba(0,0,0,.48);max-width:min(92vw,760px);text-align:center;pointer-events:none}
+ #sfStdTargetArrow{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10058;overflow:visible}
+ #sfStdFallback{position:fixed;left:50%;top:68px;transform:translateX(-50%);z-index:10072;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:min(92vw,760px);padding:10px 12px;border:1px solid rgba(255,209,102,.55);border-radius:14px;background:rgba(16,19,26,.96);box-shadow:0 12px 34px rgba(0,0,0,.55)}
+ #sfStdFallback button{border:1px solid #9b7834;background:#2a2112;color:#fff0c5;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}
+ #sfStdFallback button:hover{filter:brightness(1.18)}
+ @keyframes sfStdPulse{from{filter:brightness(1.04)}to{filter:brightness(1.2)}}
  @media(prefers-reduced-motion:reduce){.sf-std-valid{animation:none!important}}
  `;
  document.head.appendChild(s);
@@ -43,6 +47,7 @@ function clearUI(removeModal=false){
  clearMarks();
  document.getElementById('sfStdTargetHint')?.remove();
  document.getElementById('sfStdTargetArrow')?.remove();
+ document.getElementById('sfStdFallback')?.remove();
  if(removeModal&&graveOpened){try{closeModal()}catch{}}
  graveOpened=false;
 }
@@ -54,7 +59,7 @@ function ensureUI(){
  if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='sfStdTargetArrow';document.body.appendChild(svg)}
  return{hint,svg};
 }
-function visible(el){if(!el)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0}
+function visible(el){if(!el)return false;const r=el.getBoundingClientRect();const st=getComputedStyle(el);return r.width>0&&r.height>0&&st.display!=='none'&&st.visibility!=='hidden'}
 function center(el){if(!el)return null;const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
 function sourceEl(pc){
  if(pc?.type==='cerbero'&&pc.monsterUid){const m=document.querySelector(`[data-monster-uid="${CSS.escape(String(pc.monsterUid))}"]`);if(visible(m))return m}
@@ -67,7 +72,16 @@ function sourceEl(pc){
  return document.getElementById('sfStdTargetHint');
 }
 function playerZone(owner){
+ const cls=Number(owner)===Number(session?.player)?'.sf-player-zone':'.sf-opponent-zone';
+ const fantasy=document.querySelector(cls);if(fantasy)return fantasy;
  return [...document.querySelectorAll('.playerzone')].find(z=>z.querySelector(`.champ[data-owner="${owner}"]`))||null;
+}
+function soulEl(owner,color){
+ const selectors=[];
+ const zone=playerZone(owner);
+ if(zone)selectors.push(...zone.querySelectorAll(`.soul.${CSS.escape(color)}`));
+ selectors.push(...document.querySelectorAll(`.playerzone .soul.${CSS.escape(color)}`));
+ return selectors.find(visible)||null;
 }
 function graveCardsEls(ids){
  const allowed=new Set(ids.map(String));
@@ -83,14 +97,12 @@ function buildCandidates(pc){
   for(const id of ids)add(document.querySelector(`[data-monster-uid="${CSS.escape(id)}"]`),id);
  }
  else if(type==='enemySoul'){
-  const zone=playerZone(otherP());
-  for(const id of ids)add(zone?.querySelector(`.soul.${CSS.escape(id)}`),id);
+  for(const id of ids)add(soulEl(otherP(),id),id);
  }
  else if(type==='graveMonsterPow2'){
   for(const el of graveCardsEls(ids))add(el,el.dataset.previewCard);
  }
  else {
-  // Future-proof mapping: new trigger types automatically try the visible game objects first.
   for(const id of ids){
    const champ=document.querySelector(`.champ[data-champ-id="${CSS.escape(id)}"]`);
    const mon=document.querySelector(`[data-monster-uid="${CSS.escape(id)}"]`);
@@ -103,8 +115,8 @@ function buildCandidates(pc){
 }
 function labelFor(pc){
  const type=choiceType(pc),name=pc?.trigger?.effectName||(pc?.type==='cerbero'?'Effetto — Cerbero':'Scegli un bersaglio');
- const action=type==='enemyChampion'?'scegli un Campione nemico':type==='monsterUids'?'scegli un Mostro':type==='enemySoul'?'scegli graficamente un’Anima nemica':type==='graveMonsterPow2'?'scegli un Mostro valido dal tuo Cimitero':'scegli il bersaglio evidenziato';
- return `${name}: ${action}  •  ESC per annullare`;
+ const action=type==='enemyChampion'?'scegli un Campione nemico':type==='monsterUids'?'scegli un Mostro evidenziato':type==='enemySoul'?'scegli una delle Anime avversarie evidenziate':type==='graveMonsterPow2'?'scegli un Mostro valido dal tuo Cimitero':'scegli il bersaglio evidenziato';
+ return `${name}: ${action} • scelta obbligatoria`;
 }
 function draw(){
  if(!active)return;
@@ -114,7 +126,7 @@ function draw(){
 }
 function suppressLegacyModal(){
  const box=document.querySelector('[data-v17-pending="trigger_target"],[data-v17-pending="cerbero"]');
- if(box){try{closeModal()}catch{document.getElementById('modal').innerHTML=''}}
+ if(box){try{closeModal()}catch{const m=document.getElementById('modal');if(m)m.innerHTML=''}}
 }
 function openGraveForTarget(pc){
  if(choiceType(pc)!=='graveMonsterPow2')return false;
@@ -123,7 +135,7 @@ function openGraveForTarget(pc){
  const btn=document.querySelector(`.sf-grave-btn[data-owner="${session.player}"][data-kind="monsters"]`);
  if(!btn||graveOpened)return false;
  graveOpened=true;
- setTimeout(()=>{btn.click();setTimeout(sync,40)},0);
+ setTimeout(()=>{btn.click();setTimeout(sync,60)},0);
  return true;
 }
 function markNonTargets(pc,cands){
@@ -135,31 +147,39 @@ function markNonTargets(pc,cands){
  else if(type==='graveMonsterPow2')pool=[...document.querySelectorAll('.sf-grave-card[data-preview-card]')];
  pool.filter(visible).forEach(el=>{if(!valid.has(el))el.classList.add('sf-std-invalid')});
 }
+function fallback(pc,cands){
+ document.getElementById('sfStdFallback')?.remove();
+ const opts=options(pc);if(!opts.length||cands.length)return;
+ const box=document.createElement('div');box.id='sfStdFallback';
+ for(const o of opts){const b=document.createElement('button');b.type='button';b.dataset.sfFallbackChoice=String(o.id);b.textContent=String(o.label||o.id);box.appendChild(b)}
+ document.body.appendChild(box);
+}
 function sync(){
  injectStyle();
  const pc=pending();
- if(!pc){if(active){clearUI(true);active=null}return}
+ if(!pc){if(active){clearUI(true);active=null}resolving=false;return}
  suppressLegacyModal();
  const sig=signature(pc);
- if(!active||active.sig!==sig){clearUI(false);active={pc,sig,candidates:[]};graveOpened=false}else active.pc=pc;
+ if(!active||active.sig!==sig){clearUI(false);active={pc,sig,candidates:[]};graveOpened=false;resolving=false}else active.pc=pc;
  const {hint}=ensureUI();hint.textContent=labelFor(pc);
  if(openGraveForTarget(pc))return;
  clearMarks();
  const cands=buildCandidates(pc);active.candidates=cands;
  cands.forEach(({el})=>el.classList.add('sf-std-valid'));
  markNonTargets(pc,cands);
- if(!cands.length)hint.textContent=labelFor(pc)+' — nessun bersaglio grafico disponibile';
+ fallback(pc,cands);
+ if(!cands.length)hint.textContent=labelFor(pc)+' — usa i pulsanti di scelta qui sotto';
  draw();
 }
 function resolve(id){
- if(!active)return;
+ if(!active||resolving)return;
+ resolving=true;
  const pc=active.pc;
  clearUI(true);active=null;
- if(pc.type==='cerbero')move({type:'resolve_choice',cardId:id});
- else move({type:'resolve_choice',choice:id});
+ const payload=pc.type==='cerbero'?{type:'resolve_choice',cardId:id}:{type:'resolve_choice',choice:id};
+ Promise.resolve(move(payload)).finally(()=>{resolving=false;setTimeout(sync,60)});
 }
 
-// Blocca soltanto il vecchio popup testuale dei trigger; tutti gli altri modal restano invariati.
 if(typeof window.showModal==='function'&&!window.showModal.__sfStd26){
  const previous=window.showModal;
  const wrapped=function(title,body){
@@ -174,22 +194,23 @@ document.addEventListener('mousemove',e=>{mouse={x:e.clientX,y:e.clientY};if(act
 document.addEventListener('click',e=>{
  if(!active)return;
  const el=e.target.closest?.('[data-sf-std-choice].sf-std-valid');
- if(!el)return;
- e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();resolve(String(el.dataset.sfStdChoice));
+ const fb=e.target.closest?.('[data-sf-fallback-choice]');
+ const id=el?.dataset.sfStdChoice??fb?.dataset.sfFallbackChoice;
+ if(id==null)return;
+ e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();resolve(String(id));
 },true);
 document.addEventListener('keydown',e=>{
- if(e.key==='Escape'&&active){e.preventDefault();clearUI(true);active=null}
+ if(e.key==='Escape'&&active){e.preventDefault();e.stopPropagation();sync()}
 },true);
 
-// Watch DOM replacement/opening of graphical zones, but not class changes made by this layer itself.
 const observer=new MutationObserver(()=>queueMicrotask(sync));
 observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['data-preview-card']});
 if(typeof render==='function'&&!render.__sfStd26){
  const previous=render;
- const wrapped=function(){const out=previous();setTimeout(sync,0);setTimeout(sync,30);return out};
+ const wrapped=function(){const out=previous();setTimeout(sync,0);setTimeout(sync,40);return out};
  wrapped.__sfStd26=true;render=wrapped;
 }
-window.addEventListener('resize',()=>{if(active)draw()});
+window.addEventListener('resize',()=>{if(active){sync();draw()}});
 window.addEventListener('sf-blue-ready',()=>setTimeout(sync,0));
 setInterval(()=>{if(pending())sync()},350);
 setTimeout(sync,0);
