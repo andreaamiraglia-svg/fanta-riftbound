@@ -1,5 +1,21 @@
 (()=>{
 let queued=false;
+function bindHandHover(){
+ document.querySelectorAll('.hand-card').forEach(el=>{
+  if(el.dataset.sfV30Hover)return;
+  el.dataset.sfV30Hover='1';
+  const base=el.style.transform||'';
+  el.dataset.sfV30Base=base;
+  el.addEventListener('mouseenter',()=>{
+   const b=el.dataset.sfV30Base||base;
+   el.style.setProperty('transform',`${b} translateY(-22px) scale(1.06)`,'important');
+  });
+  el.addEventListener('mouseleave',()=>{
+   el.style.removeProperty('transform');
+   el.style.transform=el.dataset.sfV30Base||base;
+  });
+ });
+}
 function decorateReferenceBoard(){
  queued=false;
  const grid=document.querySelector('.game-grid');
@@ -24,6 +40,7 @@ function decorateReferenceBoard(){
  if(log&&!log.querySelector('.sf-log-crest')){
   const crest=document.createElement('div');crest.className='sf-log-crest';crest.textContent='✦';log.prepend(crest);
  }
+ bindHandHover();
 }
 function queue(){if(queued)return;queued=true;requestAnimationFrame(decorateReferenceBoard)}
 const app=document.querySelector('#app');
