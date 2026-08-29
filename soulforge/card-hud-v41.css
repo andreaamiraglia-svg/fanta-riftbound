@@ -1,0 +1,201 @@
+/* Champion of the Souls — in-play card HUD v41 */
+
+body.sf-fantasy-game .sf-card-shell{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:visible!important;
+  flex:none!important;
+}
+
+/* Champions: keep the full card visible and place the live stats on top of it. */
+body.sf-fantasy-game .champ.sf-card-hud-card{
+  overflow:visible!important;
+}
+body.sf-fantasy-game .champ .sf-champ-shell{
+  grid-column:1!important;
+  grid-row:1/4!important;
+  width:122px!important;
+  height:179px!important;
+  align-self:center!important;
+  margin:auto!important;
+  transform-origin:50% 50%!important;
+  transition:transform .34s cubic-bezier(.2,.8,.2,1)!important;
+}
+body.sf-fantasy-game .champ .sf-champ-shell .champ-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  margin:0!important;
+  transform:none!important;
+  animation:none!important;
+  z-index:1!important;
+}
+body.sf-fantasy-game .champ .sf-champ-shell .stats{
+  position:absolute!important;
+  left:38%!important;
+  top:43%!important;
+  width:94%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  gap:5px!important;
+  margin:0!important;
+  padding:0!important;
+  z-index:5!important;
+  pointer-events:none!important;
+}
+
+/* Monsters use the same visual language, with the two stats stacked on-card. */
+body.sf-fantasy-game .monster.sf-card-hud-card{
+  overflow:visible!important;
+  justify-content:flex-start!important;
+}
+body.sf-fantasy-game .monster .sf-monster-shell{
+  width:100%!important;
+  height:145px!important;
+  flex:0 0 145px!important;
+  margin:0 auto!important;
+}
+body.sf-fantasy-game .monster .sf-monster-shell .monster-art{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  margin:0!important;
+  z-index:1!important;
+}
+body.sf-fantasy-game .monster .sf-monster-shell .stats{
+  position:absolute!important;
+  left:31%!important;
+  top:49%!important;
+  width:88%!important;
+  display:flex!important;
+  flex-direction:column!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  gap:4px!important;
+  margin:0!important;
+  padding:0!important;
+  z-index:5!important;
+  pointer-events:none!important;
+}
+
+body.sf-fantasy-game .sf-card-shell .sf-hud-stat{
+  width:100%!important;
+  min-width:0!important;
+  height:25px!important;
+  padding:0 9px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  border:2px solid rgba(255,255,255,.26)!important;
+  border-radius:999px!important;
+  background:#111!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    inset 0 5px 10px rgba(255,255,255,.035),
+    0 3px 8px rgba(0,0,0,.72),
+    0 0 9px rgba(0,0,0,.36)!important;
+  font-family:Inter,system-ui,sans-serif!important;
+  font-size:8px!important;
+  line-height:1!important;
+  letter-spacing:.06em!important;
+  font-weight:900!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 2px #000!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-label{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  min-width:0!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-label:before{
+  content:""!important;
+  width:7px!important;
+  height:7px!important;
+  flex:0 0 7px!important;
+  border-radius:50%!important;
+  background:currentColor!important;
+  box-shadow:0 0 7px currentColor!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-value{
+  margin-left:auto!important;
+  color:#fff!important;
+  font-size:13px!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+  font-weight:950!important;
+  text-shadow:0 2px 3px #000!important;
+}
+
+body.sf-fantasy-game .sf-card-shell .sf-hud-pow{
+  color:#efab54!important;
+  border-color:#b56b23!important;
+  background:linear-gradient(180deg,rgba(92,50,12,.97),rgba(43,23,7,.98))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,205,105,.14),0 3px 8px #000b,0 0 8px rgba(210,119,31,.24)!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-hp{
+  color:#62d887!important;
+  border-color:#23834a!important;
+  background:linear-gradient(180deg,rgba(13,73,35,.97),rgba(5,40,20,.98))!important;
+  box-shadow:inset 0 0 0 1px rgba(113,244,151,.12),0 3px 8px #000b,0 0 8px rgba(43,186,86,.22)!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-damage{
+  color:#ff7474!important;
+  border-color:#a63a3d!important;
+  background:linear-gradient(180deg,rgba(91,19,24,.97),rgba(45,8,12,.98))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,125,125,.12),0 3px 8px #000b,0 0 8px rgba(218,53,59,.22)!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-armor{
+  color:#7bc8ff!important;
+  border-color:#367fae!important;
+  background:linear-gradient(180deg,rgba(18,60,88,.97),rgba(7,31,49,.98))!important;
+}
+body.sf-fantasy-game .sf-card-shell .sf-hud-armor.sf-hud-zero{
+  display:none!important;
+}
+
+/* The HUD is part of the card, so it taps/untaps with the champion art. */
+body.sf-fantasy-game .champ.sf-tapped .sf-champ-shell{
+  transform:rotate(90deg) scale(.72)!important;
+}
+body.sf-fantasy-game .champ.sf-tapped .champ-art{
+  transform:none!important;
+}
+body.sf-fantasy-game .champ.sf-tap-anim .champ-art,
+body.sf-fantasy-game .champ.sf-untap-anim .champ-art{
+  animation:none!important;
+}
+body.sf-fantasy-game .champ.sf-tap-anim .sf-champ-shell{
+  animation:sfHudTap .34s cubic-bezier(.2,.8,.2,1) both!important;
+}
+body.sf-fantasy-game .champ.sf-untap-anim .sf-champ-shell{
+  animation:sfHudUntap .34s cubic-bezier(.2,.8,.2,1) both!important;
+}
+@keyframes sfHudTap{from{transform:rotate(0deg) scale(1)}to{transform:rotate(90deg) scale(.72)}}
+@keyframes sfHudUntap{from{transform:rotate(90deg) scale(.72)}to{transform:rotate(0deg) scale(1)}}
+
+@media(max-width:1450px){
+  body.sf-fantasy-game .champ .sf-champ-shell{width:104px!important;height:153px!important}
+  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:37%!important;top:42%!important;width:96%!important;gap:4px!important}
+  body.sf-fantasy-game .monster .sf-monster-shell{height:126px!important;flex-basis:126px!important}
+  body.sf-fantasy-game .sf-card-shell .sf-hud-stat{height:22px!important;padding:0 7px!important;font-size:7px!important}
+  body.sf-fantasy-game .sf-card-shell .sf-hud-value{font-size:11px!important}
+  body.sf-fantasy-game .sf-card-shell .sf-hud-label:before{width:6px!important;height:6px!important;flex-basis:6px!important}
+}
+@media(max-width:1099px){
+  body.sf-fantasy-game .champ .sf-champ-shell{width:96px!important;height:142px!important}
+  body.sf-fantasy-game .champ .sf-champ-shell .stats{left:35%!important;top:42%!important;width:98%!important}
+}
+@media(prefers-reduced-motion:reduce){
+  body.sf-fantasy-game .champ .sf-champ-shell{transition:none!important;animation:none!important}
+}
