@@ -1,0 +1,180 @@
+/* Champion of the Souls — coin toss + opponent hand count v40 */
+
+body.sf-fantasy-game .sf-opponent-hand-count{
+  margin:5px 0 2px!important;
+  min-height:28px!important;
+  padding:4px 8px 4px 7px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  width:max-content!important;
+  max-width:100%!important;
+  border:1px solid #8b6534!important;
+  border-radius:6px!important;
+  background:linear-gradient(180deg,#20160d,#0d0c0c)!important;
+  box-shadow:inset 0 0 12px rgba(218,152,67,.08),0 3px 10px #0008!important;
+  color:#ead8b7!important;
+  font-family:Inter,system-ui,sans-serif!important;
+}
+body.sf-fantasy-game .sf-hand-stack-icon{
+  position:relative!important;
+  width:20px!important;
+  height:17px!important;
+  flex:0 0 20px!important;
+}
+body.sf-fantasy-game .sf-hand-stack-icon i{
+  position:absolute!important;
+  width:11px!important;
+  height:15px!important;
+  border-radius:2px!important;
+  border:1px solid #d09b52!important;
+  background:linear-gradient(145deg,#342415,#100e0d)!important;
+  box-shadow:0 1px 3px #000!important;
+}
+body.sf-fantasy-game .sf-hand-stack-icon i:nth-child(1){left:1px!important;top:1px!important;transform:rotate(-11deg)!important}
+body.sf-fantasy-game .sf-hand-stack-icon i:nth-child(2){left:5px!important;top:1px!important;transform:rotate(-2deg)!important}
+body.sf-fantasy-game .sf-hand-stack-icon i:nth-child(3){left:9px!important;top:1px!important;transform:rotate(8deg)!important}
+body.sf-fantasy-game .sf-hand-count-label{
+  font-size:7px!important;
+  letter-spacing:.12em!important;
+  color:#a99270!important;
+  font-weight:800!important;
+}
+body.sf-fantasy-game .sf-opponent-hand-count strong{
+  min-width:20px!important;
+  text-align:center!important;
+  font-size:15px!important;
+  line-height:1!important;
+  color:#fff4d5!important;
+  text-shadow:0 0 7px rgba(255,189,92,.35),0 1px 2px #000!important;
+}
+
+.sf-coin-overlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:14000!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:20px!important;
+  background:rgba(1,3,7,.82)!important;
+  backdrop-filter:blur(7px)!important;
+  opacity:0!important;
+  transition:opacity .22s ease!important;
+}
+.sf-coin-overlay.is-visible{opacity:1!important}
+.sf-coin-panel{
+  width:min(520px,94vw)!important;
+  padding:24px 28px 22px!important;
+  text-align:center!important;
+  color:#f4ead7!important;
+  border:1px solid #9b6b34!important;
+  border-radius:14px!important;
+  background:
+    radial-gradient(circle at 50% 20%,rgba(194,114,39,.17),transparent 38%),
+    linear-gradient(180deg,#17120f,#080a0e 72%)!important;
+  box-shadow:inset 0 0 0 2px #070707,0 24px 80px #000f,0 0 44px rgba(197,108,34,.17)!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+}
+.sf-coin-kicker{
+  font:800 10px Inter,system-ui,sans-serif!important;
+  letter-spacing:.22em!important;
+  color:#c79b62!important;
+}
+.sf-coin-panel h2{
+  margin:5px 0 10px!important;
+  font-size:29px!important;
+  color:#f0d7a7!important;
+  text-shadow:0 2px 8px #000!important;
+}
+.sf-coin-scene{
+  width:150px!important;
+  height:150px!important;
+  margin:8px auto 15px!important;
+  display:grid!important;
+  place-items:center!important;
+  perspective:800px!important;
+}
+.sf-coin{
+  position:relative!important;
+  width:112px!important;
+  height:112px!important;
+  transform-style:preserve-3d!important;
+  animation:sfCoinSpin 1.45s cubic-bezier(.16,.7,.25,1) both!important;
+}
+.sf-coin-face{
+  position:absolute!important;
+  inset:0!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center!important;
+  backface-visibility:hidden!important;
+  border:5px double #f1bf68!important;
+  background:
+    radial-gradient(circle at 34% 28%,#ffe2a0 0 8%,#d59636 29%,#7b451a 72%,#351b0a 100%)!important;
+  color:#31190a!important;
+  font-size:39px!important;
+  font-weight:900!important;
+  box-shadow:inset 0 0 18px #fff7,0 0 0 3px #4f2b11,0 0 28px rgba(239,159,53,.5)!important;
+  text-shadow:0 1px 0 #ffd98d!important;
+}
+.sf-coin-face:before{
+  content:""!important;
+  position:absolute!important;
+  inset:10px!important;
+  border:2px dotted rgba(76,38,12,.75)!important;
+  border-radius:50%!important;
+}
+.sf-coin-tails{transform:rotateY(180deg)!important}
+.sf-coin.show-heads{animation:none!important;transform:rotateY(0deg) rotateX(0deg)!important}
+.sf-coin.show-tails{animation:none!important;transform:rotateY(180deg) rotateX(0deg)!important}
+.sf-coin-assign{
+  display:flex!important;
+  justify-content:center!important;
+  flex-wrap:wrap!important;
+  gap:8px 16px!important;
+  margin-bottom:12px!important;
+  font:700 11px Inter,system-ui,sans-serif!important;
+  color:#a99b86!important;
+}
+.sf-coin-result{
+  min-height:52px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:4px!important;
+  font-size:18px!important;
+  color:#e6d8c1!important;
+}
+.sf-coin-result b{font-size:25px!important;color:#ffc969!important;letter-spacing:.08em!important}
+.sf-coin-result span{font:700 13px Inter,system-ui,sans-serif!important;color:#f2e8d7!important}
+.sf-coin-continue{
+  margin-top:10px!important;
+  padding:9px 20px!important;
+  border-radius:999px!important;
+  border:1px solid #b57b35!important;
+  background:linear-gradient(180deg,#533018,#25150b)!important;
+  color:#fff0ce!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  box-shadow:0 5px 16px #0008!important;
+}
+.sf-coin-continue:disabled{opacity:.35!important;cursor:default!important}
+.sf-coin-overlay.is-revealed .sf-coin{filter:drop-shadow(0 0 18px rgba(255,190,85,.45))!important}
+
+@keyframes sfCoinSpin{
+  0%{transform:translateY(18px) rotateX(0deg) rotateY(0deg) scale(.9)}
+  25%{transform:translateY(-24px) rotateX(500deg) rotateY(180deg) scale(1.08)}
+  55%{transform:translateY(-8px) rotateX(1040deg) rotateY(360deg) scale(1.02)}
+  100%{transform:translateY(0) rotateX(1440deg) rotateY(720deg) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  .sf-coin{animation:none!important}
+  .sf-coin-overlay{transition:none!important}
+}
+@media(max-width:700px){
+  .sf-coin-panel{padding:19px 16px!important}
+  .sf-coin-panel h2{font-size:24px!important}
+  .sf-coin-scene{width:125px!important;height:125px!important}
+  .sf-coin{width:94px!important;height:94px!important}
+}
