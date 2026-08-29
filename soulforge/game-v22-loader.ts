@@ -10,6 +10,12 @@ patch(
 );
 
 patch(
+ "function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n !== 1 || (p !== 1 && p !== 2))",
+ "function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n <= 0 || (p !== 1 && p !== 2))",
+ 'Lyrandel damage trigger'
+);
+
+patch(
  /function queueMonsterTrigger\(s, m, effectId, effectName, meta = \{\}\) \{[\s\S]*?\}\nfunction processMonsterEnter/,
  `function queueMonsterTrigger(s, m, effectId, effectName, meta = {}, choiceType = null) { const tr = { actor: m.owner, sourceCardId: m.cardId, effectId, effectName, meta }; if (choiceType) tr.choiceType = choiceType; s.triggerQueue.push(tr); log(s, \`${'${MONSTER_DEFS[m.cardId].name}'} attiva il suo effetto: entra in Catena.\`); }\nfunction processMonsterEnter`,
  'queue monster trigger'
