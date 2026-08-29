@@ -1,0 +1,51 @@
+/* Champion of the Souls — in-card stat badges v31 */
+body.sf-fantasy-game .champ .stats,
+body.sf-fantasy-game .monster .stats{display:none!important}
+
+body.sf-fantasy-game .champ,
+body.sf-fantasy-game .monster{position:relative!important}
+
+body.sf-fantasy-game .sf-card-stat-stack{
+  position:absolute;z-index:12;pointer-events:none;display:flex;flex-direction:column;gap:4px;
+  font-family:Inter,system-ui,sans-serif;font-weight:800;line-height:1;
+}
+body.sf-fantasy-game .champ .sf-card-stat-stack{left:102px;top:24px}
+body.sf-fantasy-game .monster .sf-card-stat-stack{right:7px;top:9px}
+
+body.sf-fantasy-game .sf-card-stat{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:84px;
+  padding:4px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(5,7,10,.92);box-shadow:0 3px 9px #000b,inset 0 0 8px rgba(255,255,255,.035);
+  text-shadow:0 1px 2px #000;backdrop-filter:blur(2px)
+}
+body.sf-fantasy-game .sf-card-stat .sf-card-stat-label{font-size:7px;letter-spacing:.045em;text-transform:uppercase;opacity:.9}
+body.sf-fantasy-game .sf-card-stat .sf-card-stat-value{font-size:10px;color:#fff;white-space:nowrap}
+
+body.sf-fantasy-game .sf-card-stat--pow{border-color:#a86422;background:linear-gradient(90deg,rgba(73,38,9,.96),rgba(18,12,6,.96));color:#ffb65c}
+body.sf-fantasy-game .sf-card-stat--hp{border-color:#2f7e49;background:linear-gradient(90deg,rgba(11,48,25,.96),rgba(7,20,12,.96));color:#7ee59a}
+body.sf-fantasy-game .sf-card-stat--damage{border-color:#8f3636;background:linear-gradient(90deg,rgba(58,14,14,.96),rgba(22,7,7,.96));color:#ff7777}
+body.sf-fantasy-game .sf-card-stat--armor{border-color:#397498;background:linear-gradient(90deg,rgba(10,37,56,.96),rgba(6,18,27,.96));color:#79cfff}
+
+body.sf-fantasy-game .champ .sf-card-stat--armor{box-shadow:0 0 12px rgba(68,166,229,.18),0 3px 9px #000b}
+body.sf-fantasy-game .monster .sf-card-stat{min-width:68px;padding:3px 5px;gap:4px}
+body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-label{font-size:6px}
+body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-value{font-size:8px}
+
+/* Keep title/status readable with the stat tower sitting on the card edge. */
+body.sf-fantasy-game .champ h3{padding-left:92px!important;min-height:18px}
+body.sf-fantasy-game .champ .tap{z-index:14!important}
+
+@media(min-width:1451px){
+ body.sf-fantasy-game .champ .sf-card-stat-stack{left:111px;top:28px}
+}
+@media(max-width:1450px){
+ body.sf-fantasy-game .champ .sf-card-stat-stack{left:88px;top:23px}
+ body.sf-fantasy-game .sf-card-stat{min-width:76px;padding:3px 6px}
+ body.sf-fantasy-game .sf-card-stat .sf-card-stat-label{font-size:6px}
+ body.sf-fantasy-game .sf-card-stat .sf-card-stat-value{font-size:9px}
+ body.sf-fantasy-game .champ h3{padding-left:78px!important}
+}
+@media(max-width:1099px){
+ body.sf-fantasy-game .champ .sf-card-stat-stack{left:82px;top:22px}
+ body.sf-fantasy-game .champ h3{padding-left:72px!important}
+}
