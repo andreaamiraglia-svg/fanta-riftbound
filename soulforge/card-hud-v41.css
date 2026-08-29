@@ -1,5 +1,13 @@
 /* Champion of the Souls — in-play card HUD v41 */
 
+/* v31 generated a second independent stat tower (.sf-card-stat-stack).
+   v41 is now the single source of truth for all in-play statistics. */
+body.sf-fantasy-game .sf-card-stat-stack{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
 body.sf-fantasy-game .sf-card-shell{
   position:relative!important;
   isolation:isolate!important;
