@@ -1,0 +1,67 @@
+/* Champion of the Souls — stable hand hover + player soul spacing v39 */
+
+/* The old v30 :hover transform conflicts with the hand-v11 fan transforms.
+   hand-v11 now owns transforms with inline !important; keep CSS hover visual-only. */
+body.sf-fantasy-game .hand-card:hover{
+  filter:drop-shadow(0 14px 20px rgba(0,0,0,.82)) brightness(1.04)!important;
+}
+body.sf-fantasy-game .hand-card.sf-hand-focus{
+  filter:drop-shadow(0 22px 30px rgba(0,0,0,.9)) brightness(1.07)!important;
+}
+body.sf-fantasy-game .hand-card.sf-hand-focus img{
+  box-shadow:0 20px 46px rgba(0,0,0,.72),0 0 0 2px rgba(255,222,151,.18),0 0 24px rgba(62,151,230,.12)!important;
+}
+
+/* Give the local player's soul aura its own visual breathing room. */
+body.sf-fantasy-game .game-grid main > .playerzone:nth-of-type(3),
+body.sf-fantasy-game .game-grid main > .sf-player-zone{
+  overflow:visible!important;
+}
+body.sf-fantasy-game .game-grid main > .playerzone:nth-of-type(3) .playerinfo,
+body.sf-fantasy-game .game-grid main > .sf-player-zone .playerinfo{
+  overflow:visible!important;
+  position:relative!important;
+  z-index:12!important;
+}
+body.sf-fantasy-game .game-grid main > .playerzone:nth-of-type(3) .souls,
+body.sf-fantasy-game .game-grid main > .sf-player-zone .souls{
+  position:relative!important;
+  z-index:20!important;
+  overflow:visible!important;
+  margin-bottom:2px!important;
+}
+
+/* Move "LA TUA MANO" below the soul orbs instead of letting the title line
+   run through their glow. The selector only hits the title after the local
+   player zone; the opponent zone is followed by the monster field. */
+body.sf-fantasy-game .game-grid main > .playerzone + .hand-title,
+body.sf-fantasy-game .game-grid main > .sf-player-zone + .hand-title{
+  margin-top:20px!important;
+  min-height:42px!important;
+  height:42px!important;
+  padding:10px 7px 0!important;
+  position:relative!important;
+  z-index:3!important;
+  border-top:1px solid rgba(83,137,187,.28)!important;
+  background:linear-gradient(180deg,rgba(4,18,31,.30),transparent)!important;
+}
+body.sf-fantasy-game .game-grid main > .playerzone + .hand-title h3,
+body.sf-fantasy-game .game-grid main > .sf-player-zone + .hand-title h3{
+  line-height:1.1!important;
+}
+
+/* Keep the hand itself below the title and give focused cards room to rise
+   without touching the soul counters. */
+body.sf-fantasy-game .hand-wrap{
+  padding-top:4px!important;
+}
+
+@media(max-width:1450px){
+  body.sf-fantasy-game .game-grid main > .playerzone + .hand-title,
+  body.sf-fantasy-game .game-grid main > .sf-player-zone + .hand-title{
+    margin-top:16px!important;
+    min-height:38px!important;
+    height:38px!important;
+    padding-top:8px!important;
+  }
+}
