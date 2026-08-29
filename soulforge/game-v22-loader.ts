@@ -17,7 +17,7 @@ patch(
 
 patch(
  "cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando un Mostro subisce 1 danno, ottiene +1 POW per questo turno.' },",
- "cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando questo Mostro subisce danni, ottiene +1 POW per questo turno.' },",
+ "cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando un altro Mostro subisce danni, quel Mostro ottiene +1 POW per questo turno.' },",
  'Cervo Antico text'
 );
 
@@ -27,12 +27,14 @@ patch(
     return false; m.damage += n; log(s, \`${'${MONSTER_DEFS[m.cardId]?.name || m.cardId}'} subisce ${'${n}'} dann${'${n === 1 ? \'o\' : \'i\'}'} (${'${m.damage}'}/${'${currentMonsterPow(s, m)}'}).\`); return m.damage >= currentMonsterPow(s, m); }
 export function damageMonster(s, p, uid0, n, source = '', allowLyrandel = true) { const m = monster(s, uid0); if (!m || n <= 0)
     return { died: false }; n = absorbArmor(s, m, n, MONSTER_DEFS[m.cardId]?.name || m.cardId); if (n <= 0)
-    return { died: false }; recordLyrandel(s, p, uid0, n, allowLyrandel); const cervoTriggered = m.cardId === 'cervo_antico'; if (applyMonsterDamage(s, m, n)) {
+    return { died: false }; recordLyrandel(s, p, uid0, n, allowLyrandel); const cervi = s.board.monsters.filter((x) => x.cardId === 'cervo_antico' && x.uid !== uid0).map((x) => ({ uid: x.uid, owner: x.owner })); if (applyMonsterDamage(s, m, n)) {
     killMonster(s, p, m, source, true);
     return { died: true };
-} if (cervoTriggered && monster(s, uid0)) {
-    s.triggerQueue.push({ actor: m.owner, sourceCardId: 'cervo_antico', effectId: 'cervo_antico_pow', effectName: 'Effetto — Cervo Antico', meta: { sourceUid: uid0 } });
-    log(s, 'Cervo Antico attiva il suo effetto: entra in Catena.');
+} if (monster(s, uid0)) {
+    for (const cervo of cervi) {
+        s.triggerQueue.push({ actor: cervo.owner, sourceCardId: 'cervo_antico', effectId: 'cervo_antico_pow', effectName: 'Effetto — Cervo Antico', meta: { sourceUid: cervo.uid, targetUid: uid0 } });
+        log(s, 'Cervo Antico attiva il suo effetto: entra in Catena.');
+    }
 } return { died: false }; }
 function reduceChampionPow`,
  'Cervo Antico damage trigger'
@@ -107,10 +109,10 @@ patch(
  "meta || {}; log(s, `Si risolve ${item.effectName || 'un effetto'}.`); switch (item.effectId) {",
  `meta || {}; log(s, \`Si risolve ${'${item.effectName || \'un effetto\'}'}.\`); switch (item.effectId) {
     case 'cervo_antico_pow': {
-        const src = monster(s, m.sourceUid);
-        if (src && src.cardId === 'cervo_antico') {
-            src.tempPow = (src.tempPow || 0) + 1;
-            log(s, 'Cervo Antico ottiene +1 POW fino alla fine del turno.');
+        const target = monster(s, m.targetUid);
+        if (target) {
+            target.tempPow = (target.tempPow || 0) + 1;
+            log(s, \`${'${MONSTER_DEFS[target.cardId]?.name || target.cardId}'} ottiene +1 POW da Cervo Antico fino alla fine del turno.\`);
         }
         break;
     }
