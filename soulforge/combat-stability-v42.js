@@ -1,5 +1,5 @@
 (()=>{
-let lastSig='';
+let sending=false;
 
 function state(){try{return session?.state||null}catch{return null}}
 function clearLegacyAttack(){
@@ -18,6 +18,46 @@ function ensureHint(){
  }
  return h;
 }
+function canPassCombat(){
+ const s=state();
+ return !!(s&&s.status==='main'&&s.combat&&Number(s.priority)===Number(session?.player)&&!s.pendingChoice);
+}
+async function sendDirectMove(movePayload,retry=true){
+ try{
+  const j=await post({action:'move',roomCode:session.room,token:session.token,version:session.version,move:movePayload});
+  session.version=j.version;
+  session.state=j.state;
+  render();
+  return true;
+ }catch(e){
+  if(e?.message==='STATE_CONFLICT'&&retry){
+   try{
+    const j=await post({action:'get',roomCode:session.room,token:session.token});
+    session.player=j.player;
+    session.version=j.version;
+    session.state=j.state;
+    render();
+    if(canPassCombat())return sendDirectMove(movePayload,false);
+    return false;
+   }catch(err){try{showError(err.message)}catch{};return false}
+  }
+  try{showError(e.message)}catch{}
+  return false;
+ }
+}
+async function passCombatPriority(){
+ if(sending||!canPassCombat())return;
+ sending=true;
+ clearLegacyAttack();
+ const btn=document.getElementById('passPriority');
+ if(btn){btn.disabled=true;btn.textContent='Passaggio…'}
+ try{
+  await sendDirectMove({type:'pass_priority'});
+ }finally{
+  sending=false;
+  setTimeout(sync,30);
+ }
+}
 function sync(){
  const s=state(),hint=ensureHint();
  if(!s||s.status!=='main'){
@@ -25,8 +65,6 @@ function sync(){
   return;
  }
  if(s.combat){
-  // Appena il combattimento e' stato dichiarato nessun vecchio sistema di targeting
-  // deve restare attivo: in passato poteva intercettare il click su Passa priorita'.
   clearLegacyAttack();
   const mine=Number(s.priority)===Number(session?.player);
   const noStack=!(s.stack||[]).length;
@@ -35,47 +73,50 @@ function sync(){
    hint.style.display='block';
    const btn=document.getElementById('passPriority');
    if(btn){
-    btn.disabled=false;
+    btn.disabled=!!sending;
     btn.style.pointerEvents='auto';
     btn.style.position='relative';
     btn.style.zIndex='10054';
     btn.title='Passa priorità e continua il combattimento';
    }
   }else hint.style.display='none';
- }else{
-  hint.style.display='none';
- }
- const sig=[s.turn,s.priority,s.combat?.attacker?.player||'',s.combat?.attacker?.champId||'',s.combat?.target?.uid||s.combat?.target?.champId||'',s.combatPasses||0,(s.stack||[]).length,s.pendingChoice?.type||''].join('|');
- lastSig=sig;
+ }else hint.style.display='none';
 }
 
-// Rende il comando deterministico: un solo handler invia pass_priority.
-document.addEventListener('click',e=>{
+// Pointerdown viene usato apposta: scatta prima dei vecchi handler click che in alcuni
+// casi lasciavano il combattimento bloccato. La richiesta viene inviata direttamente
+// al server, senza dipendere dal flag globale `busy` del vecchio client.
+document.addEventListener('pointerdown',e=>{
  const btn=e.target.closest?.('#passPriority');
- if(!btn)return;
- const s=state();
- if(!s||Number(s.priority)!==Number(session?.player))return;
+ if(!btn||!canPassCombat())return;
  e.preventDefault();
  e.stopPropagation();
  e.stopImmediatePropagation();
- clearLegacyAttack();
- Promise.resolve(move({type:'pass_priority'})).finally(()=>setTimeout(sync,40));
+ passCombatPriority();
 },true);
 
-// Un Campione gia tappato/non disponibile non deve riaprire un targeting fantasma.
+// Blocca comunque tutti i vecchi click sul pulsante. Serve anche per attivazione da tastiera.
+document.addEventListener('click',e=>{
+ const btn=e.target.closest?.('#passPriority');
+ if(!btn||!canPassCombat())return;
+ e.preventDefault();
+ e.stopPropagation();
+ e.stopImmediatePropagation();
+ passCombatPriority();
+},true);
+
+// Un Campione già tappato/non disponibile non deve riaprire un targeting fantasma.
 document.addEventListener('click',e=>{
  const champ=e.target.closest?.(`.champ[data-owner="${session?.player}"][data-champ-id]`);
  if(!champ)return;
  const s=state();
- if(s?.combat||s?.priority||s?.pendingChoice){
-  clearLegacyAttack();
- }
+ if(s?.combat||s?.priority||s?.pendingChoice)clearLegacyAttack();
 },true);
 
 const app=document.getElementById('app');
 if(app)new MutationObserver(()=>queueMicrotask(sync)).observe(app,{childList:true,subtree:true});
 window.addEventListener('sf-blue-ready',()=>setTimeout(sync,0));
 window.addEventListener('resize',sync);
-setInterval(sync,250);
+setInterval(sync,200);
 setTimeout(sync,0);
 })();
