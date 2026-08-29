@@ -16,6 +16,29 @@ patch(
 );
 
 patch(
+ "cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando un Mostro subisce 1 danno, ottiene +1 POW per questo turno.' },",
+ "cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando questo Mostro subisce danni, ottiene +1 POW per questo turno.' },",
+ 'Cervo Antico text'
+);
+
+patch(
+ /function applyMonsterDamage\(s, m, n\) \{[\s\S]*?\}\nexport function damageMonster\(s, p, uid0, n, source = '', allowLyrandel = true\) \{[\s\S]*?\}\nfunction reduceChampionPow/,
+ `function applyMonsterDamage(s, m, n) { if (!m || n <= 0)
+    return false; m.damage += n; log(s, \`${'${MONSTER_DEFS[m.cardId]?.name || m.cardId}'} subisce ${'${n}'} dann${'${n === 1 ? \'o\' : \'i\'}'} (${'${m.damage}'}/${'${currentMonsterPow(s, m)}'}).\`); return m.damage >= currentMonsterPow(s, m); }
+export function damageMonster(s, p, uid0, n, source = '', allowLyrandel = true) { const m = monster(s, uid0); if (!m || n <= 0)
+    return { died: false }; n = absorbArmor(s, m, n, MONSTER_DEFS[m.cardId]?.name || m.cardId); if (n <= 0)
+    return { died: false }; recordLyrandel(s, p, uid0, n, allowLyrandel); const cervoTriggered = m.cardId === 'cervo_antico'; if (applyMonsterDamage(s, m, n)) {
+    killMonster(s, p, m, source, true);
+    return { died: true };
+} if (cervoTriggered && monster(s, uid0)) {
+    s.triggerQueue.push({ actor: m.owner, sourceCardId: 'cervo_antico', effectId: 'cervo_antico_pow', effectName: 'Effetto — Cervo Antico', meta: { sourceUid: uid0 } });
+    log(s, 'Cervo Antico attiva il suo effetto: entra in Catena.');
+} return { died: false }; }
+function reduceChampionPow`,
+ 'Cervo Antico damage trigger'
+);
+
+patch(
  /function queueMonsterTrigger\(s, m, effectId, effectName, meta = \{\}\) \{[\s\S]*?\}\nfunction processMonsterEnter/,
  `function queueMonsterTrigger(s, m, effectId, effectName, meta = {}, choiceType = null) { const tr = { actor: m.owner, sourceCardId: m.cardId, effectId, effectName, meta }; if (choiceType) tr.choiceType = choiceType; s.triggerQueue.push(tr); log(s, \`${'${MONSTER_DEFS[m.cardId].name}'} attiva il suo effetto: entra in Catena.\`); }\nfunction processMonsterEnter`,
  'queue monster trigger'
@@ -83,6 +106,14 @@ patch(
 patch(
  "meta || {}; log(s, `Si risolve ${item.effectName || 'un effetto'}.`); switch (item.effectId) {",
  `meta || {}; log(s, \`Si risolve ${'${item.effectName || \'un effetto\'}'}.\`); switch (item.effectId) {
+    case 'cervo_antico_pow': {
+        const src = monster(s, m.sourceUid);
+        if (src && src.cardId === 'cervo_antico') {
+            src.tempPow = (src.tempPow || 0) + 1;
+            log(s, 'Cervo Antico ottiene +1 POW fino alla fine del turno.');
+        }
+        break;
+    }
     case 'enter_segugio_infernale':
         beginDamageEvent(s, null);
         for (const u of m.uids || [])
