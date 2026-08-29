@@ -25,54 +25,72 @@ function parseBaseTransform(el){
   return {x:Number(m[1]),y:Number(m[2]),r:Number(m[3])};
 }
 
-function setCardTransform(el,t,scale=1){
-  el.style.transform=`translate(${t.x}px,${t.y}px) rotate(${t.r}deg) scale(${scale})`;
+function setTransform(el,value){
+  el.style.setProperty('transform',value,'important');
+}
+
+function baseTransform(el){
+  return el.dataset.sfBaseTransform||'';
 }
 
 function bindFancyHand(){
   const fan=document.querySelector('.hand-fan');
   if(!fan||fan.dataset.sfFancyBound==='1')return;
   fan.dataset.sfFancyBound='1';
+
   const cards=[...fan.querySelectorAll('.hand-card')];
   cards.forEach((el,i)=>{
-    el.dataset.sfBaseTransform=el.style.transform;
+    const base=el.style.transform||'';
+    el.dataset.sfBaseTransform=base;
     el.dataset.sfHandIndex=String(i);
+    /* Lock the fan transform with inline !important so the old fantasy-board
+       :hover rule cannot replace translate(x,y) with translate(0,-24px). */
+    setTransform(el,base);
   });
 
+  let activeIndex=-1;
+
   const reset=()=>{
+    if(activeIndex===-1)return;
+    activeIndex=-1;
     fan.classList.remove('sf-hand-active');
     cards.forEach(el=>{
       el.classList.remove('sf-hand-focus','sf-hand-near');
-      el.style.transform=el.dataset.sfBaseTransform||'';
-      el.style.zIndex='';
+      setTransform(el,baseTransform(el));
+      el.style.removeProperty('z-index');
     });
   };
 
   const focusAt=(index)=>{
+    if(index===activeIndex)return;
+    activeIndex=index;
     fan.classList.add('sf-hand-active');
+
     cards.forEach((el,i)=>{
       const base=parseBaseTransform(el);
       if(!base)return;
-      const d=i-index;
       el.classList.remove('sf-hand-focus','sf-hand-near');
-      if(d===0){
+
+      if(i===index){
         el.classList.add('sf-hand-focus');
-        setCardTransform(el,{x:base.x,y:base.y-54,r:0},1.16);
-        el.style.zIndex='120';
+        /* Only the selected card moves. Neighbours stay exactly in their fan
+           positions, which prevents pointer-enter/leave oscillation. */
+        setTransform(el,`translate(${base.x}px,${base.y-34}px) rotate(0deg) scale(1.09)`);
+        el.style.setProperty('z-index','120');
       }else{
-        const dist=Math.abs(d);
-        const shift=(dist===1?34:dist===2?20:10)*(d<0?-1:1);
-        const lift=dist===1?-10:0;
-        const rotAdjust=dist===1?(d<0?-2:2):0;
-        if(dist<=1)el.classList.add('sf-hand-near');
-        setCardTransform(el,{x:base.x+shift,y:base.y+lift,r:base.r+rotAdjust},1);
-        el.style.zIndex=String(70-dist);
+        if(Math.abs(i-index)===1)el.classList.add('sf-hand-near');
+        setTransform(el,baseTransform(el));
+        el.style.setProperty('z-index',String(60-Math.abs(i-index)));
       }
     });
   };
 
-  cards.forEach((el,i)=>el.addEventListener('pointerenter',()=>focusAt(i)));
+  cards.forEach((el,i)=>{
+    el.addEventListener('pointerenter',()=>focusAt(i));
+  });
+
   fan.addEventListener('pointerleave',reset);
+  fan.addEventListener('pointercancel',reset);
 }
 
 const prevRender=render;
