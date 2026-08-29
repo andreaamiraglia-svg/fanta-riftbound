@@ -51,6 +51,9 @@ function decorate(){
   const main=grid.querySelector('main');if(!main)return;
   const pzones=main.querySelectorAll(':scope > .playerzone');
   if(pzones.length>=2){
+   pzones.forEach(x=>x.classList.remove('sf-opponent-zone','sf-player-zone'));
+   pzones[0].classList.add('sf-opponent-zone');
+   pzones[pzones.length-1].classList.add('sf-player-zone');
    const op=typeof otherP==='function'?otherP():(session.player===1?2:1);
    const opState=typeof playerState==='function'?playerState(op):session.state.players?.[String(op)];
    const meState=typeof playerState==='function'?playerState(session.player):session.state.players?.[String(session.player)];
