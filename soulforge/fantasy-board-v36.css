@@ -1,0 +1,78 @@
+/* Champion of the Souls — centered readable stat plaques v36 */
+
+/* Champions: stats centered over the physical card, not hanging to the right. */
+body.sf-fantasy-game .champ .sf-card-stat-stack{
+  left:68px!important;
+  right:auto!important;
+  top:62px!important;
+  width:112px!important;
+  transform:translateX(-50%)!important;
+  align-items:stretch!important;
+  gap:6px!important;
+  z-index:15!important;
+}
+body.sf-fantasy-game .champ .sf-card-stat{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  padding:6px 9px 6px 17px!important;
+  border-width:1.5px!important;
+  box-shadow:0 4px 12px #000d,inset 0 0 10px rgba(255,255,255,.045)!important;
+}
+body.sf-fantasy-game .champ .sf-card-stat:before{
+  width:6px!important;
+  height:6px!important;
+  left:6px!important;
+}
+body.sf-fantasy-game .champ .sf-card-stat .sf-card-stat-label{
+  font-size:7.5px!important;
+  letter-spacing:.055em!important;
+}
+body.sf-fantasy-game .champ .sf-card-stat .sf-card-stat-value{
+  font-size:11px!important;
+}
+
+/* Monsters use the same visual language, centered on the card artwork. */
+body.sf-fantasy-game .monster .sf-card-stat-stack{
+  left:50%!important;
+  right:auto!important;
+  top:49px!important;
+  width:98px!important;
+  transform:translateX(-50%)!important;
+  align-items:stretch!important;
+  gap:5px!important;
+  z-index:15!important;
+}
+body.sf-fantasy-game .monster .sf-card-stat{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  padding:4px 7px 4px 13px!important;
+  border-width:1.25px!important;
+  box-shadow:0 3px 9px #000c,inset 0 0 8px rgba(255,255,255,.04)!important;
+}
+body.sf-fantasy-game .monster .sf-card-stat:before{
+  width:5px!important;
+  height:5px!important;
+  left:5px!important;
+}
+body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-label{font-size:6.5px!important}
+body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-value{font-size:9px!important}
+
+/* Keep card names independent from the badge tower. */
+body.sf-fantasy-game .champ h3{padding-left:0!important}
+
+@media(max-width:1450px){
+  body.sf-fantasy-game .champ .sf-card-stat-stack{
+    left:59px!important;
+    top:55px!important;
+    width:98px!important;
+    gap:5px!important;
+  }
+  body.sf-fantasy-game .champ .sf-card-stat{padding:5px 7px 5px 15px!important}
+  body.sf-fantasy-game .champ .sf-card-stat .sf-card-stat-label{font-size:6.5px!important}
+  body.sf-fantasy-game .champ .sf-card-stat .sf-card-stat-value{font-size:10px!important}
+  body.sf-fantasy-game .monster .sf-card-stat-stack{top:43px!important;width:88px!important}
+  body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-label{font-size:6px!important}
+  body.sf-fantasy-game .monster .sf-card-stat .sf-card-stat-value{font-size:8.5px!important}
+}
