@@ -9,7 +9,7 @@ const ART_FIXES=[
  ["leviatano:'leviatano.webp'","leviatano:'valtheris-spirito-eterno.webp'"],
  ["vecchio_delle_nevi:'vecchio-delle-nevi.webp'","vecchio_delle_nevi:'squalo-delle-maree.webp'"]
 ];
-const NEW_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/cards-v46/';
+const NEW_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(p+' HTTP '+r.status);return r.text()})).then(xs=>{
  let js=xs.join('');
  for(const [from,to] of ART_FIXES)js=js.replace(from,to);
