@@ -20,9 +20,7 @@ function ensureStyle(){
 
 function printedEligibleStack(){
  const s=session?.state;
- // Specchio può annullare qualsiasi CARTA nella Catena con costo stampato 0 o 1.
- // Gli effetti/trigger non sono carte e restano esclusi.
- return (s?.stack||[]).filter(x=>x?.kind==='card'&&PRINTED_COST(x.cardId)<=1);
+ return (s?.stack||[]).filter(x=>x?.kind==='card'&&s?.cardDefs?.[x.cardId]?.type==='Magia'&&PRINTED_COST(x.cardId)<=1);
 }
 
 function fixedCanCast(card){
@@ -32,9 +30,8 @@ function fixedCanCast(card){
  if(card.effect==='taglio'&&!s.combat)return false;
  if(card.effect==='marea'&&!s.combat)return false;
 
- // Specchio d'Acqua è una risposta speciale alla Catena: non richiede un
- // combattimento. Se hai priorità e c'è almeno una carta dal costo stampato
- // 0 o 1, deve risultare giocabile indipendentemente dal tipo della carta bersaglio.
+ // Specchio d'Acqua può rispondere a una Magia in Catena anche fuori dal combattimento.
+ // Serve la priorità e la Magia bersaglio deve avere costo stampato 0 o 1.
  if(card.id==='specchio_acqua'){
   if(!(s.stack||[]).length)return false;
   if(Number(s.priority)!==Number(session.player))return false;
@@ -70,7 +67,7 @@ function clearSpecchio(){
 function syncSpecchio(){
  if(!specchioTargeting)return;
  const valid=printedEligibleStack();
- if(!valid.length){clearSpecchio();try{showError('Non ci sono carte da 0 o 1 Anima da annullare.')}catch{}return;}
+ if(!valid.length){clearSpecchio();try{showError('Non ci sono Magie da 0 o 1 Anima da annullare.')}catch{}return;}
  const stack=session?.state?.stack||[],els=[...document.querySelectorAll('.stack-card')];
  document.querySelectorAll('.sf49-specchio-valid').forEach(el=>el.classList.remove('sf49-specchio-valid'));
  els.forEach((el,i)=>{
@@ -80,7 +77,7 @@ function syncSpecchio(){
  });
  document.body.classList.add('sf49-specchio');
  let h=document.getElementById('sf49SpecchioHint');if(!h){h=document.createElement('div');h.id='sf49SpecchioHint';document.body.appendChild(h)}
- h.textContent='Specchio d’Acqua: scegli una carta in Catena con costo stampato 0 o 1 • ESC per annullare';
+ h.textContent='Specchio d’Acqua: scegli una Magia in Catena con costo stampato 0 o 1 • ESC per annullare';
 }
 function beginSpecchio(){
  specchioTargeting=true;
@@ -96,7 +93,7 @@ function installChooser(){
  const wrapped=function(id){
   const card=playerState(session.player)?.handCards?.find(c=>String(c.id)===String(id));
   if(card?.id==='specchio_acqua'){
-   if(!fixedCanCast(card)){try{showError('Specchio d’Acqua non ha una carta valida da annullare oppure non hai priorità.')}catch{}return;}
+   if(!fixedCanCast(card)){try{showError('Specchio d’Acqua non ha una Magia valida da annullare oppure non hai priorità.')}catch{}return;}
    beginSpecchio();return;
   }
   return previous(id);
