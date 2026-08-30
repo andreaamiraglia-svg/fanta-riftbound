@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView, CARD_DEFS } from "./game-v22-loader.ts";
+import { newState, newPlayer, act, publicView, CARD_DEFS } from "./game-v30-loader.ts";
 
 if(CARD_DEFS?.sguardo_ninjitsu) CARD_DEFS.sguardo_ninjitsu.text='Uccidi un Mostro danneggiato.';
 
