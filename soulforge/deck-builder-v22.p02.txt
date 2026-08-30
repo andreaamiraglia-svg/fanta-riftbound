@@ -9,7 +9,7 @@ const MONSTERS=[
 const RULES={champions:2,cards:18,monsters:12,maxColors:2};
 const LIB_KEY='sf_deck_library_v1',ACTIVE_KEY='sf_active_deck_id_v1',LEGACY_KEY='sf_deck_v18';
 const byId=(arr,id)=>arr.find(x=>x.id===id);
-const esc2=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
+const esc2=v=>String(v??'').replace(/[&<>"]/g,c=>c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':'&quot;');
 const defaultDeck=()=>({champions:['kael','lyrandel'],cards:CARDS.filter(x=>['red','green'].includes(x.color)).map(x=>x.id),monsters:MONSTERS.filter(x=>['red','green'].includes(x.color)).map(x=>x.id)});
 function deckColors(d){return [...new Set((d.champions||[]).map(id=>byId(CHAMPIONS,id)?.color).filter(Boolean))]}
 function validate(d){if(!d||new Set(d.champions||[]).size!==2||new Set(d.cards||[]).size!==18||new Set(d.monsters||[]).size!==12)return false;if((d.champions||[]).some(id=>!byId(CHAMPIONS,id))||(d.cards||[]).some(id=>!byId(CARDS,id))||(d.monsters||[]).some(id=>!byId(MONSTERS,id)))return false;const cc=deckColors(d);if(cc.length>2)return false;if((d.cards||[]).some(id=>!cc.includes(byId(CARDS,id).color))||(d.monsters||[]).some(id=>!cc.includes(byId(MONSTERS,id).color)))return false;return true}
