@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v39-loader.ts";
+import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v40-loader.ts";
 
 if(CARD_DEFS?.sguardo_ninjitsu) CARD_DEFS.sguardo_ninjitsu.text='Uccidi un Mostro danneggiato.';
 
@@ -22,8 +22,8 @@ const rematchDeck=(state:any,p:number)=>{
  const stackCards=(state?.stack||[]).filter((x:any)=>Number(x?.actor)===p&&x?.kind==='card').map((x:any)=>x.cardId);
  const boardMonsters=(state?.board?.monsters||[]).filter((m:any)=>Number(m?.owner)===p).map((m:any)=>m.cardId);
  const cfg={
-  champions:unique((q.champions||[]).map((c:any)=>c.id)),
-  cards:unique([...(q.deck||[]),...(q.hand||[]),...(q.grave||[]),...stackCards]),
+  champions:unique((q.champions||[]).filter((c:any)=>!c?.supportChampion).map((c:any)=>c.id)),
+  cards:unique([...(q.deck||[]),...(q.hand||[]),...(q.grave||[]),...stackCards,...(q.champions||[]).filter((c:any)=>c?.supportChampion).map((c:any)=>c.sourceCardId||c.id)]),
   monsters:unique([...(q.monsterDeck||[]),...(q.monsterGrave||[]),...(q.banishedMonsters||[]),...boardMonsters])
  };
  return cfg.champions.length===2&&cfg.cards.length===18&&cfg.monsters.length===12?cfg:null;
