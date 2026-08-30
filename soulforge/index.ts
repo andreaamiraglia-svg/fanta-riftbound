@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v34-loader.ts";
+import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v35-loader.ts";
 
 if(CARD_DEFS?.sguardo_ninjitsu) CARD_DEFS.sguardo_ninjitsu.text='Uccidi un Mostro danneggiato.';
 
@@ -15,6 +15,19 @@ const token=()=>crypto.randomUUID()+crypto.randomUUID().replaceAll('-','');
 const tossCoin=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return (a[0]&1)===0?'testa':'croce';};
 const otherPlayer=(p:number)=>p===1?2:1;
 const desiredFocus=(state:any)=>{const starter=Number(state?.startingPlayer)===2?2:1;return Number(state?.turn||1)%2===1?starter:otherPlayer(starter);};
+const unique=(xs:any[])=>[...new Set((xs||[]).filter(Boolean).map(String))];
+const rematchDeck=(state:any,p:number)=>{
+ const q=state?.players?.[String(p)];if(!q)return null;
+ if(q._rematchDeck?.champions?.length===2&&q._rematchDeck?.cards?.length===18&&q._rematchDeck?.monsters?.length===12)return q._rematchDeck;
+ const stackCards=(state?.stack||[]).filter((x:any)=>Number(x?.actor)===p&&x?.kind==='card').map((x:any)=>x.cardId);
+ const boardMonsters=(state?.board?.monsters||[]).filter((m:any)=>Number(m?.owner)===p).map((m:any)=>m.cardId);
+ const cfg={
+  champions:unique((q.champions||[]).map((c:any)=>c.id)),
+  cards:unique([...(q.deck||[]),...(q.hand||[]),...(q.grave||[]),...stackCards]),
+  monsters:unique([...(q.monsterDeck||[]),...(q.monsterGrave||[]),...(q.banishedMonsters||[]),...boardMonsters])
+ };
+ return cfg.champions.length===2&&cfg.cards.length===18&&cfg.monsters.length===12?cfg:null;
+};
 const alignFocusWithCoin=(state:any,beforeStatus:string,beforeTurn:number)=>{
  if(!state||![1,2].includes(Number(state.startingPlayer)))return state;
  const target=desiredFocus(state);
@@ -58,6 +71,29 @@ Deno.serve(async(req:Request)=>{
   const {data:updated,error}=await supabase.from('soulforge_games').update({p2_name:name,p2_token:p2Token,state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('La stanza è stata aggiornata. Riprova.',409);return json({roomCode:code,token:p2Token,player:2,state:publicView(state,2),version:updated.version})
  }
  const supplied=String(body.token||'');let p=0;if(supplied&&supplied===game.p1_token)p=1;else if(supplied&&supplied===game.p2_token)p=2;else return err('Token giocatore non valido.',403);
+ if(action==='rematch'){
+  if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
+  let state=game.state;
+  if(state?.status!=='gameover')return err('Il rematch è disponibile solo a partita conclusa.');
+  state.rematchVotes ||= {};
+  state.rematchVotes[String(p)]=true;
+  if(state.rematchVotes['1']&&state.rematchVotes['2']){
+   const d1=rematchDeck(state,1),d2=rematchDeck(state,2);
+   if(!d1||!d2)return err('Non riesco a ricostruire uno dei mazzi per il rematch. Tornate alla home e create una nuova stanza.');
+   const n1=cleanName(state.players?.['1']?.name||game.p1_name),n2=cleanName(state.players?.['2']?.name||game.p2_name);
+   let next:any;try{next=newState(n1,d1);next.players['2']=newPlayer(n2,d2)}catch(e){return err(e instanceof Error?e.message:String(e))}
+   const result=tossCoin(),startingPlayer=result==='testa'?1:2,winnerName=startingPlayer===1?n1:n2;
+   next.startingPlayer=startingPlayer;
+   next.coinToss={id:crypto.randomUUID(),result,winner:startingPlayer};
+   next.status='select';
+   next.focus=startingPlayer;
+   next.log=[`Rematch tra ${n1} e ${n2}.`,`Lancio della moneta: ${result==='testa'?'TESTA':'CROCE'}. ${winnerName} inizierà per primo.`,`Scegliete le 6 carte iniziali.`];
+   state=next;
+  }
+  const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();
+  if(error||!updated)return err('STATE_CONFLICT',409);
+  return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version});
+ }
  if(action==='get')return json({roomCode:code,player:p,state:publicView(game.state,p),version:game.version});
  if(action==='move'){
   if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
