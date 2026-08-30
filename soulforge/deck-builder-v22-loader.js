@@ -13,6 +13,8 @@ const NEW_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-rift
 Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(p+' HTTP '+r.status);return r.text()})).then(xs=>{
  let js=xs.join('');
  for(const [from,to] of ART_FIXES)js=js.replace(from,to);
+ // Albero della Vita è una Magia Istantanea.
+ js=js.replace("['albero_della_vita','Albero della Vita','green','Supporto','Istantanea']","['albero_della_vita','Albero della Vita','green','Magia','Istantanea']");
  js=js.replace("const V21_BASE=OLD_BASE;",`const V21_BASE=OLD_BASE;\nconst V46_BASE='${NEW_BASE}';\nconst V46_ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp'};`);
  js=js.replace("const art=id=>V21_ART[id]?V21_BASE+V21_ART[id]:(V18_ART[id]?V18_BASE+V18_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''));","const art=id=>V46_ART[id]?V46_BASE+V46_ART[id]:(V21_ART[id]?V21_BASE+V21_ART[id]:(V18_ART[id]?V18_BASE+V18_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:'')));" );
  js=js.replace("['berserk','Berserk','red','Magia','Istantanea'],","['berserk','Berserk','red','Magia','Istantanea'],['colpo_in_testa','Colpo in Testa','red','Magia','Base'],");
