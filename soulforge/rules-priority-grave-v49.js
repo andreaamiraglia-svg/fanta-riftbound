@@ -29,6 +29,16 @@ function fixedCanCast(card){
  if(Number(me?.souls?.[card.color]??0)<cost)return false;
  if(card.effect==='taglio'&&!s.combat)return false;
  if(card.effect==='marea'&&!s.combat)return false;
+
+ // Specchio d'Acqua è una risposta speciale alla Catena: non richiede un
+ // combattimento. Se hai priorità e c'è almeno una Magia dal costo stampato
+ // 0 o 1, deve risultare giocabile indipendentemente dal suo speed stampato.
+ if(card.id==='specchio_acqua'){
+  if(!(s.stack||[]).length)return false;
+  if(Number(s.priority)!==Number(session.player))return false;
+  return printedEligibleStack().length>0;
+ }
+
  if((s.stack||[]).length){
   if(Number(s.priority)!==Number(session.player))return false;
   if(s.combat){if(card.speed!=='instant'&&card.speed!=='response')return false;}
@@ -37,7 +47,6 @@ function fixedCanCast(card){
   if(Number(s.priority)!==Number(session.player))return false;
   if(card.speed!=='instant'&&card.speed!=='response')return false;
  }else if(Number(s.focus)!==Number(session.player))return false;
- if(card.id==='specchio_acqua')return printedEligibleStack().length>0;
  if(card.id==='freddo_puro')return (s.board?.monsters||[]).some(m=>Number(m.pow)<=2);
  return true;
 }
