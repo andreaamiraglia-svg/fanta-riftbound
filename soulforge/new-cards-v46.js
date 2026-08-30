@@ -1,5 +1,5 @@
 (()=>{
-const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/cards-v46/';
+const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 const ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp'};
 let mode=null,previousChoose=null;
 function artUrl(id){return ART[id]?BASE+ART[id]:''}
@@ -10,7 +10,7 @@ function clear(){document.querySelectorAll('.sf46-valid').forEach(x=>x.classList
 function hint(text){let h=document.getElementById('sf46Hint');if(!h){h=document.createElement('div');h.id='sf46Hint';document.body.appendChild(h)}h.textContent=text}
 function ownChampEls(){return [...document.querySelectorAll(`.champ[data-owner="${session.player}"][data-champ-id]`)].filter(x=>!x.classList.contains('defeated'))}
 function monsterEls(){return(session.state?.board?.monsters||[]).map(m=>document.querySelector(`[data-monster-uid="${m.uid}"]`)).filter(Boolean)}
-function enemyEls(){const op=session.player===1?2:1;return[...document.querySelectorAll(`.champ[data-owner="${op}"][data-champ-id]`),...monsterEls()].filter(x=>!x.classList.contains('defeated'))}
+function enemyEls(){const op=session.player===1?2:1;return[...document.querySelectorAll(`.champ[data-owner="${op}"][data-champ-id]`),...(session.state?.board?.monsters||[]).filter(m=>Number(m.owner)===Number(op)).map(m=>document.querySelector(`[data-monster-uid="${m.uid}"]`)).filter(Boolean)].filter(x=>!x.classList.contains('defeated'))}
 function startColpo(cardId){clear();mode={type:'colpo',cardId};const els=enemyEls();els.forEach(x=>x.classList.add('sf46-valid'));hint(els.length?'Colpo in Testa: scegli un Nemico • ESC per annullare':'Colpo in Testa: nessun Nemico valido')}
 function startFabbro(cardId){clear();mode={type:'fabbroChamp',cardId};const els=ownChampEls();els.forEach(x=>x.classList.add('sf46-valid'));hint(els.length?'Fabbro Ninjitsu: scegli un tuo Campione • ESC per annullare':'Fabbro Ninjitsu: nessun Campione valido')}
 function ninjitsuDeckCards(){const q=typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)];const cards=(q?.deckCards||[]).filter(c=>String(c?.name||'').toLowerCase().includes('ninjitsu'));const seen=new Set();return cards.filter(c=>c?.id&&!seen.has(c.id)&&seen.add(c.id))}
