@@ -12,9 +12,9 @@ function ensureStyle(){
  if(document.getElementById('sfDeckFiltersStyle'))return;
  const st=document.createElement('style');st.id='sfDeckFiltersStyle';
  st.textContent=`
- .sf-deck-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:18px 0 6px;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(10,13,20,.48)}
+ .sf-deck-filters{position:relative;z-index:20;display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:18px 0 6px;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(10,13,20,.48)}
  .sf-deck-filter{display:flex;flex-direction:column;gap:6px;min-width:150px}.sf-deck-filter label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#aeb7c7}
- .sf-deck-filter select{appearance:none;background:#121722;color:#f5f7fb;border:1px solid #3a4352;border-radius:10px;padding:9px 34px 9px 11px;font:inherit;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#b7c0ce 50%),linear-gradient(135deg,#b7c0ce 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+ .sf-deck-filter select{position:relative;z-index:21;pointer-events:auto!important;appearance:none;background:#121722;color:#f5f7fb;border:1px solid #3a4352;border-radius:10px;padding:9px 34px 9px 11px;font:inherit;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#b7c0ce 50%),linear-gradient(135deg,#b7c0ce 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
  .sf-deck-filter select:focus{outline:2px solid rgba(230,184,75,.65);outline-offset:1px}.sf-deck-filter-count{margin-left:auto;padding:9px 0;color:#aeb7c7;font-size:12px;font-weight:700}
  .deck-pick.sf-filter-hidden{display:none!important}
  @media(max-width:720px){.sf-deck-filter{min-width:calc(50% - 6px);flex:1}.sf-deck-filter-count{width:100%;margin-left:0}}
@@ -30,8 +30,11 @@ function applyFilters(){
  page.querySelectorAll('.deck-pick[data-deck-kind="monsters"]').forEach(el=>{totalMonsters++;const color=colorOf(el),show=selectedColor==='all'||selectedColor===color;el.classList.toggle('sf-filter-hidden',!show);if(show)shownMonsters++});
  const counter=page.querySelector('#sfDeckFilterCount');if(counter)counter.textContent=`${shownCards}/${totalCards} carte • ${shownMonsters}/${totalMonsters} Mostri`;
 }
-function buildColorOptions(page){
+function availableColors(page){
  const colors=[];page.querySelectorAll('.deck-pick[data-deck-kind="cards"],.deck-pick[data-deck-kind="monsters"]').forEach(el=>{const c=colorOf(el);if(c&&!colors.includes(c))colors.push(c)});
+ return colors;
+}
+function buildColorOptions(colors){
  if(selectedColor!=='all'&&!colors.includes(selectedColor))selectedColor='all';
  return `<option value="all">Tutti i colori</option>`+colors.map(c=>`<option value="${c}"${selectedColor===c?' selected':''}>${COLOR_LABEL[c]}</option>`).join('');
 }
@@ -40,17 +43,21 @@ function install(){
  const cardSection=[...page.querySelectorAll('.deck-section')].find(s=>s.querySelector('.deck-pick[data-deck-kind="cards"]'));
  if(!cardSection)return;
  let bar=page.querySelector('#sfDeckFilters');
- if(!bar){
-  bar=document.createElement('div');bar.id='sfDeckFilters';bar.className='sf-deck-filters';
-  cardSection.parentNode.insertBefore(bar,cardSection);
- }
- bar.innerHTML=`<div class="sf-deck-filter"><label for="sfDeckColorFilter">Colore</label><select id="sfDeckColorFilter">${buildColorOptions(page)}</select></div><div class="sf-deck-filter"><label for="sfDeckCostFilter">Costo in Anime</label><select id="sfDeckCostFilter"><option value="all"${selectedCost==='all'?' selected':''}>Tutti i costi</option><option value="0"${selectedCost==='0'?' selected':''}>0 Anime</option><option value="1"${selectedCost==='1'?' selected':''}>1 Anima</option><option value="2"${selectedCost==='2'?' selected':''}>2 Anime</option><option value="3"${selectedCost==='3'?' selected':''}>3 Anime</option><option value="4plus"${selectedCost==='4plus'?' selected':''}>4+ Anime</option></select></div><div class="sf-deck-filter-count" id="sfDeckFilterCount"></div>`;
+ if(bar){applyFilters();return;}
+ const colors=availableColors(page);
+ bar=document.createElement('div');bar.id='sfDeckFilters';bar.className='sf-deck-filters';
+ bar.innerHTML=`<div class="sf-deck-filter"><label for="sfDeckColorFilter">Colore</label><select id="sfDeckColorFilter">${buildColorOptions(colors)}</select></div><div class="sf-deck-filter"><label for="sfDeckCostFilter">Costo in Anime</label><select id="sfDeckCostFilter"><option value="all"${selectedCost==='all'?' selected':''}>Tutti i costi</option><option value="0"${selectedCost==='0'?' selected':''}>0 Anime</option><option value="1"${selectedCost==='1'?' selected':''}>1 Anima</option><option value="2"${selectedCost==='2'?' selected':''}>2 Anime</option><option value="3"${selectedCost==='3'?' selected':''}>3 Anime</option><option value="4plus"${selectedCost==='4plus'?' selected':''}>4+ Anime</option></select></div><div class="sf-deck-filter-count" id="sfDeckFilterCount"></div>`;
+ cardSection.parentNode.insertBefore(bar,cardSection);
  const color=bar.querySelector('#sfDeckColorFilter'),cost=bar.querySelector('#sfDeckCostFilter');
- color.onchange=()=>{selectedColor=color.value;applyFilters()};
- cost.onchange=()=>{selectedCost=cost.value;applyFilters()};
+ color.addEventListener('change',()=>{selectedColor=color.value;applyFilters()});
+ cost.addEventListener('change',()=>{selectedCost=cost.value;applyFilters()});
  applyFilters();
 }
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;install()})}
 ensureStyle();schedule();
-const app=document.getElementById('app');if(app)new MutationObserver(muts=>{if(muts.some(m=>m.addedNodes?.length))schedule()}).observe(app,{childList:true,subtree:true});
+const app=document.getElementById('app');
+// Il Deck Builder sostituisce direttamente il contenuto di #app ad ogni render.
+// Osserviamo solo quel livello: osservare tutto il subtree faceva reagire il filtro
+// alle proprie modifiche, ricreando continuamente i <select> mentre si tentava di cliccarli.
+if(app)new MutationObserver(()=>schedule()).observe(app,{childList:true});
 })();
