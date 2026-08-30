@@ -1,6 +1,6 @@
 (()=>{
 const COST={
- taglio_fiammante:0,sfera_incandescente:0,corazza_esplosiva:0,occhio_di_drago:0,mano_del_caos:1,nube_di_fuoco:1,tornado_bollente:1,fendente_di_fuoco:1,berserk:2,colpo_in_testa:3,
+ taglio_fiammante:0,sfera_incandescente:0,corazza_esplosiva:0,occhio_di_drago:0,mano_del_caos:1,nube_di_fuoco:1,tornado_bollente:1,fendente_di_fuoco:1,berserk:2,spacca_teste:1,alabardo:1,colpo_in_testa:3,
  stupido:0,riflesso:0,tutto_per_la_festa:0,taglio_ninjitsu:0,doppia_katana:1,alta_marea:1,albero_della_vita:1,sguardo_ninjitsu:1,mille_lame:12,fabbro_ninjitsu:1,
  evocatore_anime_vacue:0,anima_esplosiva:0,sacrificio:0,collasso:0,spacca_ossa:1,eclipse_fang:1,fino_alla_morte:1,mietitore:2,ammazza_morte:3,richiamo_del_branco:2,
  grandine_brillante:1,flusso_gelido:0,freddo_puro:0,in_guardia:0,ali_del_protettore:0,staffa_del_mare:1,specchio_acqua:1,muro_di_ghiaccio:2,custode_dei_deboli:3,distruzione_totale:1
@@ -56,8 +56,5 @@ function install(){
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;install()})}
 ensureStyle();schedule();
 const app=document.getElementById('app');
-// Il Deck Builder sostituisce direttamente il contenuto di #app ad ogni render.
-// Osserviamo solo quel livello: osservare tutto il subtree faceva reagire il filtro
-// alle proprie modifiche, ricreando continuamente i <select> mentre si tentava di cliccarli.
 if(app)new MutationObserver(()=>schedule()).observe(app,{childList:true});
 })();
