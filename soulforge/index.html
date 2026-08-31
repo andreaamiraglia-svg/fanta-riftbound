@@ -9,7 +9,7 @@
 <body><div class="box"><h2>Caricamento Champion of the Souls…</h2><p id="status">Connessione al server di gioco.</p></div>
 <script>
 (async()=>{
-  const BACKEND='https://gmunayvayjzzyrigaesx.supabase.co/functions/v1/soulforge-orange-safe-test';
+  const BACKEND='https://gmunayvayjzzyrigaesx.supabase.co/functions/v1/soulforge';
   try{
     const r=await fetch(BACKEND,{cache:'no-store'});
     if(!r.ok) throw new Error('HTTP '+r.status);
