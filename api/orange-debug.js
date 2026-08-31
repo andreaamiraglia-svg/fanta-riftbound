@@ -1,7 +1,0 @@
-export default async function handler(req,res){
-  try{
-    const r=await fetch('https://gmunayvayjzzyrigaesx.supabase.co/functions/v1/soulforge-orange-test',{cache:'no-store'});
-    const text=await r.text();
-    res.status(r.status).setHeader('content-type',r.headers.get('content-type')||'text/plain').send(text);
-  }catch(e){res.status(500).json({ok:false,error:e instanceof Error?e.message:String(e)});}
-}
