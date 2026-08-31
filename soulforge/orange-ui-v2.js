@@ -30,7 +30,26 @@ function idOf(el){
 function directImg(el){
  if(!el)return null;
  if(el.matches?.('img'))return el;
- try{return el.querySelector(':scope > img')}catch{return el.querySelector('img')}
+ const selectors=[
+  ':scope > .sf-card-shell > img[data-sf-orange-art="1"]',
+  ':scope > .sf-card-shell > .champ-art',
+  ':scope > .sf-card-shell > .monster-art',
+  ':scope > img[data-sf-orange-art="1"]',
+  ':scope > img'
+ ];
+ for(const selector of selectors){
+  try{const found=el.querySelector(selector);if(found)return found}catch{}
+ }
+ return el.querySelector?.('img[data-sf-orange-art="1"],.champ-art,.monster-art,img')||null;
+}
+function removeDuplicateImages(el,keep,src){
+ if(!el||!keep||!(el.classList?.contains('champ')||el.classList?.contains('monster')))return;
+ el.querySelectorAll?.('img').forEach(img=>{
+  if(img===keep)return;
+  const sameSrc=img.getAttribute('src')===src;
+  const orangeCopy=img.dataset?.sfOrangeArt==='1';
+  if(sameSrc||orangeCopy)img.remove();
+ });
 }
 function normalizeImage(el,id){
  const src=url(id);if(!src||!el)return;
@@ -45,6 +64,7 @@ function normalizeImage(el,id){
   img.classList.remove('champ-art');
  }
  if(img.getAttribute('src')!==src)img.setAttribute('src',src);
+ removeDuplicateImages(el,img,src);
 }
 function repairImages(root=document){
  root.querySelectorAll?.('[data-hand-card],[data-preview-card],[data-select-card],[data-deck-id],[data-card]').forEach(el=>{
@@ -54,10 +74,10 @@ function repairImages(root=document){
 
 function installResolver(){
  const current=window.sfArtUrl21;
- if(current?.__sfOrangeUiV2)return;
+ if(current?.__sfOrangeUiV3)return;
  const previous=current;
  const wrapped=id=>url(id)||(typeof previous==='function'?previous(id):'');
- wrapped.__sfOrangeUiV2=true;
+ wrapped.__sfOrangeUiV3=true;
  wrapped.__previous=previous;
  window.sfArtUrl21=wrapped;
 }
@@ -122,7 +142,7 @@ function boot(){
 }
 function schedule(){
  if(queued)return;queued=true;
- requestAnimationFrame(()=>{queued=false;try{boot()}catch(e){console.error('[orange-ui-v2]',e)}});
+ requestAnimationFrame(()=>{queued=false;try{boot()}catch(e){console.error('[orange-ui-v3]',e)}});
 }
 
 if(!document.getElementById('sfOrangeUiV2Style')){
@@ -139,6 +159,22 @@ if(!document.getElementById('sfOrangeUiV2Style')){
   scrollbar-width:thin;
  }
  body.sf-fantasy-game .champions.sf-support-lane>.champ{min-width:235px!important;height:100%!important}
+ body.sf-fantasy-game .champions.sf-support-lane>.sf-support-champ h3{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.05!important;
+  font-size:12px!important;
+ }
+ body.sf-fantasy-game .champ.sf-support-champ.sf-tapped .sf-champ-shell{
+  transform:none!important;
+  filter:brightness(.80) saturate(.88)!important;
+ }
+ body.sf-fantasy-game .champ.sf-support-champ.sf-tap-anim .sf-champ-shell,
+ body.sf-fantasy-game .champ.sf-support-champ.sf-untap-anim .sf-champ-shell{
+  animation:none!important;
+  transform:none!important;
+ }
  body.sf-fantasy-game .champ.orange,body.sf-fantasy-game .monster.orange{border-color:#c77a18!important}
  body.sf-fantasy-game .champ.orange .champ-art,
  body.sf-fantasy-game .monster.orange .monster-art{object-fit:contain!important;object-position:center!important}
