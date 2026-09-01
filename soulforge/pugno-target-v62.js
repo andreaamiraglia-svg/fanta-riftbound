@@ -22,9 +22,6 @@ function supportEl(id){return document.querySelector(`.champ[data-owner="${sessi
 function monsterEl(uid){return document.querySelector(`[data-monster-uid="${css(uid)}"]`)}
 function champEl(owner,id){return document.querySelector(`.champ[data-owner="${owner}"][data-champ-id="${css(id)}"]`)}
 
-/* Supporti e Campioni condividono la stessa zona/lista. Non affidarti soltanto
-   al flag runtime supportChampion, perché alcuni wrapper lo mascherano
-   temporaneamente per gli effetti che dicono "Campione". */
 function isSupportLike(c){
  if(!c)return false;
  const id=String(c.sourceCardId||c.id||'');
@@ -39,13 +36,14 @@ function isSupportLike(c){
   String(c.id||'')==='sciamano_del_sole_support'
  );
 }
-function ownSupportEls(){
+function ownSupportEntries(){
  const q=me();
  return (q?.champions||[])
   .filter(c=>!c.defeated&&isSupportLike(c))
-  .map(c=>supportEl(c.id))
-  .filter(visible);
+  .map(c=>({c,el:supportEl(c.id)}))
+  .filter(x=>visible(x.el));
 }
+function ownSupportEls(){return ownSupportEntries().map(x=>x.el)}
 function targetEntries(){
  const s=session?.state,opp=enemyId(),out=[];
  if(!s)return out;
@@ -81,9 +79,10 @@ function refresh(){
  clearMarks();
  const {hint}=ensureUI();
  if(tgt.step==='support'){
-  const els=ownSupportEls();tgt.valid=els.map(el=>({el,value:el.dataset.champId}));
-  els.forEach(el=>el.classList.add('sf-pugno-valid'));
-  hint.textContent=els.length?'Pugno in Faccia: scegli un tuo Supporto • può essere anche tappato':'Pugno in Faccia: non controlli Supporti validi';
+  const entries=ownSupportEntries();
+  tgt.valid=entries.map(x=>({el:x.el,value:String(x.c.id)}));
+  entries.forEach(x=>x.el.classList.add('sf-pugno-valid'));
+  hint.textContent=entries.length?'Pugno in Faccia: scegli un tuo Supporto • può essere anche tappato':'Pugno in Faccia: non controlli Supporti validi';
  }else{
   const entries=targetEntries();tgt.valid=entries;
   entries.forEach(x=>x.el.classList.add('sf-pugno-valid'));
@@ -105,6 +104,8 @@ function start(cardId){
  if(!supports.length){try{showError('Pugno in Faccia richiede un tuo Supporto.')}catch{}return}
  tgt={cardId:String(cardId),step:'support',supportId:null,valid:[]};refresh();
 }
+window.__sfStartPugnoInFaccia=start;
+
 function installChooser(){
  const current=window.chooseForCard;if(typeof current!=='function'||current.__sfPugnoTargetV62)return;
  const previous=current;
