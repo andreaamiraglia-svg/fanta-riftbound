@@ -1,7 +1,7 @@
 (()=>{
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 const ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp'};
-let mode=null,previousChoose=null;
+let mode=null,chooserInstalled=false;
 function artUrl(id){return ART[id]?BASE+ART[id]:''}
 function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfNewCards46)return;const prev=cur;const fn=(id)=>artUrl(String(id))||(typeof prev==='function'?prev(id):'');fn.__sfNewCards46=true;fn.__previous=prev;window.sfArtUrl21=fn}
 function patchKnownImages(root=document){const sels='[data-hand-card],[data-preview-card],[data-select-card],[data-card-id],[data-card]';root.querySelectorAll?.(sels).forEach(el=>{const id=el.dataset.handCard||el.dataset.previewCard||el.dataset.selectCard||el.dataset.cardId||el.dataset.card;const u=artUrl(id);if(!u)return;const img=el.matches('img')?el:el.querySelector('img');if(img&&img.src!==u)img.src=u})}
@@ -29,7 +29,27 @@ window.__sfStartFabbroNinjitsu=function(id='fabbro_ninjitsu'){
  startFabbro(String(card.id));
 };
 
-function installChooser(){const cur=window.chooseForCard;if(cur?.__sfNewCards46)return;previousChoose=cur;const fn=function(id){const card=(typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)])?.handCards?.find(c=>c.id===id);if(card?.effect==='colpo_in_testa'){startColpo(id);return}if(card?.effect==='fabbro_ninjitsu'){window.__sfStartFabbroNinjitsu(id);return}clear();return previousChoose?.(id)};fn.__sfNewCards46=true;window.chooseForCard=fn}
+/* Install exactly once. Re-installing this wrapper after every render used to
+   create a recursive chooseForCard cycle because older wrappers shared a
+   mutable previousChoose reference. The previous handler is now captured in
+   this closure and never changes. */
+function installChooser(){
+ if(chooserInstalled)return;
+ const previous=window.chooseForCard;
+ if(typeof previous!=='function')return;
+ chooserInstalled=true;
+ const fn=function(id){
+  const card=(typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)])?.handCards?.find(c=>String(c.id)===String(id));
+  if(card?.effect==='colpo_in_testa'){startColpo(id);return}
+  if(card?.effect==='fabbro_ninjitsu'){window.__sfStartFabbroNinjitsu(id);return}
+  clear();
+  return previous(id);
+ };
+ fn.__sfNewCards46=true;
+ fn.__previous=previous;
+ window.chooseForCard=fn;
+ try{chooseForCard=fn}catch{}
+}
 document.addEventListener('click',e=>{if(!mode)return;if(mode.type==='colpo'){const el=e.target.closest?.('.sf46-valid');if(!el)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const enemy=el.dataset.monsterUid?{type:'monster',uid:el.dataset.monsterUid}:{type:'champion',player:Number(el.dataset.owner),champId:el.dataset.champId};const cardId=mode.cardId;clear();move({type:'cast',cardId,targets:{enemy}});return}if(mode.type==='fabbroChamp'){const el=e.target.closest?.(`.sf46-valid.champ[data-owner="${session.player}"][data-champ-id]`);if(!el)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();showNinjitsuDeck(el.dataset.champId);return}if(mode.type==='fabbroDeck'){const b=e.target.closest?.('[data-sf46-deck]');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const targets={ownChamp:mode.champId,deckCardId:b.dataset.sf46Deck};clear();move({type:'cast',cardId:'fabbro_ninjitsu',targets})}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode){e.preventDefault();clear()}},true);
 function boot(){injectStyle();installArt();installChooser();patchKnownImages();syncMode()}boot();window.addEventListener('sf-blue-ready',()=>setTimeout(boot,0));setTimeout(boot,250);setTimeout(boot,1200);setTimeout(boot,3000);const app=document.getElementById('app');if(app){let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;patchKnownImages(app);syncMode()})}).observe(app,{childList:true,subtree:true})}
