@@ -1,13 +1,13 @@
 (()=>{
 const COST={
- taglio_fiammante:0,sfera_incandescente:0,corazza_esplosiva:0,occhio_di_drago:0,mano_del_caos:1,nube_di_fuoco:1,tornado_bollente:1,fendente_di_fuoco:1,berserk:2,spacca_teste:1,alabardo:1,colpo_in_testa:3,
- stupido:0,riflesso:0,tutto_per_la_festa:0,taglio_ninjitsu:0,doppia_katana:1,alta_marea:1,albero_della_vita:1,sguardo_ninjitsu:1,mille_lame:12,fabbro_ninjitsu:1,
- evocatore_anime_vacue:0,anima_esplosiva:0,sacrificio:0,collasso:0,spacca_ossa:1,eclipse_fang:1,fino_alla_morte:1,mietitore:2,ammazza_morte:3,richiamo_del_branco:2,
- grandine_brillante:1,flusso_gelido:0,freddo_puro:0,in_guardia:0,ali_del_protettore:0,staffa_del_mare:1,specchio_acqua:1,muro_di_ghiaccio:2,custode_dei_deboli:3,distruzione_totale:1
+ taglio_fiammante:0,sfera_incandescente:0,corazza_esplosiva:0,occhio_di_drago:0,mano_del_caos:1,nube_di_fuoco:1,tornado_bollente:1,fendente_di_fuoco:1,berserk:2,colpo_in_testa:3,bang:1,barile_esplosivo:0,
+ stupido:0,riflesso:0,tutto_per_la_festa:0,taglio_ninjitsu:0,doppia_katana:1,alta_marea:1,albero_della_vita:1,sguardo_ninjitsu:1,mille_lame:12,fabbro_ninjitsu:1,spacca_corazze:1,tiro_rotante:0,
+ evocatore_anime_vacue:0,anima_esplosiva:0,sacrificio:0,collasso:0,spacca_ossa:1,eclipse_fang:1,fino_alla_morte:1,mietitore:2,ammazza_morte:3,richiamo_del_branco:2,circo_infestato:0,scatola_incantata:3,
+ grandine_brillante:1,cacciatrice_della_tempesta:2,tempesta_di_ghiaccio:0,flusso_gelido:0,freddo_puro:0,in_guardia:0,ali_del_protettore:0,staffa_del_mare:1,specchio_acqua:1,muro_di_ghiaccio:2,custode_dei_deboli:3,distruzione_totale:1,
+ frecce_divine:0,loda_il_sole:0,parry:2,perfezione:1,pugno_in_faccia:0,spacca_teste:1,su_gli_scudi:1,alabardo:1,soldato_corrotto:2,legionario_troll:3,servo_del_sovrano:1,dono_ai_poveri:0
 };
-const COLOR_LABEL={red:'Rosso',green:'Verde',black:'Nero',blue:'Blu'};
+const COLOR_LABEL={red:'Rosso',green:'Verde',black:'Nero',blue:'Blu',orange:'Arancione'};
 let selectedColor='all',selectedCost='all',queued=false;
-
 function ensureStyle(){
  if(document.getElementById('sfDeckFiltersStyle'))return;
  const st=document.createElement('style');st.id='sfDeckFiltersStyle';
@@ -22,7 +22,7 @@ function ensureStyle(){
  document.head.appendChild(st);
 }
 function colorOf(el){for(const c of Object.keys(COLOR_LABEL))if(el.classList.contains(c))return c;return''}
-function costMatches(cost){if(selectedCost==='all')return true;if(selectedCost==='4plus')return Number(cost)>=4;return Number(cost)===Number(selectedCost)}
+function costMatches(cost){if(selectedCost==='all')return true;if(cost==null)return false;if(selectedCost==='4plus')return Number(cost)>=4;return Number(cost)===Number(selectedCost)}
 function applyFilters(){
  const page=document.querySelector('.deck-builder-page');if(!page)return;
  let shownCards=0,totalCards=0,shownMonsters=0,totalMonsters=0;
@@ -32,7 +32,7 @@ function applyFilters(){
 }
 function availableColors(page){
  const colors=[];page.querySelectorAll('.deck-pick[data-deck-kind="cards"],.deck-pick[data-deck-kind="monsters"]').forEach(el=>{const c=colorOf(el);if(c&&!colors.includes(c))colors.push(c)});
- return colors;
+ return colors.sort((a,b)=>({red:0,green:1,black:2,blue:3,orange:4}[a]??99)-({red:0,green:1,black:2,blue:3,orange:4}[b]??99));
 }
 function buildColorOptions(colors){
  if(selectedColor!=='all'&&!colors.includes(selectedColor))selectedColor='all';
@@ -55,6 +55,5 @@ function install(){
 }
 function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;install()})}
 ensureStyle();schedule();
-const app=document.getElementById('app');
-if(app)new MutationObserver(()=>schedule()).observe(app,{childList:true});
+const app=document.getElementById('app');if(app)new MutationObserver(()=>schedule()).observe(app,{childList:true});
 })();
