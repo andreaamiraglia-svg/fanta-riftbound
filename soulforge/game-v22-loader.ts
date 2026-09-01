@@ -10,6 +10,12 @@ patch(
 );
 
 patch(
+ "q.souls[color] = Math.min(3, before + n);",
+ "q.souls[color] = before + n;",
+ 'uncapped soul gain'
+);
+
+patch(
  "function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n !== 1 || (p !== 1 && p !== 2))",
  "function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n <= 0 || (p !== 1 && p !== 2))",
  'Lyrandel damage trigger'
@@ -172,7 +178,7 @@ function enforceSoulColorsOnPlayer(q:any){
  q.souls ||= {};
  for(const c of COLORS){
   const n=Math.max(0,Number(q.souls[c]||0));
-  q.souls[c]=allowed.has(c)?Math.min(3,n):0;
+  q.souls[c]=allowed.has(c)?n:0;
  }
  return q;
 }
