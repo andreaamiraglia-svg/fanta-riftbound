@@ -15,7 +15,22 @@ const other=(p:number)=>p===1?2:1;
 const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const champ=(s:any,p:number,id:string)=>(player(s,p)?.champions||[]).find((c:any)=>String(c?.id)===String(id));
 const monster=(s:any,id:string)=>(s?.board?.monsters||[]).find((m:any)=>String(m?.uid)===String(id));
-const support=(s:any,p:number,id:string)=>(player(s,p)?.champions||[]).find((c:any)=>c?.supportChampion&&String(c?.id)===String(id));
+function isSupportLike(c:any){
+ if(!c)return false;
+ const id=String(c?.sourceCardId||c?.id||'');
+ const def=CARD_DEFS?.[id]||CARD_DEFS?.[String(c?.id||'')];
+ const champDef=CHAMPION_DEFS?.[String(c?.id||'')];
+ return !!(
+  c?.supportChampion||
+  c?.tokenSupport||
+  def?.supportChampion||
+  def?.type==='Supporto'||
+  def?.subtype==='Supporto'||
+  champDef?.supportChampion||
+  String(c?.id||'')==='sciamano_del_sole_support'
+ );
+}
+const support=(s:any,p:number,id:string)=>(player(s,p)?.champions||[]).find((c:any)=>String(c?.id)===String(id)&&isSupportLike(c));
 const log=(s:any,msg:string)=>{if(!Array.isArray(s?.log))return;s.log.push(msg);if(s.log.length>180)s.log=s.log.slice(-180)};
 
 function sameTarget(a:any,b:any){
@@ -60,7 +75,7 @@ function beginPugnoCombat(s:any,p:number,targets:any){
  s.mainPasses=0;
  log(s,`${c.name} attacca grazie a Pugno in Faccia${c.tapped?' anche se è tappato':''}.`);
  if(c.id==='legionario_troll'){
-  const options=(player(s,p)?.champions||[]).filter((x:any)=>!x.defeated&&!x.supportChampion).map((x:any)=>({id:String(x.id),label:String(x.name||x.id)}));
+  const options=(player(s,p)?.champions||[]).filter((x:any)=>!x.defeated).map((x:any)=>({id:String(x.id),label:String(x.name||x.id)}));
   if(options.length){
    s.pendingChoice={type:'trigger_target',player:p,trigger:{actor:p,sourceCardId:'legionario_troll',effectId:'legionario_troll_attack',choiceType:'ownChampion',effectName:'Effetto — Legionario Troll'},options};
    s.priority=null;
