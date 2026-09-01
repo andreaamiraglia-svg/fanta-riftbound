@@ -124,24 +124,17 @@ function killByPowState(s:any,uid:string,killer:number|null){
 }
 
 function resolveStateBasedPowDeaths(s:any,beforePow:Map<string,number>,killer:number|null){
- // Determina prima tutti i Mostri letali, così eventuali trigger di morte non
- // possono salvare un altro Mostro che era già a danni >= POW nello stesso stato.
- const lethal:string[]=[];
+ // Determina prima tutti i Mostri letali e la relativa kill credit. In questo
+ // modo i trigger di morte del primo non possono cambiare l'esito degli altri.
+ const lethal:{uid:string,credited:number|null}[]=[];
  for(const m of s?.board?.monsters||[]){
   const uid=String(m.uid),now=monsterPow(s,m),before=beforePow.get(uid);
   if(Number(m.damage||0)>=now){
-   // Se il POW è sceso in questa azione attribuiamo l'uccisione a chi ha causato
-   // l'azione. Per stati già invalidi o scadenze senza responsabile, il Mostro
-   // muore comunque ma senza assegnare arbitrariamente una kill.
-   lethal.push(uid);
+   const credited=(before!=null&&now<before)?killer:null;
+   lethal.push({uid,credited});
   }
  }
- for(const uid of lethal){
-  const m=monster(s,uid);if(!m)continue;
-  const before=beforePow.get(uid),now=monsterPow(s,m);
-  const credited=(before!=null&&now<before)?killer:null;
-  killByPowState(s,uid,credited);
- }
+ for(const x of lethal)if(monster(s,x.uid))killByPowState(s,x.uid,x.credited);
  processQueuedLascito(s);
 }
 
