@@ -35,6 +35,12 @@ function snapshotPow(s:any){
  return out;
 }
 
+function snapshotMonsters(s:any){
+ const out=new Map<string,any>();
+ for(const m of s?.board?.monsters||[])out.set(String(m.uid),clone(m));
+ return out;
+}
+
 function inferKiller(move:any,top:any,beforeCombat:any,beforeDelayed:any[]){
  if(move?.type==='pass_priority'&&top){
   if(top.kind==='card'){
@@ -124,8 +130,6 @@ function killByPowState(s:any,uid:string,killer:number|null){
 }
 
 function resolveStateBasedPowDeaths(s:any,beforePow:Map<string,number>,killer:number|null){
- // Un Mostro muore per soglia solo se ha almeno 1 danno. Il POW può essere
- // anche 0: in quel caso qualsiasi quantità positiva di danni è letale.
  const lethal:{uid:string,credited:number|null}[]=[];
  for(const m of s?.board?.monsters||[]){
   const uid=String(m.uid),now=monsterPow(s,m),before=beforePow.get(uid),damage=Number(m.damage||0);
@@ -138,13 +142,43 @@ function resolveStateBasedPowDeaths(s:any,beforePow:Map<string,number>,killer:nu
  processQueuedLascito(s);
 }
 
+function serpentLascitoAlreadyPresent(s:any){
+ const pc=s?.pendingChoice;
+ if(pc?.type==='trigger_target'&&pc?.trigger?.effectId==='lascito_serpente')return true;
+ if((s?.stack||[]).some((x:any)=>x?.effectId==='lascito_serpente'))return true;
+ if((s?.triggerQueue||[]).some((x:any)=>x?.effectId==='lascito_serpente'))return true;
+ if((s?._orangeTriggers||[]).some((x:any)=>x?.effectId==='lascito_serpente'))return true;
+ return false;
+}
+
+function restoreMissingSerpentLascito(s:any,beforeMonsters:Map<string,any>,killer:number|null){
+ if(killer!==1&&killer!==2)return;
+ if(serpentLascitoAlreadyPresent(s))return;
+ const after=new Set((s?.board?.monsters||[]).map((m:any)=>String(m.uid)));
+ const deadSerpents=[...beforeMonsters.values()].filter((m:any)=>m?.cardId==='serpente_della_giungla'&&!after.has(String(m.uid)));
+ if(!deadSerpents.length)return;
+ const enemy=player(s,other(killer));
+ if(!COLORS.some(c=>Number(enemy?.souls?.[c]||0)>0))return;
+ s._orangeTriggers ||= [];
+ for(const dead of deadSerpents){
+  const desc=lascitoDescriptor(dead,killer);
+  if(desc)s._orangeTriggers.push(desc);
+ }
+ if(deadSerpents.length){
+  log(s,`Serpente della Giungla: Lascito viene ottenuto da ${player(s,killer)?.name||`Giocatore ${killer}`} ed entra in Catena.`);
+  processQueuedLascito(s);
+ }
+}
+
 export function act(state:any,p:any,move:any){
  const beforePow=snapshotPow(state);
+ const beforeMonsters=snapshotMonsters(state);
  const top=(move?.type==='pass_priority'&&state?.stack?.length)?clone(state.stack[state.stack.length-1]):null;
  const beforeCombat=state?.combat?clone(state.combat):null;
  const beforeDelayed=clone(state?.delayedKills||[]);
  const killer=inferKiller(move,top,beforeCombat,beforeDelayed);
  const out=base.act(state,p,move);
  resolveStateBasedPowDeaths(state,beforePow,killer);
+ restoreMissingSerpentLascito(state,beforeMonsters,killer);
  return out;
 }
