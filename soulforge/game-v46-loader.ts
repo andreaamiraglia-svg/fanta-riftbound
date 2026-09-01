@@ -130,15 +130,28 @@ function killByPowState(s:any,uid:string,killer:number|null){
 }
 
 function resolveStateBasedPowDeaths(s:any,beforePow:Map<string,number>,killer:number|null){
- const lethal:{uid:string,credited:number|null}[]=[];
- for(const m of s?.board?.monsters||[]){
-  const uid=String(m.uid),now=monsterPow(s,m),before=beforePow.get(uid),damage=Number(m.damage||0);
-  if(damage>=1&&damage>=now){
-   const credited=(before!=null&&now<before)?killer:null;
-   lethal.push({uid,credited});
+ // Il check non viene fatto una sola volta: la morte di un Mostro può rimuovere
+ // un'aura (+POW) e rendere immediatamente letale un altro Mostro già danneggiato.
+ // Continuiamo quindi a ricalcolare finché lo stato è stabile.
+ let reference=new Map(beforePow);
+ const maxPasses=Math.max(8,(s?.board?.monsters?.length||0)+8);
+ for(let pass=0;pass<maxPasses;pass++){
+  const lethal:{uid:string,credited:number|null}[]=[];
+  for(const m of s?.board?.monsters||[]){
+   const uid=String(m.uid),now=monsterPow(s,m),before=reference.get(uid),damage=Number(m.damage||0);
+   if(damage>=1&&damage>=now){
+    const credited=(before!=null&&now<before)?killer:null;
+    lethal.push({uid,credited});
+   }
   }
+  if(!lethal.length)break;
+
+  // Questo snapshot è il riferimento per eventuali ulteriori perdite di POW
+  // causate proprio dalla rimozione dei Mostri che stanno morendo adesso.
+  const beforeDeaths=snapshotPow(s);
+  for(const x of lethal)if(monster(s,x.uid))killByPowState(s,x.uid,x.credited);
+  reference=beforeDeaths;
  }
- for(const x of lethal)if(monster(s,x.uid))killByPowState(s,x.uid,x.credited);
  processQueuedLascito(s);
 }
 
