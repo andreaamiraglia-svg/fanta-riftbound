@@ -1,6 +1,7 @@
 (()=>{
 let specchioTargeting=false;
 let observer=null;
+let chooserInstalled=false;
 const PRINTED_COST=id=>Number(session?.state?.cardDefs?.[id]?.cost??99);
 
 function ensureStyle(){
@@ -30,8 +31,6 @@ function fixedCanCast(card){
  if(card.effect==='taglio'&&!s.combat)return false;
  if(card.effect==='marea'&&!s.combat)return false;
 
- // Specchio d'Acqua può rispondere a una Magia in Catena anche fuori dal combattimento.
- // Serve la priorità e la Magia bersaglio deve avere costo stampato 0 o 1.
  if(card.id==='specchio_acqua'){
   if(!(s.stack||[]).length)return false;
   if(Number(s.priority)!==Number(session.player))return false;
@@ -87,8 +86,9 @@ function beginSpecchio(){
 }
 
 function installChooser(){
+ if(chooserInstalled)return;
  const current=window.chooseForCard;
- if(typeof current!=='function'||current.__sf49Specchio)return;
+ if(typeof current!=='function')return;
  const previous=current;
  const wrapped=function(id){
   const card=playerState(session.player)?.handCards?.find(c=>String(c.id)===String(id));
@@ -99,7 +99,10 @@ function installChooser(){
   return previous(id);
  };
  wrapped.__sf49Specchio=true;
+ wrapped.__previous=previous;
  window.chooseForCard=wrapped;
+ try{chooseForCard=wrapped}catch{}
+ chooserInstalled=true;
 }
 
 function boot(){ensureStyle();installCanCast();installChooser();if(specchioTargeting)syncSpecchio()}
@@ -117,6 +120,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&specchioTargeting){
 ensureStyle();boot();
 window.addEventListener('sf-blue-ready',()=>setTimeout(boot,0));
 const app=document.getElementById('app');
-if(app){observer=new MutationObserver(m=>{if(!m.some(x=>x.addedNodes?.length))return;requestAnimationFrame(()=>{installCanCast();installChooser();if(specchioTargeting)syncSpecchio()})});observer.observe(app,{subtree:true,childList:true})}
+if(app){observer=new MutationObserver(m=>{if(!m.some(x=>x.addedNodes?.length))return;requestAnimationFrame(()=>{installCanCast();if(specchioTargeting)syncSpecchio()})});observer.observe(app,{subtree:true,childList:true})}
 setTimeout(boot,200);setTimeout(boot,1000);setTimeout(boot,2600);
 })();
