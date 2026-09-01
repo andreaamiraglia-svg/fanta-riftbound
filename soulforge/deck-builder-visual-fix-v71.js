@@ -2,8 +2,6 @@
 const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 const OLD_GRIFONE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/2c71a2b8f32346a144172842b5fb72da1c8629b4/champion-of-the-souls-carte-ottimizzate/cards/yeti.webp';
 
-// I vecchi export Blu nel branch sono fisicamente ruotati tra i filename.
-// Questa tabella descrive il contenuto reale che deve essere mostrato per ogni ID.
 const BLUE_ART={
   valtheris: CURRENT+'vecchio-delle-nevi.webp?rev=404c3869',
   squalo_delle_maree: CURRENT+'lupo-glaciale.webp?rev=404c3869',
@@ -83,12 +81,9 @@ setTimeout(patch,250);
 setTimeout(patch,1000);
 window.sfDeckBuilderVisualFix71={patch,BLUE_ART};
 
-// Il renderer storico non crea proprio <img> per gli ID nuovi.
-// Carica il layer che crea i nodi immagine mancanti in selezione, mano,
-// Pending/Catena e Campioni, senza toccare la logica di gioco.
 if(!document.querySelector('script[data-sf-new-set-art72]')){
   const s=document.createElement('script');
-  s.src='/new-set-art-v72.js?v=1';
+  s.src='/new-set-art-v72.js?v=2';
   s.async=false;
   s.dataset.sfNewSetArt72='1';
   document.head.appendChild(s);
