@@ -124,12 +124,12 @@ function killByPowState(s:any,uid:string,killer:number|null){
 }
 
 function resolveStateBasedPowDeaths(s:any,beforePow:Map<string,number>,killer:number|null){
- // Un Mostro a 0 POW resta in gioco. La sconfitta per soglia richiede almeno
- // 1 danno e un POW attuale maggiore di 0; da lì, danni >= POW è letale.
+ // Un Mostro muore per soglia solo se ha almeno 1 danno. Il POW può essere
+ // anche 0: in quel caso qualsiasi quantità positiva di danni è letale.
  const lethal:{uid:string,credited:number|null}[]=[];
  for(const m of s?.board?.monsters||[]){
   const uid=String(m.uid),now=monsterPow(s,m),before=beforePow.get(uid),damage=Number(m.damage||0);
-  if(now>0&&damage>=1&&damage>=now){
+  if(damage>=1&&damage>=now){
    const credited=(before!=null&&now<before)?killer:null;
    lethal.push({uid,credited});
   }
