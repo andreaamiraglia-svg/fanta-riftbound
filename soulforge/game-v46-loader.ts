@@ -8,7 +8,6 @@ export const STARTER_DECK=base.STARTER_DECK;
 export const STARTER_MONSTERS=base.STARTER_MONSTERS;
 export const newState=base.newState;
 export const newPlayer=base.newPlayer;
-export const publicView=base.publicView;
 
 const COLORS=['red','green','black','blue','orange'];
 const clone=(x:any)=>JSON.parse(JSON.stringify(x));
@@ -17,6 +16,35 @@ const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const monster=(s:any,uid:any)=>(s?.board?.monsters||[]).find((m:any)=>String(m?.uid)===String(uid));
 const log=(s:any,msg:string)=>{s.log ||= [];s.log.push(msg);if(s.log.length>180)s.log=s.log.slice(-180)};
 const colorLabel=(c:string)=>c==='red'?'Rossa':c==='green'?'Verde':c==='black'?'Nera':c==='blue'?'Blu':'Arancione';
+
+function isSupportLike(c:any){
+ if(!c)return false;
+ const id=String(c?.sourceCardId||c?.id||'');
+ const def=CARD_DEFS?.[id]||CARD_DEFS?.[String(c?.id||'')];
+ const champDef=CHAMPION_DEFS?.[String(c?.id||'')];
+ return !!(
+  c?.supportChampion||
+  c?.tokenSupport||
+  def?.supportChampion||
+  def?.type==='Supporto'||
+  def?.subtype==='Supporto'||
+  champDef?.supportChampion||
+  String(c?.id||'')==='sciamano_del_sole_support'
+ );
+}
+function normalizeSupportMarkers(s:any){
+ for(const p of [1,2]){
+  for(const c of player(s,p)?.champions||[]){
+   if(isSupportLike(c))c.supportChampion=true;
+  }
+ }
+ return s;
+}
+
+export function publicView(state:any,p:any){
+ normalizeSupportMarkers(state);
+ return base.publicView(state,p);
+}
 
 function monsterPow(s:any,m:any){
  const d=MONSTER_DEFS?.[m?.cardId];if(!d)return 0;
@@ -184,6 +212,7 @@ function restoreMissingSerpentLascito(s:any,beforeMonsters:Map<string,any>,kille
 }
 
 export function act(state:any,p:any,move:any){
+ normalizeSupportMarkers(state);
  const beforePow=snapshotPow(state);
  const beforeMonsters=snapshotMonsters(state);
  const top=(move?.type==='pass_priority'&&state?.stack?.length)?clone(state.stack[state.stack.length-1]):null;
@@ -191,7 +220,9 @@ export function act(state:any,p:any,move:any){
  const beforeDelayed=clone(state?.delayedKills||[]);
  const killer=inferKiller(move,top,beforeCombat,beforeDelayed);
  const out=base.act(state,p,move);
+ normalizeSupportMarkers(state);
  resolveStateBasedPowDeaths(state,beforePow,killer);
  restoreMissingSerpentLascito(state,beforeMonsters,killer);
+ normalizeSupportMarkers(state);
  return out;
 }
