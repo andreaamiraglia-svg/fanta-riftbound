@@ -32,7 +32,6 @@ Object.defineProperty(CARD_DEFS,SHELL,{
   }
 });
 
-const clone=(x:any)=>JSON.parse(JSON.stringify(x));
 const other=(p:number)=>p===1?2:1;
 const pl=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const monster=(s:any,uid:any)=>(s?.board?.monsters||[]).find((m:any)=>String(m?.uid)===String(uid));
@@ -104,7 +103,6 @@ function pushSecondaryTriggerIfReady(s:any){
   const alive=(tr.uids||[]).map(String).filter((u:string)=>!!monster(s,u));
   if(!alive.length){
     log(s,'L’effetto secondario di Scatola Incantata non trova più i Mostri evocati.');
-    // Se ci sono più Scatole in attesa, prova anche la successiva.
     pushSecondaryTriggerIfReady(s);
     return;
   }
@@ -119,7 +117,6 @@ function pushSecondaryTriggerIfReady(s:any){
     targets:{},
     meta:{uids:alive}
   });
-  // Mantiene la Catena nello stesso flusso della Magia originale.
   s.stackInitiator=Number(tr.actor);
   s.priority=other(Number(tr.actor));
   s.priorityPasses=0;
@@ -174,14 +171,13 @@ export function act(state:any,p0:any,move0:any){
   }
 
   if(prepared)enqueueKillTrigger(state,prepared.actor,prepared.uids);
+  // Questa funzione gira soltanto dopo una MOVE realmente persistita. Non
+  // viene mai chiamata dal polling/publicView, quindi lo stato restituito e lo
+  // stato salvato nel DB restano sempre identici.
   pushSecondaryTriggerIfReady(state);
   return out||state;
 }
 
 export function publicView(state:any,p:any){
-  // Anche un semplice polling può arrivare quando gli effetti d'entrata hanno
-  // finito di risolversi: in quel caso rende subito visibile il trigger
-  // secondario senza richiedere un'altra azione artificiale.
-  pushSecondaryTriggerIfReady(state);
   return sanitizePublic(base.publicView(state,p));
 }
