@@ -1,11 +1,16 @@
-/* Hand interaction v11 */
+/* Hand interaction v12 — stable overlap hover */
 .hand-wrap{overflow:visible!important}
 .hand-fan{perspective:1200px;isolation:isolate}
 .hand-card{
   transition:transform .24s cubic-bezier(.2,.75,.2,1),filter .2s ease,opacity .2s ease!important;
   will-change:transform,filter;
   transform-style:preserve-3d;
+  /* fantasy-board-v29 also moves hovered cards with the individual translate
+     property. That changes the pointer hit area and causes two overlapping cards
+     to oscillate at their boundary. hand-v11.js is the only movement owner. */
+  translate:none!important;
 }
+.hand-card:hover{translate:none!important}
 .hand-card img{
   transition:box-shadow .22s ease,filter .22s ease!important;
   backface-visibility:hidden;
