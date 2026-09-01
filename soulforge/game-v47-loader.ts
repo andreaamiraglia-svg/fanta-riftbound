@@ -32,6 +32,14 @@ function enforceStarterGameover(s:any){
   }
  }
  if(s.status==='gameover'){
+  // Prima di chiudere la Catena conserva le carte non ancora risolte nei rispettivi
+  // Cimiteri, così il rematch può ricostruire correttamente i mazzi.
+  for(const x of s.stack||[]){
+   if(x?.kind!=='card')continue;
+   const q=player(s,Number(x.actor));
+   const id=String(x.cardId||'');
+   if(q&&id){q.grave ||= [];if(!q.grave.includes(id))q.grave.push(id);}
+  }
   // Gameover è uno stato terminale. Non devono restare interazioni o risoluzioni
   // pendenti che il frontend/polling possano tentare di continuare a processare.
   s.priority=null;
