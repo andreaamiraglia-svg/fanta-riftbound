@@ -27,6 +27,9 @@ function parseBaseTransform(el){
 
 function setTransform(el,value){
   el.style.setProperty('transform',value,'important');
+  /* The fantasy-board skin still has an old `translate` hover effect.
+     Always neutralise it so the card hit area cannot move under the pointer. */
+  el.style.setProperty('translate','none','important');
 }
 
 function baseTransform(el){
@@ -39,12 +42,13 @@ function bindFancyHand(){
   fan.dataset.sfFancyBound='1';
 
   const cards=[...fan.querySelectorAll('.hand-card')];
+  const bases=[];
   cards.forEach((el,i)=>{
     const base=el.style.transform||'';
     el.dataset.sfBaseTransform=base;
     el.dataset.sfHandIndex=String(i);
-    /* Lock the fan transform with inline !important so the old fantasy-board
-       :hover rule cannot replace translate(x,y) with translate(0,-24px). */
+    const parsed=parseBaseTransform(el);
+    bases.push(parsed||{x:i*82,y:0,r:0});
     setTransform(el,base);
   });
 
@@ -62,19 +66,16 @@ function bindFancyHand(){
   };
 
   const focusAt=(index)=>{
-    if(index===activeIndex)return;
+    if(index<0||index>=cards.length||index===activeIndex)return;
     activeIndex=index;
     fan.classList.add('sf-hand-active');
 
     cards.forEach((el,i)=>{
-      const base=parseBaseTransform(el);
-      if(!base)return;
+      const base=bases[i];
       el.classList.remove('sf-hand-focus','sf-hand-near');
 
       if(i===index){
         el.classList.add('sf-hand-focus');
-        /* Only the selected card moves. Neighbours stay exactly in their fan
-           positions, which prevents pointer-enter/leave oscillation. */
         setTransform(el,`translate(${base.x}px,${base.y-34}px) rotate(0deg) scale(1.09)`);
         el.style.setProperty('z-index','120');
       }else{
@@ -85,8 +86,19 @@ function bindFancyHand(){
     });
   };
 
-  cards.forEach((el,i)=>{
-    el.addEventListener('pointerenter',()=>focusAt(i));
+  /* Do not use pointerenter on overlapping cards. Once a card is lifted and its
+     z-index changes, pointerenter can alternate between two neighbours even if
+     the mouse is stationary. Instead pick the nearest ORIGINAL fan position. */
+  fan.addEventListener('pointermove',e=>{
+    if(!cards.length)return;
+    const rect=fan.getBoundingClientRect();
+    const localX=e.clientX-(rect.left+rect.width/2);
+    let best=0,bestDist=Infinity;
+    for(let i=0;i<bases.length;i++){
+      const d=Math.abs(localX-bases[i].x);
+      if(d<bestDist){bestDist=d;best=i;}
+    }
+    focusAt(best);
   });
 
   fan.addEventListener('pointerleave',reset);
