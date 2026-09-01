@@ -81,11 +81,15 @@ function activate(id){
   if(lastPlay.id===id&&now-lastPlay.at<280)return;
   lastPlay={id,at:now};
 
-  /* Fabbro Ninjitsu is intentionally routed outside the generic chooser chain:
-     it has a two-step interaction (Champion -> Ninjitsu card in deck), and
-     historical chooser wrappers can otherwise swallow or restart that flow. */
   if(id==='fabbro_ninjitsu'&&typeof window.__sfStartFabbroNinjitsu==='function'){
     try{return window.__sfStartFabbroNinjitsu(id)}catch(e){try{showError(e?.message||String(e))}catch{}return}
+  }
+
+  /* Pugno in Faccia non passa più attraverso chooseForCard. Ha un flusso
+     dedicato Supporto -> bersaglio e deve restare stabile anche quando gli
+     altri wrapper vengono reinstallati dopo i render. */
+  if(id==='pugno_in_faccia'&&typeof window.__sfStartPugnoInFaccia==='function'){
+    try{return window.__sfStartPugnoInFaccia(id)}catch(e){try{showError(e?.message||String(e))}catch{}return}
   }
 
   const chooser=window.chooseForCard;
