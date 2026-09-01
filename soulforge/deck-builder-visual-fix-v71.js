@@ -82,4 +82,15 @@ patch();
 setTimeout(patch,250);
 setTimeout(patch,1000);
 window.sfDeckBuilderVisualFix71={patch,BLUE_ART};
+
+// Il renderer storico non crea proprio <img> per gli ID nuovi.
+// Carica il layer che crea i nodi immagine mancanti in selezione, mano,
+// Pending/Catena e Campioni, senza toccare la logica di gioco.
+if(!document.querySelector('script[data-sf-new-set-art72]')){
+  const s=document.createElement('script');
+  s.src='/new-set-art-v72.js?v=1';
+  s.async=false;
+  s.dataset.sfNewSetArt72='1';
+  document.head.appendChild(s);
+}
 })();
