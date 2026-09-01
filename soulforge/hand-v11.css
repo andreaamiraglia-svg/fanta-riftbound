@@ -1,13 +1,10 @@
-/* Hand interaction v12 — stable overlap hover */
+/* Hand interaction v13 — stable overlap hover + cancelled drag cleanup */
 .hand-wrap{overflow:visible!important}
 .hand-fan{perspective:1200px;isolation:isolate}
 .hand-card{
   transition:transform .24s cubic-bezier(.2,.75,.2,1),filter .2s ease,opacity .2s ease!important;
   will-change:transform,filter;
   transform-style:preserve-3d;
-  /* fantasy-board-v29 also moves hovered cards with the individual translate
-     property. That changes the pointer hit area and causes two overlapping cards
-     to oscillate at their boundary. hand-v11.js is the only movement owner. */
   translate:none!important;
 }
 .hand-card:hover{translate:none!important}
@@ -22,8 +19,24 @@
 }
 .hand-card.sf-hand-near img{filter:brightness(.96)}
 .hand-fan.sf-hand-active .hand-card:not(.sf-hand-focus):not(.sf-hand-near){filter:brightness(.78) saturate(.84)}
+
+/* Native drag temporarily changes browser hit-testing. While a card is being
+   dragged, freeze all fan transitions so cancelling the drag cannot replay a
+   stale hover animation or flash between transformed states. */
+.hand-fan.sf-hand-dragging .hand-card,
+.hand-fan.sf-hand-dragging .hand-card img{
+  transition:none!important;
+}
+.hand-fan.sf-hand-dragging{cursor:grabbing}
+.hand-card.sf-hand-drag-source,
+.hand-card.dragging{
+  filter:none!important;
+  translate:none!important;
+}
+
 @media(max-width:800px){
   .hand-card{transition:transform .18s ease,filter .18s ease!important}
+  .hand-fan.sf-hand-dragging .hand-card{transition:none!important}
 }
 @media(prefers-reduced-motion:reduce){
   .hand-card,.hand-card img{transition:none!important}
