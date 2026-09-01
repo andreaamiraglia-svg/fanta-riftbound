@@ -27,8 +27,6 @@ function parseBaseTransform(el){
 
 function setTransform(el,value){
   el.style.setProperty('transform',value,'important');
-  /* The fantasy-board skin still has an old `translate` hover effect.
-     Always neutralise it so the card hit area cannot move under the pointer. */
   el.style.setProperty('translate','none','important');
 }
 
@@ -53,20 +51,35 @@ function bindFancyHand(){
   });
 
   let activeIndex=-1;
+  let dragging=false;
 
+  /* Always restore every card. Do not early-return when activeIndex is -1:
+     a cancelled native drag can leave classes/z-index behind even after the
+     hover state itself has already been cleared. */
   const reset=()=>{
-    if(activeIndex===-1)return;
     activeIndex=-1;
     fan.classList.remove('sf-hand-active');
     cards.forEach(el=>{
-      el.classList.remove('sf-hand-focus','sf-hand-near');
+      el.classList.remove('sf-hand-focus','sf-hand-near','sf-hand-drag-source','dragging');
       setTransform(el,baseTransform(el));
       el.style.removeProperty('z-index');
+      el.style.removeProperty('opacity');
+      el.style.removeProperty('filter');
     });
   };
 
+  const finishDrag=()=>{
+    dragging=false;
+    fan.classList.remove('sf-hand-dragging');
+    reset();
+    /* Legacy bind() also handles dragend. Run once more after its DOM0 handler
+       has finished so no class or inline style can survive the cancelled drag. */
+    requestAnimationFrame(reset);
+    setTimeout(reset,0);
+  };
+
   const focusAt=(index)=>{
-    if(index<0||index>=cards.length||index===activeIndex)return;
+    if(dragging||index<0||index>=cards.length||index===activeIndex)return;
     activeIndex=index;
     fan.classList.add('sf-hand-active');
 
@@ -86,11 +99,8 @@ function bindFancyHand(){
     });
   };
 
-  /* Do not use pointerenter on overlapping cards. Once a card is lifted and its
-     z-index changes, pointerenter can alternate between two neighbours even if
-     the mouse is stationary. Instead pick the nearest ORIGINAL fan position. */
   fan.addEventListener('pointermove',e=>{
-    if(!cards.length)return;
+    if(dragging||!cards.length)return;
     const rect=fan.getBoundingClientRect();
     const localX=e.clientX-(rect.left+rect.width/2);
     let best=0,bestDist=Infinity;
@@ -101,8 +111,31 @@ function bindFancyHand(){
     focusAt(best);
   });
 
-  fan.addEventListener('pointerleave',reset);
-  fan.addEventListener('pointercancel',reset);
+  fan.addEventListener('pointerleave',()=>{if(!dragging)reset()});
+  fan.addEventListener('pointercancel',()=>{if(!dragging)reset()});
+
+  /* Native HTML drag temporarily changes hit-testing and can suppress the normal
+     pointerleave sequence. Freeze the whole fan before the browser starts its
+     drag ghost and explicitly restore it afterwards. */
+  fan.addEventListener('dragstart',e=>{
+    const card=e.target instanceof Element?e.target.closest('.hand-card'):null;
+    if(!card)return;
+    dragging=true;
+    reset();
+    dragging=true;
+    fan.classList.add('sf-hand-dragging');
+    card.classList.add('sf-hand-drag-source');
+  },true);
+
+  fan.addEventListener('dragend',finishDrag,true);
+  fan.addEventListener('drop',finishDrag,true);
+
+  /* ESC is the usual way browsers cancel a native drag. dragend should fire,
+     but this extra cleanup also covers browser-specific cancelled-drag paths. */
+  document.addEventListener('keyup',e=>{
+    if(e.key==='Escape'&&dragging)finishDrag();
+  });
+  window.addEventListener('blur',()=>{if(dragging)finishDrag()});
 }
 
 const prevRender=render;
