@@ -37,8 +37,6 @@ function normalize(root=document){
     const card=handCard(id);
     const legal=isLegal(card);
 
-    /* The card element is always the native drag source. Old DOM0 handlers are
-       removed so there is only one input path for drag/drop and double click. */
     el.draggable=true;
     el.setAttribute('draggable','true');
     el.ondblclick=null;
@@ -83,6 +81,13 @@ function activate(id){
   if(lastPlay.id===id&&now-lastPlay.at<280)return;
   lastPlay={id,at:now};
 
+  /* Fabbro Ninjitsu is intentionally routed outside the generic chooser chain:
+     it has a two-step interaction (Champion -> Ninjitsu card in deck), and
+     historical chooser wrappers can otherwise swallow or restart that flow. */
+  if(id==='fabbro_ninjitsu'&&typeof window.__sfStartFabbroNinjitsu==='function'){
+    try{return window.__sfStartFabbroNinjitsu(id)}catch(e){try{showError(e?.message||String(e))}catch{}return}
+  }
+
   const chooser=window.chooseForCard;
   if(typeof chooser!=='function'){
     try{showError('Interazione carta non disponibile. Ricarica la pagina.')}catch{}
@@ -94,7 +99,6 @@ function activate(id){
   }catch(e){try{showError(e?.message||String(e))}catch{}}
 }
 
-/* Single delegated double-click path. */
 document.addEventListener('dblclick',e=>{
   const el=e.target instanceof Element?e.target.closest('.hand-card[data-hand-card]'):null;
   if(!el)return;
@@ -104,8 +108,6 @@ document.addEventListener('dblclick',e=>{
   activate(el.dataset.handCard);
 },true);
 
-/* Native drag is kept because it works consistently with mouse input, but the
-   source survives polling: render() is deferred for the duration of the drag. */
 document.addEventListener('dragstart',e=>{
   const el=e.target instanceof Element?e.target.closest('.hand-card[data-hand-card]'):null;
   if(!el)return;
@@ -159,9 +161,6 @@ document.addEventListener('dragend',()=>{if(dragId)finishDrag()},true);
 document.addEventListener('keyup',e=>{if(e.key==='Escape'&&dragId)finishDrag()},true);
 window.addEventListener('blur',()=>{if(dragId)finishDrag()});
 
-/* Polling used to replace the whole hand every ~900 ms even while the browser
-   was dragging a card. That destroys the drag source and causes the visible
-   flash/stuck-card bug. Defer only those renders until dragend/drop. */
 const previousRender=window.render;
 if(typeof previousRender==='function'&&!previousRender.__sfHandInputV69){
   const wrapped=function(){
