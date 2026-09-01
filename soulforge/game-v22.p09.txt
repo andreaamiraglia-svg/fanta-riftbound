@@ -62,14 +62,16 @@ meta || {}; log(s, `Si risolve ${item.effectName || 'un effetto'}.`); switch (it
         const before = list.map(x => ({ uid: x.uid, pow: currentMonsterPow(s, x) }));
         for (const x of list) {
             const b = before.find(z => z.uid === x.uid)?.pow || 0;
-            x.powMod = (x.powMod || 0) - b;
+            // Yeti porta il POW attuale a 0 solo per questo turno.
+            // tempPow viene azzerato da finalizeEndTurn, mentre powMod è permanente.
+            x.tempPow = (x.tempPow || 0) - b;
         }
         for (const x of list) {
             const b = before.find(z => z.uid === x.uid)?.pow || 0;
             if (b > 0)
                 addArmorMonster(s, x, b, 'Yeti');
         }
-        log(s, 'Yeti riduce a 0 il POW dei Mostri e converte il POW perso in Armatura.');
+        log(s, 'Yeti riduce a 0 il POW dei Mostri per questo turno e converte il POW perso in Armatura.');
         break;
     }
 } }
