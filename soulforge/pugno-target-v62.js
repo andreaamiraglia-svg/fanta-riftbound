@@ -22,9 +22,29 @@ function supportEl(id){return document.querySelector(`.champ[data-owner="${sessi
 function monsterEl(uid){return document.querySelector(`[data-monster-uid="${css(uid)}"]`)}
 function champEl(owner,id){return document.querySelector(`.champ[data-owner="${owner}"][data-champ-id="${css(id)}"]`)}
 
+/* Supporti e Campioni condividono la stessa zona/lista. Non affidarti soltanto
+   al flag runtime supportChampion, perché alcuni wrapper lo mascherano
+   temporaneamente per gli effetti che dicono "Campione". */
+function isSupportLike(c){
+ if(!c)return false;
+ const id=String(c.sourceCardId||c.id||'');
+ const defs=session?.state?.cardDefs||{};
+ const d=defs[id]||defs[String(c.id||'')]||null;
+ return !!(
+  c.supportChampion||
+  d?.supportChampion||
+  d?.type==='Supporto'||
+  d?.subtype==='Supporto'||
+  c.tokenSupport||
+  String(c.id||'')==='sciamano_del_sole_support'
+ );
+}
 function ownSupportEls(){
  const q=me();
- return (q?.champions||[]).filter(c=>c.supportChampion&&!c.defeated).map(c=>supportEl(c.id)).filter(visible);
+ return (q?.champions||[])
+  .filter(c=>!c.defeated&&isSupportLike(c))
+  .map(c=>supportEl(c.id))
+  .filter(visible);
 }
 function targetEntries(){
  const s=session?.state,opp=enemyId(),out=[];
