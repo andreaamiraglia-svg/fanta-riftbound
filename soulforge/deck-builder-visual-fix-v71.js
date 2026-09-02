@@ -5,7 +5,7 @@ const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftb
 // Grifone della Tempesta ora usa il proprio artwork canonico.
 const BLUE_ART={
   valtheris: CURRENT+'vecchio-delle-nevi.webp?rev=404c3869',
-  squalo_delle_maree: CURRENT+'lupo-glaciale.webp?rev=404c3869',
+  squalo_delle_maree: CURRENT+'squalo-delle-maree.webp?rev=art-shark-v1',
   lupo_glaciale: CURRENT+'lupo-glaciale.webp?rev=blue-replace-v3',
   grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=blue-replace-v3',
   yeti: CURRENT+'leviatano.webp?rev=404c3869',
