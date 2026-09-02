@@ -20,11 +20,16 @@ const ART={
   cacciatrice_della_tempesta:'cacciatrice-della-tempesta.webp',
   tempesta_di_ghiaccio:'tempesta-di-ghiaccio.webp',
   servo_del_sovrano:'servo-del-sovrano.webp',
-  dono_ai_poveri:'dono-ai-poveri.webp'
+  dono_ai_poveri:'dono-ai-poveri.webp',
+  minotauro_infernale:'minotauro-infernale.webp',
+  treant_millenario:'treant-millenario.webp',
+  ghoul_affamato:'ghoul-affamato.webp',
+  balena_della_tempesta:'balena-della-tempesta.webp',
+  scarabeo_dorato:'scarabeo-dorato.webp'
 };
-// Questi due file sono ora espliciti e non passano dalla vecchia rotazione Blu.
+// Questi due file sono espliciti e non passano dalla vecchia rotazione Blu.
 const BLUE_FIX={
-  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=grifone-canonical-v2',
+  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=grifone-canonical-v3',
   yeti:BASE+'yeti.webp?rev=yeti-404c3869'
 };
 const ownUrl=id=>BLUE_FIX[id]||(ART[id]?BASE+ART[id]:'');
