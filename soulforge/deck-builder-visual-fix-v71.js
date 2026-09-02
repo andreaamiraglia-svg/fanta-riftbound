@@ -1,13 +1,13 @@
 (()=>{
 const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 
-// Gli export Blu presenti nel branch sono fisicamente ruotati tra i filename.
-// Questo mapping è allineato al loader Blu stabile usato in partita.
+// Manteniamo le correzioni Blu storiche solo dove servono.
+// Grifone della Tempesta ora usa il proprio artwork canonico.
 const BLUE_ART={
   valtheris: CURRENT+'vecchio-delle-nevi.webp?rev=404c3869',
   squalo_delle_maree: CURRENT+'lupo-glaciale.webp?rev=404c3869',
   lupo_glaciale: CURRENT+'grifone-della-tempesta.webp?rev=404c3869',
-  grifone_della_tempesta: CURRENT+'yeti.webp?rev=404c3869',
+  grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=griffon-fix-v1',
   yeti: CURRENT+'leviatano.webp?rev=404c3869',
   leviatano: CURRENT+'valtheris-spirito-eterno.webp?rev=404c3869',
   vecchio_delle_nevi: CURRENT+'squalo-delle-maree.webp?rev=404c3869'
