@@ -4,7 +4,7 @@ const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftb
 // Manteniamo le correzioni Blu storiche solo dove servono.
 // Grifone della Tempesta ora usa il proprio artwork canonico.
 const BLUE_ART={
-  valtheris: CURRENT+'valtheris-spirito-eterno.webp?rev=blue-set-v4',
+  valtheris: CURRENT+'valtheris-spirito-eterno.webp?rev=blue-valtheris-v1',
   squalo_delle_maree: CURRENT+'squalo-delle-maree.webp?rev=blue-set-v4',
   lupo_glaciale: CURRENT+'lupo-glaciale.webp?rev=blue-set-v4',
   grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=blue-set-v4',
