@@ -30,7 +30,7 @@ const EFFECT={
  lyrandel:'La prima volta in ogni turno che una tua Magia infligge danni a un Mostro, scegli uno dei Mostri danneggiati: ottiene +1 POW per questo turno.',
  divoratore_campione:'Dopo che hai ucciso un Mostro in questo turno, puoi tappare questo Campione per riprendere una carta dal tuo Cimitero.',
  valtheris:'All’inizio del turno, Valtheris ottiene 1 Armatura.',
- scarlet:'Se hai scartato una carta dalla tua mano in questo turno, pesca una carta Rossa dal tuo Mazzo e riduci di 1 Anima Rossa il suo costo.',
+ scarlet:'Se hai scartato una carta dalla tua mano in questo turno, pesca una carta Rossa dal tuo Mazzo.',
  torvald:'La prima volta che Torvald muore, ritorna in vita con 1 HP. Alla fine del turno, muore.',
  grinn:'La prima volta in ogni turno che muore un Campione o un Mostro con 4 o più POW, le Magie di costo 3 o superiore costano 1 Anima in meno per questo turno.',
  hilda:'Quando riduci un nemico a 0 POW o meno, Hilda lo attacca.',
