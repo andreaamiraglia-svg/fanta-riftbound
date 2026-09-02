@@ -3,7 +3,7 @@ const DATA={
  minotauro_infernale:{pow:4,color:'red',label:'ROSSO',text:'Quando questo Mostro entra in gioco, tutti i giocatori scartano 1 carta dalla loro mano.'},
  treant_millenario:{pow:3,color:'green',label:'VERDE',text:'Quando subisce danni ottiene 2 Armatura.'},
  ghoul_affamato:{pow:1,color:'black',label:'NERO',text:'Quando muore un altro Mostro, le Magie di costo 3 o superiore costano 1 Anima in meno per questo turno.'},
- balena_della_tempesta:{pow:4,color:'blue',label:'BLU',text:'Quando entra in gioco infligge 1 danno a tutti i Campioni.'},
+ balena_della_tempesta:{pow:4,color:'blue',label:'BLU',text:'Quando entra in gioco riduce di 1 il POW a tutti i Campioni.'},
  scarabeo_dorato:{pow:2,color:'orange',label:'ARANCIONE',text:'Lascito — Pesca 1 carta.'}
 };
 let last='';
