@@ -1,6 +1,5 @@
 (()=>{
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
-const OLD_BLUE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/fefcef7c59cebcf33ece3a31b57942a1501f3ce5/champion-of-the-souls-carte-ottimizzate/cards/';
 const ART={
   scarlet:'scarlet-fiamma-dei-mari.webp',
   torvald:'torvald-spezzatronchi.webp',
@@ -23,11 +22,9 @@ const ART={
   servo_del_sovrano:'servo-del-sovrano.webp',
   dono_ai_poveri:'dono-ai-poveri.webp'
 };
-// Il commit 404c3869 ha sovrascritto solo yeti.webp tra gli artwork Blu:
-// il file nuovo è lo Yeti corretto; la revisione immediatamente precedente è
-// l'artwork che veniva usato dal Grifone della Tempesta.
+// Questi due file sono ora espliciti e non passano dalla vecchia rotazione Blu.
 const BLUE_FIX={
-  grifone_della_tempesta:OLD_BLUE+'yeti.webp?rev=grifone-pre-404c3869',
+  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=grifone-canonical-v2',
   yeti:BASE+'yeti.webp?rev=yeti-404c3869'
 };
 const ownUrl=id=>BLUE_FIX[id]||(ART[id]?BASE+ART[id]:'');
