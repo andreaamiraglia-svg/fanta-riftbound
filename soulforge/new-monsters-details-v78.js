@@ -8,7 +8,7 @@ const DATA={
 };
 let last='';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function remember(e){const el=e.target instanceof Element?e.target.closest('[data-preview-id],[data-sidebar-preview]'):null;if(!el)return;const id=String(el.dataset.previewId||el.dataset.sidebarPreview||'');if(DATA[id]){last=id;setTimeout(patch,0);setTimeout(patch,35)}}
+function remember(e){const el=e.target instanceof Element?e.target.closest('[data-preview-id],[data-sidebar-preview]'):null;if(!el)return;const id=String(el.dataset.previewId||el.dataset.sidebarPreview||'');last=DATA[id]?id:'';if(last){setTimeout(patch,0);setTimeout(patch,35)}}
 function patch(){
  if(!last||!DATA[last])return;
  const overlay=document.getElementById('deckPreview');if(!overlay?.classList.contains('show'))return;

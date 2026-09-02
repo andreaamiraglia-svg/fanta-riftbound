@@ -29,7 +29,8 @@ const ART={
 };
 // Questi due file sono espliciti e non passano dalla vecchia rotazione Blu.
 const BLUE_FIX={
-  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=webp-set1-v1',
+  lupo_glaciale:BASE+'lupo-glaciale.webp?rev=art-stable-v1',
+  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=art-stable-v1',
   yeti:BASE+'yeti.webp?rev=yeti-404c3869'
 };
 const artUrl=file=>BASE+encodeURIComponent(file).replace(/'/g,'%27');
@@ -80,7 +81,7 @@ function patch(root=document){
   if(root instanceof Element&&root.matches(SELECTOR))ensure(root);
   root.querySelectorAll?.(SELECTOR).forEach(ensure);
   const preview=document.getElementById('deckPreview');
-  if(preview){const title=preview.querySelector('h3')?.textContent?.trim();const id=title==='Grifone della tempesta'||title==='Grifone della Tempesta'?'grifone_della_tempesta':title==='Yeti'?'yeti':'';if(id)setTimeout(()=>setImgPreview(preview,id),0)}
+  if(preview){const title=preview.querySelector('h3')?.textContent?.trim();const id=title==='Lupo Glaciale'?'lupo_glaciale':title==='Grifone della tempesta'||title==='Grifone della Tempesta'?'grifone_della_tempesta':title==='Yeti'?'yeti':'';if(id)setTimeout(()=>setImgPreview(preview,id),0)}
 }
 function setImgPreview(preview,id){const img=preview?.querySelector('img'),src=ownUrl(id);if(img&&src&&img.getAttribute('src')!==src)img.setAttribute('src',src)}
 function installResolver(){
