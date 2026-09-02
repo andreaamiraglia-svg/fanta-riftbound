@@ -4,13 +4,13 @@ const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftb
 // Manteniamo le correzioni Blu storiche solo dove servono.
 // Grifone della Tempesta ora usa il proprio artwork canonico.
 const BLUE_ART={
-  valtheris: CURRENT+'vecchio-delle-nevi.webp?rev=404c3869',
-  squalo_delle_maree: CURRENT+'squalo-delle-maree.webp?rev=art-shark-v2',
-  lupo_glaciale: CURRENT+'lupo-glaciale.webp?rev=blue-replace-v3',
-  grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=blue-replace-v3',
-  yeti: CURRENT+'leviatano.webp?rev=404c3869',
-  leviatano: CURRENT+'valtheris-spirito-eterno.webp?rev=404c3869',
-  vecchio_delle_nevi: CURRENT+'squalo-delle-maree.webp?rev=404c3869'
+  valtheris: CURRENT+'valtheris-spirito-eterno.webp?rev=blue-set-v4',
+  squalo_delle_maree: CURRENT+'squalo-delle-maree.webp?rev=blue-set-v4',
+  lupo_glaciale: CURRENT+'lupo-glaciale.webp?rev=blue-set-v4',
+  grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=blue-set-v4',
+  yeti: CURRENT+'yeti.webp?rev=blue-set-v4',
+  leviatano: CURRENT+'leviatano.webp?rev=blue-set-v4',
+  vecchio_delle_nevi: CURRENT+'vecchio-delle-nevi.webp?rev=blue-set-v4'
 };
 
 const NAME_TO_ID={
