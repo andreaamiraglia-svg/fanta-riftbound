@@ -4,7 +4,7 @@ const ART={
   scarlet:'scarlet-fiamma-dei-mari.webp',
   torvald:'torvald-spezzatronchi.webp',
   grinn:'grinn-il-folle.webp',
-  hilda:"Hilda, Ira d'Inverno.png",
+  hilda:'hilda-ira-d-inverno.webp',
   aurelius:'aurelius-re-dell-opulenza.webp',
   colpo_in_testa:'colpo-in-testa.webp',
   fabbro_ninjitsu:'fabbro-ninjitsu.webp',
@@ -21,15 +21,15 @@ const ART={
   tempesta_di_ghiaccio:'tempesta-di-ghiaccio.webp',
   servo_del_sovrano:'servo-del-sovrano.webp',
   dono_ai_poveri:'dono-ai-poveri.webp',
-  minotauro_infernale:'Minotauro Infernale.png',
-  treant_millenario:'Treant Millenario.png',
-  ghoul_affamato:'Ghoul Affamato.png',
-  balena_della_tempesta:'Balena della Tormenta.png',
-  scarabeo_dorato:'Scarabeo Dorato.png'
+  minotauro_infernale:'minotauro-infernale.webp',
+  treant_millenario:'treant-millenario.webp',
+  ghoul_affamato:'ghoul-affamato.webp',
+  balena_della_tempesta:'balena-della-tempesta.webp',
+  scarabeo_dorato:'scarabeo-dorato.webp'
 };
 // Questi due file sono espliciti e non passano dalla vecchia rotazione Blu.
 const BLUE_FIX={
-  grifone_della_tempesta:BASE+'Grifone%20della%20tempesta.png?rev=art-20260902',
+  grifone_della_tempesta:BASE+'grifone-della-tempesta.webp?rev=webp-set1-v1',
   yeti:BASE+'yeti.webp?rev=yeti-404c3869'
 };
 const artUrl=file=>BASE+encodeURIComponent(file).replace(/'/g,'%27');
