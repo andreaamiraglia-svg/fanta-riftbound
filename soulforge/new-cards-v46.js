@@ -1,0 +1,56 @@
+(()=>{
+const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
+const ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp'};
+let mode=null,chooserInstalled=false;
+function artUrl(id){return ART[id]?BASE+ART[id]:''}
+function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfNewCards46)return;const prev=cur;const fn=(id)=>artUrl(String(id))||(typeof prev==='function'?prev(id):'');fn.__sfNewCards46=true;fn.__previous=prev;window.sfArtUrl21=fn}
+function patchKnownImages(root=document){const sels='[data-hand-card],[data-preview-card],[data-select-card],[data-card-id],[data-card]';root.querySelectorAll?.(sels).forEach(el=>{const id=el.dataset.handCard||el.dataset.previewCard||el.dataset.selectCard||el.dataset.cardId||el.dataset.card;const u=artUrl(id);if(!u)return;const img=el.matches('img')?el:el.querySelector('img');if(img&&img.src!==u)img.src=u})}
+function injectStyle(){if(document.getElementById('sfNew46Style'))return;const s=document.createElement('style');s.id='sfNew46Style';s.textContent=`.sf46-valid{outline:3px solid #ffd166!important;outline-offset:3px!important;cursor:crosshair!important;filter:brightness(1.1)}#sf46Hint{position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:10060;background:#131821;border:1px solid #d5a13f;border-radius:999px;color:#ffe7ad;padding:9px 16px;font-weight:900;box-shadow:0 8px 28px #0008}#sf46Deck{position:fixed;inset:0;z-index:10070;background:#06090dcc;display:flex;align-items:center;justify-content:center;padding:24px}#sf46Deck .box{width:min(1000px,94vw);max-height:88vh;overflow:auto;background:#10151d;border:1px solid #d5a13f;border-radius:18px;padding:20px;box-shadow:0 24px 80px #000c}#sf46Deck h2{margin:0 0 14px;color:#f6dfaa;font-family:Georgia,serif}#sf46Deck .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}#sf46Deck .card{background:#090d13;border:1px solid #495365;border-radius:12px;padding:8px;cursor:pointer;color:#fff;text-align:left}#sf46Deck .card:hover{border-color:#ffd166;transform:translateY(-2px)}#sf46Deck img{display:block;width:100%;aspect-ratio:.744;object-fit:cover;border-radius:8px;background:#05070a}#sf46Deck strong{display:block;margin-top:7px;font-size:13px}#sf46Deck .cancel{margin-top:14px;padding:8px 14px;border-radius:10px;border:1px solid #596273;background:#171d27;color:#fff;cursor:pointer}`;document.head.appendChild(s)}
+function clear(){document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));document.getElementById('sf46Hint')?.remove();document.getElementById('sf46Deck')?.remove();mode=null}
+function hint(text){let h=document.getElementById('sf46Hint');if(!h){h=document.createElement('div');h.id='sf46Hint';document.body.appendChild(h)}h.textContent=text}
+function ownChampEls(){return [...document.querySelectorAll(`.champ[data-owner="${session.player}"][data-champ-id]`)].filter(x=>!x.classList.contains('defeated'))}
+function monsterEls(){return(session.state?.board?.monsters||[]).map(m=>document.querySelector(`[data-monster-uid="${m.uid}"]`)).filter(Boolean)}
+function enemyEls(){const op=session.player===1?2:1;return[...document.querySelectorAll(`.champ[data-owner="${op}"]`),...monsterEls()].filter(x=>!x.classList.contains('defeated'))}
+function paintColpo(){if(mode?.type!=='colpo')return;document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));const els=enemyEls();els.forEach(x=>x.classList.add('sf46-valid'));hint(els.length?'Colpo in Testa: scegli un Nemico • ESC per annullare':'Colpo in Testa: nessun Nemico valido')}
+function paintFabbro(){if(mode?.type!=='fabbroChamp')return;document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));const els=ownChampEls();els.forEach(x=>x.classList.add('sf46-valid'));hint(els.length?'Fabbro Ninjitsu: scegli un tuo Campione • ESC per annullare':'Fabbro Ninjitsu: nessun Campione valido')}
+function syncMode(){if(mode?.type==='colpo')paintColpo();else if(mode?.type==='fabbroChamp')paintFabbro()}
+function startColpo(cardId){clear();mode={type:'colpo',cardId};paintColpo()}
+function startFabbro(cardId){clear();mode={type:'fabbroChamp',cardId};paintFabbro()}
+function ninjitsuDeckCards(){const q=typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)];const cards=(q?.deckCards||[]).filter(c=>String(c?.name||'').toLowerCase().includes('ninjitsu'));const seen=new Set();return cards.filter(c=>c?.id&&!seen.has(c.id)&&seen.add(c.id))}
+function showNinjitsuDeck(champId){document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));document.getElementById('sf46Hint')?.remove();const cards=ninjitsuDeckCards();const ov=document.createElement('div');ov.id='sf46Deck';ov.innerHTML=`<div class="box"><h2>Scegli una carta Ninjitsu dal tuo Mazzo</h2><div class="grid">${cards.map(c=>`<button class="card" data-sf46-deck="${c.id}"><img src="${artUrl(c.id)||window.sfArtUrl21?.(c.id)||''}" alt=""><strong>${c.name}</strong></button>`).join('')}</div>${cards.length?'':'<p>Non ci sono carte Ninjitsu nel tuo Mazzo.</p>'}<button class="cancel">Annulla</button></div>`;document.body.appendChild(ov);mode={type:'fabbroDeck',cardId:'fabbro_ninjitsu',champId};ov.querySelector('.cancel').onclick=clear}
+
+/* Stable direct entry point used by the final hand-input controller. Fabbro is
+   a two-step card and must not depend on the historical chooseForCard wrapper
+   chain, which can be replaced asynchronously by older modules. */
+window.__sfStartFabbroNinjitsu=function(id='fabbro_ninjitsu'){
+ const card=(typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)])?.handCards?.find(c=>String(c.id)===String(id));
+ if(!card)return;
+ try{if(typeof canCast==='function'&&!canCast(card)){showError?.('Non puoi giocare Fabbro Ninjitsu in questo momento.');return}}catch{}
+ startFabbro(String(card.id));
+};
+
+/* Install exactly once. Re-installing this wrapper after every render used to
+   create a recursive chooseForCard cycle because older wrappers shared a
+   mutable previousChoose reference. The previous handler is now captured in
+   this closure and never changes. */
+function installChooser(){
+ if(chooserInstalled)return;
+ const previous=window.chooseForCard;
+ if(typeof previous!=='function')return;
+ chooserInstalled=true;
+ const fn=function(id){
+  const card=(typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)])?.handCards?.find(c=>String(c.id)===String(id));
+  if(card?.effect==='colpo_in_testa'){startColpo(id);return}
+  if(card?.effect==='fabbro_ninjitsu'){window.__sfStartFabbroNinjitsu(id);return}
+  clear();
+  return previous(id);
+ };
+ fn.__sfNewCards46=true;
+ fn.__previous=previous;
+ window.chooseForCard=fn;
+ try{chooseForCard=fn}catch{}
+}
+document.addEventListener('click',e=>{if(!mode)return;if(mode.type==='colpo'){const el=e.target.closest?.('.sf46-valid');if(!el)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const enemy=el.dataset.monsterUid?{type:'monster',uid:el.dataset.monsterUid}:{type:'champion',player:Number(el.dataset.owner),champId:el.dataset.champId};const cardId=mode.cardId;clear();move({type:'cast',cardId,targets:{enemy}});return}if(mode.type==='fabbroChamp'){const el=e.target.closest?.(`.sf46-valid.champ[data-owner="${session.player}"][data-champ-id]`);if(!el)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();showNinjitsuDeck(el.dataset.champId);return}if(mode.type==='fabbroDeck'){const b=e.target.closest?.('[data-sf46-deck]');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const targets={ownChamp:mode.champId,deckCardId:b.dataset.sf46Deck};clear();move({type:'cast',cardId:'fabbro_ninjitsu',targets})}},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode){e.preventDefault();clear()}},true);
+function boot(){injectStyle();installArt();installChooser();patchKnownImages();syncMode()}boot();window.addEventListener('sf-blue-ready',()=>setTimeout(boot,0));setTimeout(boot,250);setTimeout(boot,1200);setTimeout(boot,3000);const app=document.getElementById('app');if(app){let queued=false;new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;patchKnownImages(app);syncMode()})}).observe(app,{childList:true,subtree:true})}
+})();

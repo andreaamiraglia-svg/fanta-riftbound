@@ -1,0 +1,12 @@
+t=left+'px';p.style.top=Math.max(16,Math.min(innerHeight-430,(y!=null?y:r.top)-70))+'px';p.classList.add('show')}
+function bindPreview21(){document.querySelectorAll('[data-preview-card]').forEach(el=>{const id=el.dataset.previewCard;if(!artUrl(id)||el.dataset.bluePreviewBound)return;el.dataset.bluePreviewBound='1';el.addEventListener('mouseenter',()=>{clearTimeout(el._blueHover);el._blueHover=setTimeout(()=>showPreview21(el,id),1000)});el.addEventListener('mouseleave',()=>{clearTimeout(el._blueHover);document.querySelector('#sfBluePreview')?.classList.remove('show')})})}
+document.addEventListener('contextmenu',e=>{const el=e.target.closest?.('[data-preview-card]');if(!el)return;const id=el.dataset.previewCard;if(!artUrl(id))return;e.preventDefault();showPreview21(el,id,e.clientX,e.clientY)},true);
+document.addEventListener('click',()=>document.querySelector('#sfBluePreview')?.classList.remove('show'),true);
+
+const bindBefore21=bind;
+bind=function(){bindBefore21();document.querySelector('#revivePhoenix')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();revivePhoenix21()},true);bindPreview21()};
+const renderBefore21=render;
+render=function(){renderBefore21();const badge=document.querySelector('.ui-v2-badge');if(badge)badge.textContent='UI v22 • Set 1 Blu';bindPreview21()};
+window.sfArtUrl21=artUrl;
+if(session.state)render();
+})();

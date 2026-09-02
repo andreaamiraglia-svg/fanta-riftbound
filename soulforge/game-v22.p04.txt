@@ -1,0 +1,65 @@
+colors)
+    souls[c] = 3; return { name, souls, recycleCount: 0, deckColors: [...cfg.colors], champions: cfg.champions.map(freshChampion), deck: shuffle(cfg.cards), grave: [], hand: [], selected: false, monsterDeck: shuffle(cfg.monsters), monsterGrave: [], banishedMonsters: [], fireCloud: false, lyrandelUsed: false, firstMagicCast: false, killedMonsterThisTurn: false }; }
+export function newState(name, deckConfig) { return { status: 'waiting', turn: 1, focus: 1, priority: null, priorityPasses: 0, mainPasses: 0, stack: [], stackInitiator: null, combat: null, pendingChoice: null, winner: null, players: { '1': newPlayer(name, deckConfig), '2': null }, board: { monsters: [] }, triggerQueue: [], enterQueue: [], delayedKills: [], endTurnPending: false, log: [`Partita creata da ${name}.`] }; }
+export function currentPow(s, p, c) { let v = (c?.basePow || 0) + (c?.tempPow || 0); if (c?.id === 'kael' && pl(s, p)?.hand?.length === 0 && s.status === 'main')
+    v += 3; return Math.max(0, v); }
+function griffins(s) { return (s.board.monsters || []).filter((x) => x.cardId === 'grifone_della_tempesta').length; }
+function reductionAmount(s, n) { return Math.max(0, n) + griffins(s); }
+export function currentMonsterPow(s, m) { const d = MONSTER_DEFS[m?.cardId]; if (!d)
+    return 0; let v = d.pow + (m.powMod || 0) + (m.tempPow || 0); v += (s.board.monsters || []).filter((x) => x.cardId === 'lupo_delle_radici' && x.uid !== m.uid).length; const iceWolves = (s.board.monsters || []).filter((x) => x.cardId === 'lupo_glaciale' && x.uid !== m.uid).length; if (iceWolves)
+    v -= iceWolves * (1 + griffins(s)); return Math.max(0, v); }
+function dynamicCost(s, p, c) { let cost = c.id === 'mille_lame' ? Math.max(0, 12 - (pl(s, p)?.monsterGrave?.length || 0)) : c.cost; if (c.type === 'Magia')
+    cost += (s.board.monsters || []).filter((m) => m.cardId === 'ragno_dei_germogli').length; return Math.max(0, cost); }
+function canPay(s, p, c) { return (pl(s, p)?.souls?.[c.color] || 0) >= dynamicCost(s, p, c); }
+function pay(s, p, c) { const n = dynamicCost(s, p, c); pl(s, p).souls[c.color] -= n; return n; }
+function gainSoul(s, p, color, n = 1) { if (p !== 1 && p !== 2)
+    return; const q = pl(s, p); if (!q || !COLORS.includes(color))
+    return; const before = q.souls[color] || 0; q.souls[color] = Math.min(3, before + n); const got = q.souls[color] - before; if (got > 0)
+    log(s, `${q.name} recupera ${got} Anima${got === 1 ? '' : 'e'} ${colorLabel(color)}${got === 1 ? '' : 'e'}.`); }
+function checkWinner(s) { for (const p of [1, 2]) {
+    const q = pl(s, p);
+    if (q && q.champions.every((c) => c.defeated)) {
+        s.status = 'gameover';
+        s.winner = other(p);
+        log(s, `${pl(s, other(p)).name} vince la partita!`);
+    }
+} }
+function woundChampion(s, p, c, source = '') { if (!c || c.defeated)
+    return; c.wounds++; c.damage = 0; log(s, `${c.name} subisce una Ferita (${c.wounds}/${c.hp})${source ? ` da ${source}` : ''}.`); if (c.wounds >= c.hp) {
+    c.defeated = true;
+    c.tapped = true;
+    log(s, `${c.name} è sconfitto.`);
+    checkWinner(s);
+} }
+function absorbArmor(s, obj, n, name) { const a = Math.max(0, Number(obj?.armor || 0)); const blocked = Math.min(a, Math.max(0, n)); if (blocked) {
+    obj.armor = a - blocked;
+    log(s, `${name} usa ${blocked} Armatura e annulla ${blocked} dann${blocked === 1 ? 'o' : 'i'}.`);
+} return Math.max(0, n - blocked); }
+export function damageChampion(s, p, id, n, source = '') { const c = champ(s, p, id); if (!c || c.defeated || n <= 0)
+    return { wounded: false }; n = absorbArmor(s, c, n, c.name); if (n <= 0)
+    return { wounded: false }; c.damage += n; log(s, `${c.name} subisce ${n} dann${n === 1 ? 'o' : 'i'} (${c.damage}/${currentPow(s, p, c)}).`); if (c.damage >= currentPow(s, p, c)) {
+    woundChampion(s, p, c, source);
+    return { wounded: true };
+} return { wounded: false }; }
+function addArmorChampion(s, p, id, n, source = '') { const c = champ(s, p, id); if (!c || c.defeated || n <= 0)
+    return; c.armor = (c.armor || 0) + n; log(s, `${c.name} ottiene ${n} Armatura${source ? ` da ${source}` : ''}.`); }
+function addArmorMonster(s, m, n, source = '') { if (!m || n <= 0)
+    return; m.armor = (m.armor || 0) + n; log(s, `${MONSTER_DEFS[m.cardId]?.name || m.cardId} ottiene ${n} Armatura${source ? ` da ${source}` : ''}.`); }
+function beginDamageEvent(s, p) { s._damageEvent = (p === 1 || p === 2) ? { player: p, uids: [] } : null; }
+function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n !== 1 || (p !== 1 && p !== 2))
+    return; const e = s._damageEvent; if (e && e.player === p && !e.uids.includes(uid0))
+    e.uids.push(uid0); }
+function endDamageEvent(s) { const e = s._damageEvent; delete s._damageEvent; if (!e?.uids?.length)
+    return; const q = pl(s, e.player), lyr = champ(s, e.player, 'lyrandel'); if (!q || q.lyrandelUsed || !lyr || lyr.defeated)
+    return; const ids = e.uids.filter((u) => !!monster(s, u)); if (!ids.length)
+    return; q.lyrandelUsed = true; s.triggerQueue.push({ actor: e.player, sourceCardId: 'lyrandel', effectId: 'lyrandel_bonus', choiceType: 'monsterUids', meta: { uids: ids }, effectName: 'Effetto di Lyrandel' }); log(s, `${lyr.name} attiva la sua abilità.`); }
+function applyMonsterDamage(s, m, n) { if (!m || n <= 0)
+    return false; m.damage += n; if (n === 1) {
+    const deer = (s.board.monsters || []).filter((x) => x.cardId === 'cervo_antico').length;
+    if (deer) {
+        m.tempPow = (m.tempPow || 0) + deer;
+        log(s, `${MONSTER_DEFS[m.cardId]?.name || m.cardId} ottiene +${deer} POW dal Cervo Antico fino alla fine del turno.`);
+    }
+} log(s, `${MONSTER_DEFS[m.cardId]?.name || m.cardId} subisce ${n} dann${n === 1 ? 'o' : 'i'} (${m.damage}/${currentMonsterPow(s, m)}).`); return m.damage >= currentMonsterPow(s, m); }
+export function damageMonster(s, p, uid0, n, source = '', allowLyrandel = true) { const m = monster(s, uid0); if (!m || n <= 0)
+    return { died: false }; n = absorbArmor(s, m, n, MONSTER_DEFS[m

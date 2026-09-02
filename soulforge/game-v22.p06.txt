@@ -1,0 +1,128 @@
+   if (victims.length)
+        log(s, `Divoratore di Anime divora ${victims.length} Mostr${victims.length === 1 ? 'o' : 'i'}.`);
+}
+else if (m.cardId === 'squalo_delle_maree')
+    queueMonsterTrigger(s, m, 'squalo_armor', 'Effetto — Squalo delle Maree');
+else if (m.cardId === 'yeti')
+    queueMonsterTrigger(s, m, 'yeti_freeze', 'Effetto — Yeti'); }
+function processEnterQueue(s) { while (!s.pendingChoice && s.enterQueue.length) {
+    const u = s.enterQueue.shift(), m = monster(s, u);
+    if (m)
+        processMonsterEnter(s, m);
+} }
+function addMonstersForTurn(s) { const amount = s.turn === 1 ? 1 : 2; for (const p of [1, 2]) {
+    const q = pl(s, p);
+    for (let i = 0; i < amount && q.monsterDeck.length; i++) {
+        const id = q.monsterDeck.shift();
+        addMonsterToBoard(s, id, p);
+        log(s, `${q.name} rivela ${MONSTER_DEFS[id].name}.`);
+    }
+} processEnterQueue(s); }
+function enqueueTurnStartChampionTriggers(s) { for (const p of [1, 2]) {
+    const v = champ(s, p, 'valtheris');
+    if (v && !v.defeated) {
+        s.triggerQueue.push({ actor: p, sourceCardId: 'valtheris', effectId: 'valtheris_armor', effectName: 'Protettore dell’Anima' });
+        log(s, `${v.name} attiva Protettore dell’Anima.`);
+    }
+} }
+function startMainIfReady(s) { if (pl(s, 1)?.selected && pl(s, 2)?.selected) {
+    s.status = 'main';
+    s.focus = s.turn % 2 ? 1 : 2;
+    s.priority = null;
+    s.mainPasses = 0;
+    s.stack = [];
+    s.stackInitiator = null;
+    s.combat = null;
+    enqueueTurnStartChampionTriggers(s);
+    addMonstersForTurn(s);
+    if (!s.pendingChoice)
+        prepareTriggers(s);
+    log(s, `Inizia il turno ${s.turn}. Il Focus è di ${pl(s, s.focus).name}.`);
+} }
+function validEnemyTarget(s, p, t) { if (t?.type === 'champion') {
+    const c = champ(s, t.player, t.champId);
+    return t.player === other(p) && !!c && !c.defeated;
+} if (t?.type === 'monster')
+    return !!monster(s, t.uid); return false; }
+function validCharacter(s, t) { if (t?.type === 'champion') {
+    const c = champ(s, Number(t.player), String(t.champId));
+    return !!c && !c.defeated;
+} if (t?.type === 'monster')
+    return !!monster(s, String(t.uid)); return false; }
+function provocationsAgainst(s, p) { const op = other(p); const ms = s.board.monsters.filter((m) => m.owner === op && MONSTER_DEFS[m.cardId]?.provocazione).map((m) => ({ type: 'monster', uid: m.uid })); const cs = (pl(s, op)?.champions || []).filter((c) => !c.defeated && c.provocazione).map((c) => ({ type: 'champion', player: op, champId: c.id })); return [...ms, ...cs]; }
+function validateAttackTarget(s, p, t) { const guards = provocationsAgainst(s, p); if (guards.length)
+    return guards.some((g) => g.type === t?.type && (g.type === 'monster' ? g.uid === t?.uid : (g.player === t?.player && g.champId === t?.champId))); return validEnemyTarget(s, p, t); }
+function spellDamage(s, p, n) { return n + (pl(s, p).fireCloud ? 1 : 0); }
+function eligibleCounterTarget(s, stackUid) { const x = s.stack.find((z) => z.uid === stackUid); if (!x || x.kind !== 'card')
+    return false; const c = CARD_DEFS[x.cardId]; return !!c && c.type === 'Magia' && Number(x.paidCost ?? c.cost) <= 1; }
+function resolveCardEffect(s, item) {
+    const p = item.actor, q = pl(s, p), c = CARD_DEFS[item.cardId], t = item.targets || {};
+    log(s, `Si risolve ${c.name}.`);
+    let pause = false;
+    switch (c.effect) {
+        case 'taglio':
+            if (s.combat) {
+                const a = s.combat.attacker;
+                damageChampion(s, a.player, a.champId, spellDamage(s, p, 1), c.name);
+            }
+            break;
+        case 'sfera': {
+            const d = spellDamage(s, p, 1);
+            if (t.enemy?.type === 'champion')
+                damageChampion(s, t.enemy.player, t.enemy.champId, d, c.name);
+            else if (t.enemy?.type === 'monster') {
+                beginDamageEvent(s, p);
+                damageMonster(s, p, t.enemy.uid, d, c.name, true);
+                endDamageEvent(s);
+            }
+            damageChampion(s, p, t.ownChamp, d, c.name);
+            break;
+        }
+        case 'corazza': {
+            damageChampion(s, p, t.ownChamp, spellDamage(s, p, 1), c.name);
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow++;
+                log(s, `${x.name} ottiene +1 POW fino alla fine del turno.`);
+            }
+            break;
+        }
+        case 'occhio': {
+            const n = Math.min(5, q.deck.length);
+            q.grave.push(...q.deck.splice(0, n));
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow++;
+                log(s, `${q.name} mette ${n} carte dal mazzo nel Cimitero. ${x.name} ottiene +1 POW fino alla fine del turno.`);
+            }
+            break;
+        }
+        case 'mano': {
+            const ids = q.hand.filter((id) => id !== item.cardId), n = ids.length;
+            q.grave.push(...ids);
+            q.hand = q.hand.filter((id) => !ids.includes(id));
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow += n;
+                log(s, `${q.name} scarta ${n} carte. ${x.name} ottiene +${n} POW.`);
+            }
+            break;
+        }
+        case 'nube':
+            q.fireCloud = true;
+            log(s, `Le Magie di ${q.name} infliggono +1 danno fino alla fine del turno.`);
+            break;
+        case 'tornado': {
+            const d = spellDamage(s, p, 1);
+            for (const z of [1, 2])
+                for (const x of pl(s, z).champions.filter((x) => !x.defeated))
+                    damageChampion(s, z, x.id, d, c.name);
+            beginDamageEvent(s, p);
+            for (const m0 of [...s.board.monsters])
+                if (monster(s, m0.uid))
+                    damageMonster(s, p, m0.uid, d, c.name, true);
+            endDamageEvent(s);
+            break;
+        }
+        case 'fendente': {
+            const d = spellDamage(s, p, 

@@ -1,0 +1,158 @@
+2);
+            if (t.enemy?.type === 'champion')
+                damageChampion(s, t.enemy.player, t.enemy.champId, d, c.name);
+            else if (t.enemy?.type === 'monster') {
+                beginDamageEvent(s, p);
+                damageMonster(s, p, t.enemy.uid, d, c.name, true);
+                endDamageEvent(s);
+            }
+            break;
+        }
+        case 'berserk': {
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated && x.damage > 0) {
+                x.tempPow += 2;
+                x.tapped = false;
+                log(s, `${x.name} viene attivato da Berserk e ottiene +2 POW.`);
+            }
+            break;
+        }
+        case 'stupido':
+            beginDamageEvent(s, p);
+            damageMonster(s, p, t.monsterUid, spellDamage(s, p, 1), c.name, true);
+            endDamageEvent(s);
+            break;
+        case 'riflesso': {
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                beginDamageEvent(s, p);
+                damageMonster(s, p, t.monsterUid, spellDamage(s, p, x.damage), c.name, true);
+                endDamageEvent(s);
+            }
+            break;
+        }
+        case 'festa': {
+            const top = q.monsterDeck.slice(0, 3);
+            s.pendingChoice = { type: 'festa', player: p, top };
+            log(s, `${q.name} guarda le prime ${top.length} carte del proprio Monster Deck.`);
+            pause = true;
+            break;
+        }
+        case 'taglio_ninjitsu':
+            beginDamageEvent(s, p);
+            damageMonster(s, p, t.monsterUid, spellDamage(s, p, 2), c.name, true);
+            endDamageEvent(s);
+            break;
+        case 'katana': {
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tapped = false;
+                log(s, `${x.name} diventa attivo.`);
+            }
+            break;
+        }
+        case 'marea':
+            if (s.combat) {
+                const involved = (s.combat.attacker.player === p && s.combat.attacker.champId === t.ownChamp) || (s.combat.target.type === 'champion' && s.combat.target.player === p && s.combat.target.champId === t.ownChamp);
+                if (involved) {
+                    s.combat.cancelled = true;
+                    log(s, 'Alta Marea annulla il combattimento.');
+                }
+            }
+            break;
+        case 'albero': {
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow += 2;
+                log(s, `${x.name} ottiene +2 POW fino alla fine del turno.`);
+            }
+            break;
+        }
+        case 'sguardo': {
+            const m = monster(s, t.monsterUid);
+            if (m)
+                killMonster(s, p, m, c.name, true);
+            break;
+        }
+        case 'mille': {
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow += 4;
+                log(s, `${x.name} ottiene +4 POW fino alla fine del turno.`);
+            }
+            break;
+        }
+        case 'evocatore_anime_vacue': {
+            const id = String(t.graveMonsterId || '');
+            if (id && q.monsterGrave.includes(id) && MONSTER_DEFS[id]?.pow <= 2) {
+                reviveFromGrave(s, p, id);
+                processEnterQueue(s);
+                if (s.pendingChoice)
+                    pause = true;
+            }
+            break;
+        }
+        case 'anima_esplosiva':
+            if (monster(s, t.monsterUid)) {
+                s.delayedKills.push({ uid: t.monsterUid, killer: p });
+                log(s, `${MONSTER_DEFS[monster(s, t.monsterUid).cardId].name} verrà ucciso alla fine del turno.`);
+            }
+            break;
+        case 'sacrificio': {
+            const m = monster(s, t.monsterUid);
+            if (m && m.owner === p)
+                killMonster(s, p, m, c.name, false);
+            break;
+        }
+        case 'collasso': {
+            const n = COLORS.reduce((a, k) => a + (q.souls[k] || 0), 0);
+            for (const k of COLORS)
+                q.souls[k] = 0;
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow += n;
+                log(s, `${x.name} ottiene +${n} POW consumando tutte le Anime.`);
+            }
+            break;
+        }
+        case 'spacca_ossa': {
+            const m = monster(s, t.monsterUid);
+            if (m) {
+                const id = m.cardId;
+                killMonster(s, p, m, c.name, true);
+                for (const g of [pl(s, 1), pl(s, 2)].filter(Boolean)) {
+                    const i = g.monsterGrave.lastIndexOf(id);
+                    if (i >= 0) {
+                        g.monsterGrave.splice(i, 1);
+                        break;
+                    }
+                }
+                addMonsterToBoard(s, id, p);
+                log(s, `${MONSTER_DEFS[id].name} torna in gioco sotto il controllo di ${q.name}.`);
+                processEnterQueue(s);
+                if (s.pendingChoice)
+                    pause = true;
+            }
+            break;
+        }
+        case 'eclipse_fang': {
+            let success = false;
+            if (t.enemy?.type === 'champion') {
+                const r = damageChampion(s, t.enemy.player, t.enemy.champId, spellDamage(s, p, 1), c.name);
+                success = r.wounded;
+            }
+            else if (t.enemy?.type === 'monster') {
+                const before = !!monster(s, t.enemy.uid);
+                beginDamageEvent(s, p);
+                const r = damageMonster(s, p, t.enemy.uid, spellDamage(s, p, 1), c.name, true);
+                endDamageEvent(s);
+                success = before && r.died;
+            }
+            if (success)
+                gainSoul(s, p, 'black', 2);
+            break;
+        }
+        case 'fino_alla_morte': {
+            const n = q.monsterGrave.length;
+            q.banishedMonsters.push(...q.monsterGrave);
+            q.m

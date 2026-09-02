@@ -1,0 +1,151 @@
+onsterGrave = [];
+            const x = champ(s, p, t.ownChamp);
+            if (x && !x.defeated) {
+                x.tempPow += n;
+                x.cantAttackTurn = s.turn;
+                log(s, `${x.name} ottiene +${n} POW e non può attaccare fino alla fine del turno.`);
+            }
+            break;
+        }
+        case 'mietitore': {
+            const victims = s.board.monsters.filter((m) => currentMonsterPow(s, m) <= 2);
+            killMany(s, victims, p, c.name, true);
+            break;
+        }
+        case 'ammazza_morte': {
+            const x = champ(s, t.champion?.player, t.champion?.champId);
+            if (x && !x.defeated)
+                woundChampion(s, t.champion.player, x, c.name);
+            break;
+        }
+        case 'flusso_gelido': {
+            const m = monster(s, t.monsterUid);
+            if (m)
+                reduceMonsterPow(s, m, 2, c.name);
+            break;
+        }
+        case 'freddo_puro': {
+            const m = monster(s, t.monsterUid);
+            if (m && currentMonsterPow(s, m) <= 2)
+                killMonster(s, p, m, c.name, true);
+            break;
+        }
+        case 'in_guardia': {
+            if (t.character?.type === 'champion')
+                addArmorChampion(s, t.character.player, t.character.champId, 1, c.name);
+            else if (t.character?.type === 'monster') {
+                const m = monster(s, t.character.uid);
+                if (m)
+                    addArmorMonster(s, m, 1, c.name);
+            }
+            break;
+        }
+        case 'ali_protettore': {
+            const m = monster(s, t.monsterUid);
+            if (m)
+                addArmorMonster(s, m, 2, c.name);
+            break;
+        }
+        case 'staffa_mare': {
+            if (t.enemy?.type === 'champion')
+                reduceChampionPow(s, t.enemy.player, t.enemy.champId, 2, c.name);
+            else if (t.enemy?.type === 'monster') {
+                const m = monster(s, t.enemy.uid);
+                if (m)
+                    reduceMonsterPow(s, m, 2, c.name);
+            }
+            break;
+        }
+        case 'specchio_acqua': {
+            const i = s.stack.findIndex((x) => x.uid === t.stackUid);
+            if (i >= 0 && eligibleCounterTarget(s, t.stackUid)) {
+                const [x] = s.stack.splice(i, 1);
+                pl(s, x.actor).grave.push(x.cardId);
+                log(s, `${c.name} annulla ${CARD_DEFS[x.cardId]?.name || x.cardId}.`);
+            }
+            else
+                log(s, `${c.name} non trova più una Magia valida da annullare.`);
+            break;
+        }
+        case 'muro_ghiaccio': {
+            for (const m of s.board.monsters)
+                addArmorMonster(s, m, 2, c.name);
+            for (const x of q.champions)
+                if (!x.defeated)
+                    addArmorChampion(s, p, x.id, 2, c.name);
+            break;
+        }
+        case 'custode_deboli': {
+            if (t.enemy?.type === 'champion')
+                reduceChampionPow(s, t.enemy.player, t.enemy.champId, 7, c.name);
+            else if (t.enemy?.type === 'monster') {
+                const m = monster(s, t.enemy.uid);
+                if (m)
+                    reduceMonsterPow(s, m, 7, c.name);
+            }
+            break;
+        }
+        case 'distruzione_totale': {
+            const x = t.champion;
+            if (x?.type === 'champion') {
+                const c0 = champ(s, Number(x.player), String(x.champId));
+                if (c0 && !c0.defeated) {
+                    c0.cantAttackTurn = s.turn;
+                    log(s, `${c0.name} non può attaccare per questo turno a causa di ${c.name}.`);
+                }
+            }
+            break;
+        }
+    }
+    return pause;
+}
+function effectChoices(s, tr) { if (tr.choiceType === 'enemyChampion')
+    return pl(s, other(tr.actor)).champions.filter((c) => !c.defeated).map((c) => ({ id: c.id, label: c.name })); if (tr.choiceType === 'enemySoul') {
+    const o = pl(s, other(tr.actor));
+    return COLORS.filter(c => (o.souls[c] || 0) > 0).map(c => ({ id: c, label: `Anima ${colorLabel(c)}` }));
+} if (tr.choiceType === 'monsterUids')
+    return (tr.meta?.uids || []).filter((u) => !!monster(s, u)).map((u) => ({ id: u, label: MONSTER_DEFS[monster(s, u).cardId]?.name || u })); return []; }
+function pushEffect(s, tr, choice) { const targets = {}; if (tr.choiceType === 'enemyChampion')
+    targets.champion = { player: other(tr.actor), champId: choice }; if (tr.choiceType === 'enemySoul')
+    targets.color = choice; if (tr.choiceType === 'monsterUids')
+    targets.monsterUid = choice; s.stack.push({ uid: uid(), kind: 'effect', actor: tr.actor, sourceCardId: tr.sourceCardId, effectId: tr.effectId, effectName: tr.effectName || 'Effetto', targets, meta: tr.meta || {} }); }
+function prepareTriggers(s) { if (s.pendingChoice)
+    return; while (s.triggerQueue.length) {
+    const tr = s.triggerQueue.shift(), opts = effectChoices(s, tr);
+    if (tr.choiceType) {
+        if (!opts.length) {
+            log(s, `${tr.effectName || 'Effetto'} non ha bersagli validi.`);
+            continue;
+        }
+        s.pendingChoice = { type: 'trigger_target', player: tr.actor, trigger: tr, options: opts };
+        s.priority = null;
+        return;
+    }
+    else
+        pushEffect(s, tr);
+} if (s.stack.length) {
+    s.priority = other(s.stack[s.stack.length - 1].actor);
+    s.priorityPasses = 0;
+    return;
+} if (s.enterQueue.length) {
+    processEnterQueue(s);
+    if (s.pendingChoice)
+        return;
+    if (s.triggerQueue.length) {
+        prepareTriggers(s);
+        return;
+    }
+} if (s.combat) {
+    s.priority = other(s.combat.initiator);
+    return;
+} if (s.endTurnPending) {
+    finalizeEndTurn(s);
+    return;
+} if (s.stackInitiator != null) {
+    const init = s.stackInitiator;
+    s.stackInitiator = null;
+    s.focus = other(init);
+    s.mainPasses = 0;
+    s.priority = null;
+} }
+function resolveEffect(s, item) { const p = item.actor, t = item.targets || {}, m = item.

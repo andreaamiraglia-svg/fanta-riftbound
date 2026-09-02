@@ -1,0 +1,145 @@
+meta || {}; log(s, `Si risolve ${item.effectName || 'un effetto'}.`); switch (item.effectId) {
+    case 'lyrandel_bonus':
+        if (monster(s, t.monsterUid)) {
+            beginDamageEvent(s, null);
+            damageMonster(s, p, t.monsterUid, 1, 'Lyrandel', false);
+            endDamageEvent(s);
+        }
+        break;
+    case 'lascito_segugio':
+        if (champ(s, t.champion?.player, t.champion?.champId))
+            damageChampion(s, t.champion.player, t.champion.champId, 1, 'Lascito — Segugio dei Morti');
+        break;
+    case 'lascito_custode':
+        for (const c of pl(s, p).champions)
+            if (!c.defeated)
+                c.tempPow++;
+        log(s, `I Campioni di ${pl(s, p).name} ottengono +1 POW fino alla fine del turno.`);
+        break;
+    case 'lascito_cavaliere':
+        if (champ(s, t.champion?.player, t.champion?.champId))
+            damageChampion(s, t.champion.player, t.champion.champId, 2, 'Lascito — Cavaliere Senza Volto');
+        break;
+    case 'lascito_serpente': {
+        const o = pl(s, other(p)), c = t.color;
+        if (c && o.souls[c] > 0) {
+            o.souls[c]--;
+            log(s, `${o.name} perde 1 Anima ${colorLabel(c)}.`);
+        }
+        break;
+    }
+    case 'lascito_divoratore':
+        for (const c of m.colors || [])
+            if (c)
+                gainSoul(s, p, c, 1);
+        break;
+    case 'ritorno_anime': {
+        const q = pl(s, p), id = t.graveCardId, i = q.grave.indexOf(id);
+        if (i >= 0) {
+            q.grave.splice(i, 1);
+            q.hand.push(id);
+            log(s, `${q.name} riprende ${CARD_DEFS[id]?.name || id} dal Cimitero.`);
+        }
+        break;
+    }
+    case 'valtheris_armor':
+        addArmorChampion(s, p, 'valtheris', 1, 'Protettore dell’Anima');
+        break;
+    case 'squalo_armor':
+        for (const z of [1, 2])
+            for (const c of pl(s, z)?.champions || [])
+                if (!c.defeated)
+                    addArmorChampion(s, z, c.id, 1, 'Squalo delle Maree');
+        break;
+    case 'vecchio_pow': {
+        const a = m.attacker;
+        if (a)
+            reduceChampionPow(s, a.player, a.champId, 1, 'Vecchio delle Nevi');
+        break;
+    }
+    case 'yeti_freeze': {
+        const list = [...s.board.monsters];
+        const before = list.map(x => ({ uid: x.uid, pow: currentMonsterPow(s, x) }));
+        for (const x of list) {
+            const b = before.find(z => z.uid === x.uid)?.pow || 0;
+            // Yeti porta il POW attuale a 0 solo per questo turno.
+            // tempPow viene azzerato da finalizeEndTurn, mentre powMod è permanente.
+            x.tempPow = (x.tempPow || 0) - b;
+        }
+        for (const x of list) {
+            const b = before.find(z => z.uid === x.uid)?.pow || 0;
+            if (b > 0)
+                addArmorMonster(s, x, b, 'Yeti');
+        }
+        log(s, 'Yeti riduce a 0 il POW dei Mostri per questo turno e converte il POW perso in Armatura.');
+        break;
+    }
+} }
+function afterTopResolution(s) { if (s.pendingChoice)
+    return; processEnterQueue(s); if (s.pendingChoice)
+    return; prepareTriggers(s); }
+function resolveTop(s) { const item = s.stack.pop(); if (!item)
+    return; if (item.kind === 'effect')
+    resolveEffect(s, item);
+else {
+    const pause = resolveCardEffect(s, item);
+    pl(s, item.actor).grave.push(item.cardId);
+    if (pause)
+        return;
+} afterTopResolution(s); }
+function resolveCombat(s) { const c = s.combat; if (!c)
+    return; const init = c.initiator, atk = champ(s, c.attacker.player, c.attacker.champId); if (!atk || atk.defeated || c.cancelled) {
+    log(s, 'Il combattimento viene annullato.');
+    s.combat = null;
+    prepareTriggers(s);
+    return;
+} const n = currentPow(s, c.attacker.player, atk); if (c.target.type === 'champion') {
+    const t = champ(s, c.target.player, c.target.champId);
+    if (t && !t.defeated) {
+        log(s, `${atk.name} attacca ${t.name} con ${n} POW.`);
+        damageChampion(s, c.target.player, t.id, n, atk.name);
+    }
+    else
+        log(s, 'Il bersaglio del combattimento non è più valido.');
+}
+else {
+    const m = monster(s, c.target.uid);
+    if (m) {
+        log(s, `${atk.name} attacca ${MONSTER_DEFS[m.cardId].name} con ${n} POW.`);
+        beginDamageEvent(s, c.attacker.player);
+        damageMonster(s, c.attacker.player, m.uid, n, atk.name, true);
+        endDamageEvent(s);
+    }
+    else
+        log(s, 'Il Mostro bersaglio non è più sul campo: l’attacco fallisce.');
+} s.combat = null; s.stackInitiator = init; afterTopResolution(s); }
+function beginEndTurn(s) { s.endTurnPending = true; const kills = [...s.delayedKills]; s.delayedKills = []; for (const d of kills) {
+    const m = monster(s, d.uid);
+    if (m)
+        killMonster(s, d.killer, m, 'Anima Esplosiva', true);
+} prepareTriggers(s); }
+function finalizeEndTurn(s) { s.endTurnPending = false; for (const p of [1, 2]) {
+    const q = pl(s, p);
+    for (const c of q.champions) {
+        c.damage = 0;
+        c.tempPow = 0;
+        c.armor = 0;
+        c.cantAttackTurn = null;
+        if (!c.defeated)
+            c.tapped = false;
+    }
+    q.fireCloud = false;
+    q.lyrandelUsed = false;
+    q.firstMagicCast = false;
+    q.killedMonsterThisTurn = false;
+    q.deck = shuffle([...q.deck, ...q.hand]);
+    q.hand = [];
+    q.selected = false;
+} for (const m of s.board.monsters) {
+    m.damage = 0;
+    m.tempPow = 0;
+    m.armor = 0;
+} s.turn++; s.status = 'select'; s.focus = s.turn % 2 ? 1 : 2; s.priority = null; s.mainPasses = 0; s.stack = []; s.stackInitiator = null; s.combat = null; s.pendingChoice = null; s.triggerQueue = []; log(s, `Fine turno. Scegliete le carte per il turno ${s.turn}.`); }
+function validateCardTargets(s, p, c, t) { const own = (id) => { const x = champ(s, p, id); return !!x && !x.defeated; }; const mon = (u) => !!monster(s, u); if (['corazza', 'mano', 'occhio', 'berserk', 'katana', 'albero', 'mille', 'collasso', 'fino_alla_morte'].includes(c.effect) && !own(String(t?.ownChamp || '')))
+    throw new Error('Campione bersaglio non valido.'); if (c.effect === 'berserk' && Number(champ(s, p, t.ownChamp)?.damage || 0) <= 0)
+    throw new Error('Berserk richiede un tuo Campione danneggiato.'); if (c.effect

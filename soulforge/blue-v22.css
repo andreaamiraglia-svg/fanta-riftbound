@@ -1,0 +1,8 @@
+:root{--sf-blue:#49b9ff;--sf-blue-deep:#0f4f85}
+.soul.blue{background:radial-gradient(circle at 35% 30%,#bcecff 0,#49b9ff 42%,#145a9d 75%,#082d52 100%);border-color:#8cddff;color:#06131d}
+.btn.blue{background:linear-gradient(180deg,#55c7ff,#2387c9);color:#03131d;border-color:#8bddff}
+.champ.blue,.monster.blue{box-shadow:0 0 0 1px rgba(74,185,255,.35),0 12px 30px rgba(20,100,160,.18)}
+.armor-stat{border-color:rgba(91,202,255,.55)!important;background:rgba(35,138,202,.14)!important}
+.armor-stat b{color:#8cddff}
+.stack-effect img{filter:grayscale(1) brightness(.62) contrast(.95)!important}
+.deck-pick.blue{--deck-accent:#49b9ff}

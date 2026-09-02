@@ -1,0 +1,10 @@
+(()=>{
+let mode=false;
+function clear(){mode=false;document.querySelectorAll('.sf53-valid').forEach(x=>x.classList.remove('sf53-valid'));document.getElementById('sf53Hint')?.remove()}
+function hint(){let h=document.getElementById('sf53Hint');if(!h){h=document.createElement('div');h.id='sf53Hint';h.style.cssText='position:fixed;top:54px;left:50%;transform:translateX(-50%);z-index:10080;background:#17120d;border:1px solid #ff9f1c;border-radius:999px;color:#fff1d6;padding:9px 16px;font-weight:900;box-shadow:0 8px 28px #0008';document.body.appendChild(h)}h.textContent='Spacca Teste: scegli un tuo Campione • ESC per annullare'}
+function begin(){clear();mode=true;document.querySelectorAll(`.champ[data-owner="${session.player}"][data-champ-id]`).forEach(el=>{if(!el.classList.contains('defeated'))el.classList.add('sf53-valid')});document.querySelectorAll('.sf53-valid').forEach(el=>{el.style.outline='3px solid #ff9f1c';el.style.outlineOffset='3px';el.style.cursor='crosshair'});hint()}
+function installChooser(){const cur=window.chooseForCard;if(typeof cur!=='function'||cur.__sf53)return;const prev=cur;const fn=function(id){const q=typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)];const card=q?.handCards?.find(c=>String(c.id)===String(id));if(card?.id==='spacca_teste'||card?.effect==='spacca_teste'){begin();return}return prev(id)};fn.__sf53=true;window.chooseForCard=fn}
+document.addEventListener('click',e=>{if(!mode)return;const el=e.target.closest?.(`.sf53-valid.champ[data-owner="${session.player}"][data-champ-id]`);if(!el)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const champId=el.dataset.champId;clear();move({type:'cast',cardId:'spacca_teste',targets:{ownChamp:champId}})},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode){e.preventDefault();clear()}},true);
+function boot(){installChooser()}boot();window.addEventListener('sf-blue-ready',()=>setTimeout(boot,0));setTimeout(boot,250);setTimeout(boot,1200);setTimeout(boot,2600);
+})();

@@ -1,0 +1,85 @@
+.cardId]?.name || m.cardId); if (n <= 0)
+    return { died: false }; recordLyrandel(s, p, uid0, n, allowLyrandel); if (applyMonsterDamage(s, m, n)) {
+    killMonster(s, p, m, source, true);
+    return { died: true };
+} return { died: false }; }
+function reduceChampionPow(s, p, id, n, source) { const c = champ(s, p, id); if (!c || c.defeated)
+    return; const amount = reductionAmount(s, n); c.tempPow = (c.tempPow || 0) - amount; log(s, `${c.name} perde ${amount} POW fino alla fine del turno${source ? ` da ${source}` : ''}.`); }
+function reduceMonsterPow(s, m, n, source) { if (!m)
+    return; const amount = reductionAmount(s, n); m.tempPow = (m.tempPow || 0) - amount; log(s, `${MONSTER_DEFS[m.cardId]?.name || m.cardId} perde ${amount} POW fino alla fine del turno${source ? ` da ${source}` : ''}.`); }
+function kingsInPlay(s) { return (s.board.monsters || []).filter((m) => m.cardId === 're_dei_non_morti').length; }
+function lascitoDescriptor(m, actor) { const d = MONSTER_DEFS[m.cardId]; if (!d?.lascito)
+    return null; switch (d.lascito) {
+    case 'segugio_morti': return { actor, sourceCardId: m.cardId, effectId: 'lascito_segugio', choiceType: 'enemyChampion', effectName: `Lascito — ${d.name}` };
+    case 'custode': return { actor, sourceCardId: m.cardId, effectId: 'lascito_custode', effectName: `Lascito — ${d.name}` };
+    case 'cavaliere': return { actor, sourceCardId: m.cardId, effectId: 'lascito_cavaliere', choiceType: 'enemyChampion', effectName: `Lascito — ${d.name}` };
+    case 'serpente': return { actor, sourceCardId: m.cardId, effectId: 'lascito_serpente', choiceType: 'enemySoul', effectName: `Lascito — ${d.name}` };
+    case 'divoratore': return { actor, sourceCardId: m.cardId, effectId: 'lascito_divoratore', meta: { colors: [...(m.devouredColors || [])] }, effectName: `Lascito — ${d.name}` };
+} return null; }
+function enqueueLascito(s, m, killer, kingCount) { if (killer !== 1 && killer !== 2)
+    return; const x = lascitoDescriptor(m, killer); if (!x)
+    return; const count = 1 + kingCount; for (let i = 0; i < count; i++)
+    s.triggerQueue.push(clone(x)); log(s, `${MONSTER_DEFS[m.cardId].name}: Lascito viene ottenuto da ${pl(s, killer).name} ed entra in Catena${count > 1 ? ` (${count} attivazioni)` : ''}.`); }
+export function killMonster(s, killer, m, reason = '', grantSoul = true, kingOverride) { const i = s.board.monsters.findIndex((x) => x.uid === m.uid); if (i < 0)
+    return; const kings = kingOverride ?? kingsInPlay(s); const dead = clone(m); s.board.monsters.splice(i, 1); pl(s, dead.owner)?.monsterGrave.push(dead.cardId); log(s, `${MONSTER_DEFS[dead.cardId]?.name || dead.cardId} viene sconfitto${reason ? ` da ${reason}` : ''}.`); if (killer === 1 || killer === 2) {
+    pl(s, killer).killedMonsterThisTurn = true;
+    if (grantSoul)
+        gainSoul(s, killer, MONSTER_DEFS[dead.cardId]?.color, 1);
+} for (const b of s.board.monsters.filter((x) => x.cardId === 'orso_furioso')) {
+    b.tempPow = (b.tempPow || 0) + 2;
+    log(s, 'Orso Furioso ottiene +2 POW fino alla fine del turno.');
+} enqueueLascito(s, dead, killer, kings); }
+function killMany(s, items, killer, reason = '', grantSoul = true) { const kings = kingsInPlay(s); for (const x of [...items]) {
+    const m = monster(s, x.uid);
+    if (m)
+        killMonster(s, killer, m, reason, grantSoul, kings);
+} }
+function addMonsterToBoard(s, cardId, owner, front = false, extra = {}) { const m = { uid: uid(), cardId, owner, damage: 0, tempPow: 0, powMod: 0, armor: 0, ...extra }; if (front)
+    s.board.monsters.unshift(m);
+else
+    s.board.monsters.push(m); s.enterQueue.push(m.uid); return m; }
+function reviveFromGrave(s, p, cardId) { const q = pl(s, p), i = q.monsterGrave.indexOf(cardId); if (i < 0)
+    return null; q.monsterGrave.splice(i, 1); const m = addMonsterToBoard(s, cardId, p); log(s, `${q.name} mette ${MONSTER_DEFS[cardId].name} in gioco dal Cimitero.`); return m; }
+function queueMonsterTrigger(s, m, effectId, effectName, meta = {}) { s.triggerQueue.push({ actor: m.owner, sourceCardId: m.cardId, effectId, effectName, meta }); log(s, `${MONSTER_DEFS[m.cardId].name} attiva il suo effetto: entra in Catena.`); }
+function processMonsterEnter(s, m) { if (!m || !monster(s, m.uid))
+    return; if (m.cardId === 'segugio_infernale') {
+    const i = s.board.monsters.findIndex((x) => x.uid === m.uid), ids = [s.board.monsters[i - 1]?.uid, s.board.monsters[i + 1]?.uid].filter(Boolean);
+    beginDamageEvent(s, null);
+    for (const u of ids)
+        if (monster(s, u))
+            damageMonster(s, null, u, 1, 'Segugio Infernale', false);
+    endDamageEvent(s);
+}
+else if (m.cardId === 'drago_delle_ceneri') {
+    beginDamageEvent(s, null);
+    for (const u of s.board.monsters.filter((x) => x.uid !== m.uid).map((x) => x.uid))
+        if (monster(s, u))
+            damageMonster(s, null, u, 1, 'Drago delle Ceneri', false);
+    endDamageEvent(s);
+}
+else if (m.cardId === 'golem_magmatico') {
+    for (const p of [1, 2])
+        for (const c of pl(s, p)?.champions || [])
+            if (!c.defeated)
+                damageChampion(s, p, c.id, 1, 'Golem Magmatico');
+    log(s, 'Golem Magmatico entra in gioco e infligge 1 danno a tutti i Campioni.');
+}
+else if (m.cardId === 'cerbero') {
+    const opts = (pl(s, m.owner)?.monsterGrave || []).filter((id) => MONSTER_DEFS[id] && MONSTER_DEFS[id].pow === 2);
+    if (opts.length) {
+        s.pendingChoice = { type: 'cerbero', player: m.owner, monsterUid: m.uid, cardIds: [...new Set(opts)] };
+        log(s, 'Cerbero: scegli un Mostro con 2 POW dal Cimitero.');
+    }
+}
+else if (m.cardId === 'divoratore_di_anime_mostro') {
+    const i = s.board.monsters.findIndex((x) => x.uid === m.uid);
+    const victims = [s.board.monsters[i - 1], s.board.monsters[i + 1]].filter(Boolean).filter((x) => x.uid !== m.uid);
+    m.devouredColors = [];
+    for (const v0 of victims) {
+        const v = monster(s, v0.uid);
+        if (!v)
+            continue;
+        m.devouredColors.push(MONSTER_DEFS[v.cardId]?.color);
+        killMonster(s, m.owner, v, 'Divoratore di Anime', false);
+    }
+  
