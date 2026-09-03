@@ -15,7 +15,15 @@ function paintColpo(){if(mode?.type!=='colpo')return;document.querySelectorAll('
 function paintFabbro(){if(mode?.type!=='fabbroChamp')return;document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));const els=ownChampEls();els.forEach(x=>x.classList.add('sf46-valid'));hint(els.length?'Fabbro Ninjitsu: scegli un tuo Campione • ESC per annullare':'Fabbro Ninjitsu: nessun Campione valido')}
 function syncMode(){if(mode?.type==='colpo')paintColpo();else if(mode?.type==='fabbroChamp')paintFabbro()}
 function startColpo(cardId){clear();mode={type:'colpo',cardId};paintColpo()}
-function startFabbro(cardId){clear();mode={type:'fabbroChamp',cardId};paintFabbro()}
+function startFabbro(cardId){
+ clear();
+ const token=String(cardId);
+ mode={type:'fabbroChamp',cardId:token};
+ const repaint=()=>{if(mode?.type==='fabbroChamp'&&String(mode.cardId)===token)paintFabbro()};
+ repaint();
+ requestAnimationFrame(()=>{repaint();requestAnimationFrame(repaint)});
+ [40,120,300,700,1200].forEach(ms=>setTimeout(repaint,ms));
+}
 function ninjitsuDeckCards(){const q=typeof playerState==='function'?playerState(session.player):session.state?.players?.[String(session.player)];const cards=(q?.deckCards||[]).filter(c=>String(c?.name||'').toLowerCase().includes('ninjitsu'));const seen=new Set();return cards.filter(c=>c?.id&&!seen.has(c.id)&&seen.add(c.id))}
 function showNinjitsuDeck(champId){document.querySelectorAll('.sf46-valid').forEach(x=>x.classList.remove('sf46-valid'));document.getElementById('sf46Hint')?.remove();const cards=ninjitsuDeckCards();const ov=document.createElement('div');ov.id='sf46Deck';ov.innerHTML=`<div class="box"><h2>Scegli una carta Ninjitsu dal tuo Mazzo</h2><div class="grid">${cards.map(c=>`<button class="card" data-sf46-deck="${c.id}"><img src="${artUrl(c.id)||window.sfArtUrl21?.(c.id)||''}" alt=""><strong>${c.name}</strong></button>`).join('')}</div>${cards.length?'':'<p>Non ci sono carte Ninjitsu nel tuo Mazzo.</p>'}<button class="cancel">Annulla</button></div>`;document.body.appendChild(ov);mode={type:'fabbroDeck',cardId:'fabbro_ninjitsu',champId};ov.querySelector('.cancel').onclick=clear}
 
