@@ -11,5 +11,15 @@
   previousBind();
   document.querySelectorAll('.sf-valtheris-ability').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopPropagation();move({type:'activate_champion',champId:'valtheris'});});
  };
+ const priorValtherisHtml=champHtml;
+ champHtml=function(c,owner,isOwn){
+  let html=priorValtherisHtml(c,owner,isOwn);
+  if(c?.id==='valtheris'&&html.endsWith('</div>')){
+   const status=[];if(Number(c.armor||0)>0)status.push('Armatura '+Number(c.armor));if(c.provocazione)status.push('Provocazione');
+   if(status.length)html=html.slice(0,-6)+'<div class="sub sf-valtheris-status">'+status.join(' • ')+'</div></div>';
+  }
+  return html;
+ };
+ window.sfValtherisAbilityUI=true;
  if(session?.state)render();
 })();
