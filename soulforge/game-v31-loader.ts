@@ -84,7 +84,7 @@ patch("for (const m of s.board.monsters) {\n    m.damage = 0;\n    m.tempPow = 0
 
 const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(source));
 const COLORS=['red','green','black','blue'];
-function enforceSoulColorsOnPlayer(q:any){ if(!q)return q; const allowed=new Set(Array.isArray(q.deckColors)&&q.deckColors.length?q.deckColors:(q.champions||[]).map((c:any)=>c?.color).filter(Boolean)); q.souls ||= {}; for(const c of COLORS){ const n=Math.max(0,Number(q.souls[c]||0)); q.souls[c]=allowed.has(c)?Math.min(3,n):0; } return q; }
+function enforceSoulColorsOnPlayer(q:any){ if(!q)return q; const allowed=new Set(Array.isArray(q.deckColors)&&q.deckColors.length?q.deckColors:(q.champions||[]).map((c:any)=>c?.color).filter(Boolean)); q.souls ||= {}; for(const c of COLORS){ const n=Math.max(0,Number(q.souls[c]||0)); q.souls[c]=allowed.has(c)?n:0; } return q; }
 function enforceSoulColors(state:any){ if(!state?.players)return state; enforceSoulColorsOnPlayer(state.players['1']); enforceSoulColorsOnPlayer(state.players['2']); return state; }
 type Snap={tempPow:number;powMod:number;armor:number;cantAttackTurn:any;tapped:boolean;cardId?:string};
 function num(v:any){const n=Number(v);return Number.isFinite(n)?n:0;} function keyChamp(p:number,id:string){return `c:${p}:${id}`;} function keyMonster(uid:string){return `m:${uid}`;}
