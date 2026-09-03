@@ -4,7 +4,7 @@ document.addEventListener('contextmenu',e=>{const el=e.target.closest?.('[data-p
 document.addEventListener('click',()=>document.querySelector('#sfBluePreview')?.classList.remove('show'),true);
 
 const bindBefore21=bind;
-bind=function(){bindBefore21();document.querySelector('#revivePhoenix')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();revivePhoenix21()},true);bindPreview21()};
+bind=function(){bindBefore21();document.querySelector('#revivePhoenix')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();revivePhoenix21()},true);document.querySelectorAll('.sf-valtheris-ability').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopPropagation();move({type:'activate_champion',champId:'valtheris'})});bindPreview21()};
 const renderBefore21=render;
 render=function(){renderBefore21();const badge=document.querySelector('.ui-v2-badge');if(badge)badge.textContent='UI v22 • Set 1 Blu';bindPreview21()};
 window.sfArtUrl21=artUrl;
