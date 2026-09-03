@@ -1,4 +1,4 @@
-import * as base from './game-v51-loader.ts?rev=souls-uncapped-v3';
+import * as base from './game-v51-loader.ts?rev=bang-champion-monster-v2';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
 export const MONSTER_DEFS:any=base.MONSTER_DEFS;
@@ -19,7 +19,7 @@ export const STARTER_MONSTERS=[...new Set([...(base.STARTER_MONSTERS||[]),...NEW
 export const newPlayer=base.newPlayer;
 export const newState=base.newState;
 
-if(CARD_DEFS?.bang) CARD_DEFS.bang.text='Infliggi 2 danni a un Mostro o Campione. Se bersagli un Mostro, infliggi 1 danno anche a tutti gli altri Mostri.';
+if(CARD_DEFS?.bang) CARD_DEFS.bang.text='Come costo aggiuntivo per giocare questa carta, scarta 2 carte dalla tua mano. Infliggi 2 danni a un Campione e 1 danno a un Mostro.';
 
 const other=(p:number)=>p===1?2:1;
 const player=(s:any,p:number)=>s?.players?.[String(p)]||null;

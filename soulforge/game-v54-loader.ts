@@ -1,4 +1,4 @@
-import * as base from './game-v53-loader.ts?rev=public-targets-v1';
+import * as base from './game-v53-loader.ts?rev=bang-champion-monster-v2';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
 export const MONSTER_DEFS:any=base.MONSTER_DEFS;

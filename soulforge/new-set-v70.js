@@ -29,9 +29,7 @@ function paint(){
  else if(mode.type==='enemy')paintEls(enemyEls(),`${mode.label}: scegli un nemico • ESC per annullare`);
  else if(mode.type==='ownChamp')paintEls(ownChampEls(),`${mode.label}: scegli un tuo Campione • ESC per annullare`);
  else if(mode.type==='bangA')paintEls(champEls(),`BANG!!!: scegli il Campione che subirà 2 danni • ESC per annullare`);
- else if(mode.type==='bangB'){
-  const key=`${mode.a.player}:${mode.a.champId}`;paintEls(champEls(el=>`${el.dataset.owner}:${el.dataset.champId}`!==key),`BANG!!!: scegli un altro Campione che subirà 1 danno • ESC per annullare`);
- }
+ else if(mode.type==='bangMonster')paintEls(monsterEls(),`BANG!!!: scegli il Mostro che subirà 1 danno • ESC per annullare`);
  else if(mode.type==='tiro'){
   const els=monsterEls();document.querySelectorAll('.sf70-valid,.sf70-picked').forEach(x=>x.classList.remove('sf70-valid','sf70-picked'));els.forEach(el=>{const u=String(el.dataset.monsterUid);el.classList.add(mode.picked.has(u)?'sf70-picked':'sf70-valid')});hint(`Tiro Rotante: scegli 3 Mostri (${mode.picked.size}/3) • ESC per annullare`);
  }
@@ -80,8 +78,8 @@ document.addEventListener('click',e=>{
   const u=String(el.dataset.monsterUid||'');if(!u)return;if(mode.picked.has(u))mode.picked.delete(u);else if(mode.picked.size<3)mode.picked.add(u);
   if(mode.picked.size===3){const id=mode.cardId,arr=[...mode.picked];cast(id,{monsterUids:arr})}else paint();return;
  }
- if(mode.type==='bangA'){const t=targetFrom(el);if(!t||t.type!=='champion')return;mode={...mode,type:'bangB',a:t};paint();return}
- if(mode.type==='bangB'){const b=targetFrom(el),m=mode;if(!b||b.type!=='champion')return;cast(m.cardId,{discardIds:m.discardIds,championA:m.a,championB:b});return}
+ if(mode.type==='bangA'){const t=targetFrom(el);if(!t||t.type!=='champion')return;mode={...mode,type:'bangMonster',a:t};paint();return}
+ if(mode.type==='bangMonster'){const m=mode,u=String(el.dataset.monsterUid||'');if(!u)return;cast(m.cardId,{discardIds:m.discardIds,championA:m.a,monsterUid:u});return}
  if(mode.type==='enemy'&&mode.next==='ownChamp'){const enemy=targetFrom(el),m=mode;if(!enemy)return;mode={type:'ownChamp',cardId:m.cardId,label:m.label,enemy};paint();return}
  if(mode.type==='ownChamp'){const m=mode;cast(m.cardId,{enemy:m.enemy,ownChamp:String(el.dataset.champId)});return}
  if(mode.type==='monster'){const m=mode;cast(m.cardId,{monsterUid:String(el.dataset.monsterUid)});return}

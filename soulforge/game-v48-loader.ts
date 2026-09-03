@@ -13,7 +13,7 @@ const CUSTOM_IDS=new Set([
 ]);
 
 Object.assign(CARD_DEFS,{
- bang:{id:'bang',name:'BANG!!!',color:'red',cost:1,speed:'base',type:'Magia',text:'Come costo aggiuntivo, scarta 2 carte dalla tua mano. Infliggi 2 danni a un Campione e 1 danno a un altro Campione.',effect:'v48_bang'},
+ bang:{id:'bang',name:'BANG!!!',color:'red',cost:1,speed:'base',type:'Magia',text:'Come costo aggiuntivo per giocare questa carta, scarta 2 carte dalla tua mano. Infliggi 2 danni a un Campione e 1 danno a un Mostro.',effect:'v48_bang'},
  barile_esplosivo:{id:'barile_esplosivo',name:'Barile Esplosivo',color:'red',cost:0,speed:'instant',type:'Magia',text:'Scegli un Mostro. Quel Mostro subisce il doppio dei danni dalle Magie.',effect:'v48_barile'},
  spacca_corazze:{id:'spacca_corazze',name:'Spacca Corazze',color:'green',cost:1,speed:'response',type:'Magia',text:'Scegli un nemico. Rimuovi tutta la sua Armatura.',effect:'v48_spacca_corazze'},
  tiro_rotante:{id:'tiro_rotante',name:'Tiro Rotante',color:'green',cost:0,speed:'base',type:'Magia',text:'Infliggi 1 danno a 3 Mostri.',effect:'v48_tiro_rotante'},
@@ -118,8 +118,8 @@ function validateCustomCast(s:any,p:number,move:any){
   case'bang':{
    const ds=[...new Set((t.discardIds||[]).map(String))];
    if(ds.length!==2||ds.some((id:string)=>id===c.id||!q?.hand?.includes(id)))throw new Error('BANG!!! richiede di scartare 2 altre carte dalla tua mano.');
-   const a=t.championA,b=t.championB,ca=validChampionRef(s,a),cb=validChampionRef(s,b);
-   if(!ca||!cb||`${a.player}:${a.champId}`===`${b.player}:${b.champId}`)throw new Error('BANG!!! richiede due Campioni diversi.');
+   const a=t.championA,ca=validChampionRef(s,a),m=monster(s,String(t.monsterUid||''));
+   if(!ca||!m)throw new Error('BANG!!! richiede un Campione e un Mostro.');
    break;
   }
   case'barile_esplosivo':case'dono_ai_poveri':if(!monster(s,String(t.monsterUid||'')))throw new Error('Mostro bersaglio non valido.');break;
@@ -214,9 +214,9 @@ function preResolveCustom(s:any,item:any,ctx:any){
  if(!c)return;
  switch(c.id){
   case'bang':{
-   const a=t.championA,b=t.championB;
+   const a=t.championA;
    if(validChampionRef(s,a))damageChampionLocal(s,Number(a.player),String(a.champId),spellAmount(s,p,2),c.name);
-   if(validChampionRef(s,b))damageChampionLocal(s,Number(b.player),String(b.champId),spellAmount(s,p,1),c.name);
+   if(monster(s,String(t.monsterUid||'')))damageMonsterSpell(s,p,String(t.monsterUid),1,c.name);
    break;
   }
   case'barile_esplosivo':{const m=monster(s,String(t.monsterUid||''));if(m){m._barileEsplosivo=true;log(s,`${MONSTER_DEFS[m.cardId]?.name||m.cardId} subirà il doppio dei danni dalle Magie.`)}break;}
