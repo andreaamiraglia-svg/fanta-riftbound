@@ -1,4 +1,4 @@
-import * as base from './game-v32-loader.ts';
+import * as base from './game-v32-loader.ts?rev=souls-uncapped-v3';
 
 // Regola globale: tutti i Mostri in campo sono considerati Nemici,
 // indipendentemente da chi li ha evocati. I Campioni sono nemici solo

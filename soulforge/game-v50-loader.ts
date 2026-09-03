@@ -1,4 +1,4 @@
-import * as base from './game-v49-loader.ts?rev=412d8626';
+import * as base from './game-v49-loader.ts?rev=souls-uncapped-v3';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
 export const MONSTER_DEFS:any=base.MONSTER_DEFS;
