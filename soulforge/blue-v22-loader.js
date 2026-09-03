@@ -1,5 +1,5 @@
 (()=>{
-const parts=['/blue-v22.p01.txt','/blue-v22.p02.txt','/blue-v22.p03.txt','/blue-v22.p04.txt'];
+const parts=['/blue-v22.p01.txt?v=valtheris-v2','/blue-v22.p02.txt?v=valtheris-v2','/blue-v22.p03.txt?v=valtheris-v2','/blue-v22.p04.txt?v=valtheris-v2'];
 const ART_FIXES=[];
 Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(p+' HTTP '+r.status);return r.text()})).then(xs=>{
  let js=xs.join('');
