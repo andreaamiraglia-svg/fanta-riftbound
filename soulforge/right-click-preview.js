@@ -59,8 +59,6 @@ function close(){const b=document.getElementById('sfRightPreview');if(!b)return;
 function cancelHoverTimer(){if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null}}
 function leaveHoverRoot(root,related){if(!root||root!==hoverRoot)return;if(related instanceof Node&&root.contains(related))return;cancelHoverTimer();hoverRoot=null;if(opened&&openedMode==='hover')close()}
 
-document.addEventListener('contextmenu',e=>{const ref=refFromTarget(e.target);if(!ref?.id||!artUrl(ref.id))return;cancelHoverTimer();e.preventDefault();e.stopPropagation();show(ref,e.clientX,e.clientY,'context')},true);
-
 document.addEventListener('mouseover',e=>{
  const root=previewRoot(e.target);if(!root)return;
  if(root===hoverRoot)return;

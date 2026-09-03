@@ -19,6 +19,8 @@ export const STARTER_MONSTERS=[...new Set([...(base.STARTER_MONSTERS||[]),...NEW
 export const newPlayer=base.newPlayer;
 export const newState=base.newState;
 
+if(CARD_DEFS?.bang) CARD_DEFS.bang.text='Infliggi 2 danni a un Mostro o Campione. Se bersagli un Mostro, infliggi 1 danno anche a tutti gli altri Mostri.';
+
 const other=(p:number)=>p===1?2:1;
 const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const champ=(s:any,p:number,id:any)=>(player(s,p)?.champions||[]).find((c:any)=>String(c?.id)===String(id));
