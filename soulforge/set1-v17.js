@@ -1,6 +1,7 @@
 (()=>{
 const OLD_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 const NEW_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/cards-v18/';
+const MAIN_CARD_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';
 const OLD_ART={
  kael:'kael.webp',lyrandel:'lyrandel.webp',
  lucertola_fuoco:'lucertola-di-fuoco.webp',segugio_infernale:'segugio-infernale.webp',fenice_cremisi:'fenice-cremisi.webp',golem_magmatico:'golem-magmatico.webp',drago_delle_ceneri:'drago-delle-ceneri.webp',salamandra_vulcanica:'salamandra-vulcanica.webp',
@@ -12,7 +13,7 @@ const NEW_ART={
  segugio_dei_morti:'segugio-dei-morti.webp',custode_sepolcrale:'custode-sepolcrale.webp',cavaliere_senza_volto:'cavaliere-senza-volto.webp',cerbero:'cerbero.webp',re_dei_non_morti:'re-dei-non-morti.webp',divoratore_di_anime_mostro:'divoratore-di-anime-mostro.webp',
  evocatore_anime_vacue:'evocatore-di-anime-vacue.webp',anima_esplosiva:'anima-esplosiva.webp',sacrificio:'sacrificio.webp',collasso:'collasso.webp',spacca_ossa:'spacca-ossa.webp',eclipse_fang:'eclipse-fang.webp',fino_alla_morte:'fino-alla-morte.webp',mietitore:'mietitore.webp',ammazza_morte:'ammazza-morte.webp'
 };
-const artUrl=id=>NEW_ART[id]?NEW_BASE+NEW_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:'');
+const artUrl=id=>id==='valtheris'?MAIN_CARD_BASE+'valtheris-spirito-eterno.webp':(NEW_ART[id]?NEW_BASE+NEW_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''));
 const artImg=(id,cl='')=>artUrl(id)?`<img class="${cl}" src="${artUrl(id)}" alt="${esc(id)}" loading="lazy">`:'';
 const objectInfo=id=>session.state?.cardDefs?.[id]||session.state?.monsterDefs?.[id]||[1,2].flatMap(p=>session.state?.players?.[String(p)]?.champions||[]).find(c=>c.id===id)||null;
 const colorLabel=c=>c==='red'?'Rossa':c==='green'?'Verde':'Nera';
@@ -35,9 +36,10 @@ monsterTargets=function(){return session.state?.board?.monsters||[]};
 soulsHtml=function(p){return `<div class="souls"><div class="soul red" title="Anime Rosse">${p.souls?.red??0}</div><div class="soul green" title="Anime Verdi">${p.souls?.green??0}</div><div class="soul black" title="Anime Nere">${p.souls?.black??0}</div></div>`};
 
 function canUseBlackChampion(c,isOwn){const me=playerState(session.player),s=session.state;return isOwn&&c.id==='divoratore_campione'&&!c.defeated&&!c.tapped&&s.status==='main'&&s.focus===session.player&&!s.priority&&!s.stack.length&&!s.combat&&!s.pendingChoice&&me.killedMonsterThisTurn&&(me.graveCards||[]).length>0}
+function canUseValtheris(c,isOwn){const s=session.state;return isOwn&&c.id==='valtheris'&&!c.defeated&&!c.tapped&&s.status==='main'&&s.focus===session.player&&!s.priority&&!s.stack.length&&!s.combat&&!s.pendingChoice}
 champHtml=function(c,owner,isOwn){
  if(!c)return'';const w=c.wounds||0,guards=enemyProvocations();const canAtk=isOwn&&canAttack(c);const enemyTarget=!isOwn&&!c.defeated&&(guards.length===0||guards.some(g=>g.type==='champion'&&g.player===owner&&g.champId===c.id));
- return `<div class="champ ${c.color}${c.defeated?' defeated':''}${canAtk?' click-attack':''}${enemyTarget?' attack-target':''}" data-owner="${owner}" data-champ-id="${c.id}" data-preview-card="${c.id}"><div class="tap ${!c.tapped&&!c.defeated?'active':''}">${c.defeated?'SCONFITTO':c.tapped?'TAPPATO':'ATTIVO'}</div>${artImg(c.id,'champ-art')}<h3>${esc(c.name)}</h3><div class="stats"><span class="stat">POW <b>${c.pow}</b></span><span class="stat">HP <b>${c.hp-w}</b>/${c.hp}</span><span class="stat">Danni <b>${c.damage}</b>/${c.pow}</span><span class="stat">Ferite <b>${w}</b></span></div>${canUseBlackChampion(c,isOwn)?'<div class="card-actions"><button class="btn black v17-champ-ability" data-champ="divoratore_campione">Ritorno delle Anime</button></div>':''}</div>`;
+ return `<div class="champ ${c.color}${c.defeated?' defeated':''}${canAtk?' click-attack':''}${enemyTarget?' attack-target':''}" data-owner="${owner}" data-champ-id="${c.id}" data-preview-card="${c.id}"><div class="tap ${!c.tapped&&!c.defeated?'active':''}">${c.defeated?'SCONFITTO':c.tapped?'TAPPATO':'ATTIVO'}</div>${artImg(c.id,'champ-art')}<h3>${esc(c.name)}</h3><div class="stats"><span class="stat">POW <b>${c.pow}</b></span><span class="stat">HP <b>${c.hp-w}</b>/${c.hp}</span><span class="stat">Danni <b>${c.damage}</b>/${c.pow}</span><span class="stat">Ferite <b>${w}</b></span></div>${canUseBlackChampion(c,isOwn)?'<div class="card-actions"><button class="btn black v17-champ-ability" data-champ="divoratore_campione">Ritorno delle Anime</button></div>':''}${canUseValtheris(c,isOwn)?'<div class="card-actions"><button class="btn blue v17-valtheris-ability" data-champ="valtheris">Protettore dell’Anima</button></div>':''}</div>`;
 };
 monsterHtml=function(m){
  const guards=enemyProvocations(),allowed=guards.length===0||guards.some(g=>g.type==='monster'&&g.uid===m.uid);const prov=session.state?.monsterDefs?.[m.cardId]?.provocazione;
@@ -64,6 +66,7 @@ showRecycle=function(){const me=playerState(session.player),cost=me.recycleCount
 function revivePhoenixV17(){const me=playerState(session.player),opts=['red','green','black'].filter(c=>(me.souls[c]||0)>0);if(opts.length===1)return move({type:'revive_phoenix',color:opts[0]});showModal('Rianima Fenice Cremisi','<p>Scegli quale Anima pagare.</p><div class="controls">'+opts.map(c=>`<button class="btn ${c==='black'?'black':c}" data-phoenix-color="${c}">1 Anima ${colorLabel(c)}</button>`).join('')+'</div>');document.querySelectorAll('[data-phoenix-color]').forEach(b=>b.onclick=()=>{const c=b.dataset.phoenixColor;closeModal();move({type:'revive_phoenix',color:c})})}
 
 async function useBlackChampion(){const cards=playerState(session.player).graveCards||[];const v=await pick('Ritorno delle Anime — scegli una carta dal Cimitero',cards.map(c=>({label:c.name,desc:`${c.type} • ${colorLabel(c.color)}`,value:c.id})));if(v)move({type:'activate_champion',champId:'divoratore_campione',graveCardId:v})}
+function useValtheris(){move({type:'activate_champion',champId:'valtheris'})}
 
 const prevChoose=window.chooseForCard;
 window.chooseForCard=async function(id){const card=playerState(session.player)?.handCards?.find(c=>c.id===id);if(!card)return;let targets={};try{
@@ -100,6 +103,7 @@ bind=function(){prevBind();
  document.querySelector('#recycleBtn')?.addEventListener('click',e=>{e.stopImmediatePropagation();showRecycle()},true);
  document.querySelector('#revivePhoenix')?.addEventListener('click',e=>{e.stopImmediatePropagation();revivePhoenixV17()},true);
  document.querySelector('.v17-champ-ability')?.addEventListener('click',e=>{e.stopPropagation();useBlackChampion()});
+ document.querySelector('.v17-valtheris-ability')?.addEventListener('click',e=>{e.stopPropagation();useValtheris()});
  document.querySelectorAll('.champ.click-attack').forEach(el=>el.onclick=e=>{e.stopPropagation();window.__v17AttackSource={champId:el.dataset.champId,el};document.body.classList.add('attack-mode')});
  document.querySelectorAll('.attack-target').forEach(el=>el.onclick=e=>{const src=window.__v17AttackSource;if(!src)return;e.stopPropagation();if(!attackTargetAllowed(el)){showError('Devi scegliere un difensore con Provocazione.');return}const t=el.dataset.monsterUid?{type:'monster',uid:el.dataset.monsterUid}:{type:'champion',player:Number(el.dataset.owner),champId:el.dataset.champId};window.__v17AttackSource=null;document.body.classList.remove('attack-mode');document.querySelector('#sfAttackLine')?.setAttribute('opacity','0');move({type:'attack',champId:src.champId,target:t})});
  bindV17Preview();setTimeout(showPendingV17,0);
