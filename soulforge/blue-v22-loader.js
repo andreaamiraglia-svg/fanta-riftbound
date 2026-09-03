@@ -1,9 +1,6 @@
 (()=>{
 const parts=['/blue-v22.p01.txt?v=valtheris-v2','/blue-v22.p02.txt?v=valtheris-v2','/blue-v22.p03.txt?v=valtheris-v2','/blue-v22.p04.txt?v=valtheris-v2'];
-const ART_FIXES=[[
- "const artUrl=id=>V21_ART[id]?V21_BASE+V21_ART[id]:(V18_ART[id]?V18_BASE+V18_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''));",
- "const artUrl=id=>id==='valtheris'?'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/valtheris-spirito-eterno.webp?v=20260903':(V21_ART[id]?V21_BASE+V21_ART[id]:(V18_ART[id]?V18_BASE+V18_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:'')));"
-]];
+const ART_FIXES=[["const V21_BASE=OLD_BASE;","const V21_BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';"]];
 Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(p+' HTTP '+r.status);return r.text()})).then(xs=>{
  let js=xs.join('');
  for(const [from,to] of ART_FIXES)js=js.replace(from,to);
