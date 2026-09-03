@@ -10,7 +10,7 @@ export const newState=base.newState;
 export const newPlayer=base.newPlayer;
 
 Object.assign(CHAMPION_DEFS,{
- valtheris:{...(CHAMPION_DEFS?.valtheris||{}),id:'valtheris',name:'Valtheris Spirito Eterno',color:'blue',basePow:3,hp:3,text:'Protettore dell’Anima — Tappa: Valtheris ottiene 1 Armatura.'}
+ valtheris:{...(CHAMPION_DEFS?.valtheris||{}),id:'valtheris',name:'Valtheris Spirito Eterno',color:'blue',basePow:3,hp:3,text:'Protettore dell’Anima — All’inizio del tuo turno, ottiene 1 Armatura. Tappa: ottiene 1 Armatura e Provocazione per questo turno.'}
 });
 
 const other=(p:number)=>p===1?2:1;
@@ -18,14 +18,11 @@ const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const champ=(s:any,p:number,id:string)=>(player(s,p)?.champions||[]).find((c:any)=>String(c?.id)===id);
 const log=(s:any,msg:string)=>{s.log ||= [];s.log.push(msg);if(s.log.length>180)s.log=s.log.slice(-180);};
 
-function clearLegacyValtherisTrigger(s:any){
- if(!s)return;
- const legacy=(x:any)=>String(x?.effectId||x?.trigger?.effectId||'')==='valtheris_armor'&&String(x?.sourceCardId||x?.trigger?.sourceCardId||'')==='valtheris';
- if(Array.isArray(s.triggerQueue))s.triggerQueue=s.triggerQueue.filter((x:any)=>!legacy(x));
- if(Array.isArray(s._v48Triggers))s._v48Triggers=s._v48Triggers.filter((x:any)=>!legacy(x));
- if(Array.isArray(s.stack))s.stack=s.stack.filter((x:any)=>!legacy(x));
- if(legacy(s.pendingChoice))s.pendingChoice=null;
- if(!s.pendingChoice&&!s.stack?.length){s.priority=null;s.priorityPasses=0;}
+function clearExpiredValtherisProvocation(s:any){
+ for(const p of [1,2]){
+  const c=champ(s,p,'valtheris');
+  if(c&&Number(c._valtherisProvTurn)!==Number(s?.turn))c.provocazione=false;
+ }
 }
 function activateValtheris(s:any,p:number){
  if(s.status!=='main'||s.priority||s.stack?.length||s.combat||s.pendingChoice||Number(s.focus)!==p)throw new Error('Puoi usare Protettore dell’Anima solo con il Focus e senza Catene.');
@@ -43,20 +40,21 @@ function resolveValtheris(s:any,p:number){
  const c=champ(s,p,'valtheris');
  if(!c||c.defeated)return;
  c.armor=Math.max(0,Number(c.armor||0))+1;
- log(s,`Protettore dell’Anima: ${c.name} ottiene 1 Armatura.`);
+ c.provocazione=true;c._valtherisProvTurn=Number(s.turn);
+ log(s,`Protettore dell’Anima: ${c.name} ottiene 1 Armatura e Provocazione fino alla fine del turno.`);
 }
 export function act(state:any,p0:any,move:any){
  const p=Number(p0);
- clearLegacyValtherisTrigger(state);
+ clearExpiredValtherisProvocation(state);
  if(move?.type==='activate_champion'&&String(move?.champId)==='valtheris')return activateValtheris(state,p);
  const top=move?.type==='pass_priority'&&Array.isArray(state?.stack)&&state.stack.length?state.stack[state.stack.length-1]:null;
  const resolvesValtheris=String(top?.effectId||'')==='valtheris_protettore'&&Number(top?.actor)===p;
  const out=(base.act as any)(state,p,move);
  if(resolvesValtheris)resolveValtheris(state,p);
- clearLegacyValtherisTrigger(state);
+ clearExpiredValtherisProvocation(state);
  return out||state;
 }
 export function publicView(state:any,p:any){
- clearLegacyValtherisTrigger(state);
+ clearExpiredValtherisProvocation(state);
  return (base.publicView as any)(state,p);
 }
