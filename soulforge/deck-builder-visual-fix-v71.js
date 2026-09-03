@@ -4,7 +4,7 @@ const CURRENT='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftb
 // Manteniamo le correzioni Blu storiche solo dove servono.
 // Grifone della Tempesta ora usa il proprio artwork canonico.
 const BLUE_ART={
-  valtheris: CURRENT+'valtheris-spirito-eterno.webp?rev=blue-valtheris-v1',
+  valtheris: 'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/valtheris-spirito-eterno.webp?v=20260903',
   squalo_delle_maree: CURRENT+'squalo-delle-maree.webp?rev=blue-set-v4',
   lupo_glaciale: CURRENT+'lupo-glaciale.webp?rev=blue-set-v4',
   grifone_della_tempesta: CURRENT+'grifone-della-tempesta.webp?rev=blue-set-v4',
