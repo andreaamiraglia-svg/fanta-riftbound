@@ -13,7 +13,7 @@ const NEW_ART={
  segugio_dei_morti:'segugio-dei-morti.webp',custode_sepolcrale:'custode-sepolcrale.webp',cavaliere_senza_volto:'cavaliere-senza-volto.webp',cerbero:'cerbero.webp',re_dei_non_morti:'re-dei-non-morti.webp',divoratore_di_anime_mostro:'divoratore-di-anime-mostro.webp',
  evocatore_anime_vacue:'evocatore-di-anime-vacue.webp',anima_esplosiva:'anima-esplosiva.webp',sacrificio:'sacrificio.webp',collasso:'collasso.webp',spacca_ossa:'spacca-ossa.webp',eclipse_fang:'eclipse-fang.webp',fino_alla_morte:'fino-alla-morte.webp',mietitore:'mietitore.webp',ammazza_morte:'ammazza-morte.webp'
 };
-const artUrl=id=>id==='valtheris'?MAIN_CARD_BASE+'valtheris-spirito-eterno.webp':(NEW_ART[id]?NEW_BASE+NEW_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''));
+const artUrl=id=>id==='valtheris'?MAIN_CARD_BASE+'valtheris-spirito-eterno.webp?v=20260903':(NEW_ART[id]?NEW_BASE+NEW_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''));
 const artImg=(id,cl='')=>artUrl(id)?`<img class="${cl}" src="${artUrl(id)}" alt="${esc(id)}" loading="lazy">`:'';
 const objectInfo=id=>session.state?.cardDefs?.[id]||session.state?.monsterDefs?.[id]||[1,2].flatMap(p=>session.state?.players?.[String(p)]?.champions||[]).find(c=>c.id===id)||null;
 const colorLabel=c=>c==='red'?'Rossa':c==='green'?'Verde':'Nera';
