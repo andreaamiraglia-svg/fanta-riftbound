@@ -17,6 +17,7 @@ const patch=(pattern:RegExp|string,replacement:string,label:string)=>{const next
 
 // Preserve all current live game fixes.
 patch("const q = pl(s, p); if (!q || !COLORS.includes(color))\n    return; const before = q.souls[color] || 0;","const q = pl(s, p); if (!q || !COLORS.includes(color))\n    return; const allowedColors = Array.isArray(q.deckColors) && q.deckColors.length ? q.deckColors : (q.champions || []).map(c => c?.color).filter(Boolean); if (!allowedColors.includes(color))\n    return; const before = q.souls[color] || 0;",'soul colors');
+patch("q.souls[color] = Math.min(3, before + n);","q.souls[color] = before + n;",'uncapped soul gain');
 patch("function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n !== 1 || (p !== 1 && p !== 2))","function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n <= 0 || (p !== 1 && p !== 2))",'Lyrandel damage trigger');
 patch("cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando un Mostro subisce 1 danno, ottiene +1 POW per questo turno.' },","cervo_antico: { id: 'cervo_antico', name: 'Cervo Antico', color: 'green', pow: 3, text: 'Quando un altro Mostro subisce danni, quel Mostro ottiene +1 POW per questo turno.' },",'Cervo Antico text');
 patch(/function applyMonsterDamage\(s, m, n\) \{[\s\S]*?\}\nexport function damageMonster\(s, p, uid0, n, source = '', allowLyrandel = true\) \{[\s\S]*?\}\nfunction reduceChampionPow/,`function applyMonsterDamage(s, m, n) { if (!m || n <= 0)
