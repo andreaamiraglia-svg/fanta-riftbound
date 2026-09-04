@@ -75,7 +75,7 @@ function repair(root=document){
 }
 async function resolveOfferta(){
  if(pendingOpen)return;const pc=session?.state?.pendingChoice;if(pc?.type!=='v59_offerta_second'||Number(pc.player)!==Number(session.player))return;
- pendingOpen=true;try{const choice=await choose('Offerta Maligna — scegli il secondo Mostro',(pc.options||[]).map(x=>({label:x.label||x.id,desc:'Verrà ucciso insieme al primo Mostro',value:String(x.id)})));if(choice)await move({type:'resolve_choice',monsterUid:String(choice)})}catch(e){showErr(e?.message||e)}finally{pendingOpen=false}
+ pendingOpen=true;try{const choice=await choose('Offerta Maligna — scegli il secondo Mostro',(pc.options||[]).map(x=>({label:x.label||x.id,desc:'L’uccisione e l’Anima di questo Mostro saranno attribuite a te',value:String(x.id)})));if(choice)await move({type:'resolve_choice',monsterUid:String(choice)})}catch(e){showErr(e?.message||e)}finally{pendingOpen=false}
 }
 function boot(){installArt();installChooser();repair();resolveOfferta()}
 let queued=false;function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;boot()})}
