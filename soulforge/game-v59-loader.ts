@@ -233,20 +233,31 @@ function combatSnapshot(s:any){
  const cb=s?.combat;if(!cb||cb.target?.type!=='champion')return null;const d=champ(s,Number(cb.target.player),String(cb.target.champId));if(d?.id!=='guardia_reale'||cb.cancelled)return null;
  return{key:`${cb.attacker?.player}:${cb.attacker?.champId}>${cb.target?.player}:${cb.target?.champId}`,attackerPlayer:Number(cb.attacker.player),attackerId:String(cb.attacker.champId),pow:currentChampionPow(s,Number(cb.target.player),d)};
 }
+function ensureCombatPriority(s:any){
+ if(!s?.combat||s.pendingChoice||s.stack?.length||s.priority)return;
+ const attacker=Number(s.combat.attacker?.player||s.combat.initiator);if(attacker!==1&&attacker!==2)return;
+ s.priority=Number(s.combatPasses||0)>0?attacker:other(attacker);
+}
+function repairOrangePaymentLog(s:any,move:any){
+ if(move?.type!=='cast'||CARD_DEFS?.[move.cardId]?.color!=='orange')return;
+ for(let i=Math.max(0,(s.log||[]).length-6);i<(s.log||[]).length;i++)s.log[i]=String(s.log[i]).replace(/Animae? Blu/g,'Anime Arancioni').replace(/Anime Blu/g,'Anime Arancioni').replace(/Anima Blu/g,'Anima Arancione');
+}
 
 export function act(state:any,p0:any,move:any){
  const p=Number(p0);if(state?.pendingChoice?.type==='v59_offerta_second')return resolveOffertaChoice(state,p,move);
+ ensureCombatPriority(state);
  guardiaCannotAttack(state,p,move);if(move?.type==='cast')validateCast(state,p,move);
  const oldTurn=Number(state?.turn||0),guard= combatSnapshot(state),beforeGraves=[(player(state,1)?.monsterGrave||[]).length,(player(state,2)?.monsterGrave||[]).length];
  const top=move?.type==='pass_priority'&&state?.stack?.length?clone(state.stack[state.stack.length-1]):null;
  const custom=((top?.kind==='card'&&CUSTOM_IDS.has(String(top.cardId)))||(top?.kind==='effect'&&String(top.effectId)==='v59_esercito'))?top:null;
  const killer=top?Number(top.actor):(state?.combat?Number(state.combat.attacker?.player):p);
  const out=(base.act as any)(state,p,move);
+ repairOrangePaymentLog(state,move);
  payAdditionalCosts(state,p,move);
  trackBaseMonsterKills(state,killer,beforeGraves);
  if(custom&&!state.stack?.some((x:any)=>String(x.uid)===String(custom.uid)))resolveCard(state,custom);
  if(guard&&!state.combat&&state.status!=='gameover'){const a=champ(state,guard.attackerPlayer,guard.attackerId);if(a&&!a.defeated&&guard.pow>0){log(state,`Guardia Reale contrattacca con ${guard.pow} POW.`);damageChampion(state,guard.attackerPlayer,guard.attackerId,guard.pow,'Guardia Reale')}}
- expireTurnEffects(state,oldTurn);cleanupSupportDeaths(state);queueSnowAtNewTurn(state,oldTurn);promoteLocalTriggers(state);settleGameover(state);return out||state;
+ expireTurnEffects(state,oldTurn);cleanupSupportDeaths(state);queueSnowAtNewTurn(state,oldTurn);promoteLocalTriggers(state);ensureCombatPriority(state);settleGameover(state);return out||state;
 }
 
 function targetName(s:any,t:any){if(!t)return'';if(t.type==='monster')return MONSTER_DEFS?.[monster(s,t.uid)?.cardId]?.name||'Mostro';return champ(s,Number(t.player),String(t.champId))?.name||'Campione'}
@@ -255,7 +266,7 @@ function targetSummary(s:any,item:any){
  add('Nemico: ',targetName(s,t.enemy));add('Campione: ',t.ownChamp&&champ(s,Number(item.actor),t.ownChamp)?.name);add('Campione nemico: ',targetName(s,t.enemyChampion));add('Mostro: ',t.monsterUid&&targetName(s,{type:'monster',uid:t.monsterUid}));add('Personaggio: ',targetName(s,t.character));add('Primo: ',targetName(s,t.championA));add('Secondo: ',targetName(s,t.championB));add('Supporto: ',t.supportId&&champ(s,Number(item.actor),t.supportId)?.name);return out.join(' • ');
 }
 export function publicView(state:any,p0:any){
- const p=Number(p0),v:any=(base.publicView as any)(state,p),raw=state?.stack||[];
+ ensureCombatPriority(state);const p=Number(p0),v:any=(base.publicView as any)(state,p),raw=state?.stack||[];ensureCombatPriority(state);v.priority=state.priority;
  for(const shown of v?.stack||[]){const item=raw.find((x:any)=>String(x.uid)===String(shown.uid));const summary=targetSummary(state,item);if(summary)shown.targetSummary=summary}
  for(const z of [1,2]){const q=v?.players?.[String(z)];if(!q)continue;delete q._v59KillsTurn;delete q._v59Kills}
  delete v._v59EndTurnHp;delete v._v59Snow;return v;
