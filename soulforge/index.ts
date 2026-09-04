@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v59-loader.ts?rev=set-one-wave-order-v1";
+import { newState, newPlayer, act, publicView, CARD_DEFS } from "https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v59-loader.ts?rev=set-one-wave-order-v2";
 
 if(CARD_DEFS?.sguardo_ninjitsu) CARD_DEFS.sguardo_ninjitsu.text='Uccidi un Mostro danneggiato.';
 
