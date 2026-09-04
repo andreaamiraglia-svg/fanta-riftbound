@@ -208,11 +208,11 @@ function queueSnowAtNewTurn(s:any,oldTurn:number){
 function resolveOffertaChoice(s:any,p:number,a:any){
  const pc=s.pendingChoice;if(!pc||pc.type!=='v59_offerta_second'||Number(pc.player)!==p||a?.type!=='resolve_choice')throw new Error('Scelta non valida.');
  const secondUid=String(a.monsterUid||a.choice||''),allowed=(pc.options||[]).some((x:any)=>String(x.id)===secondUid),first=monster(s,pc.firstUid),second=monster(s,secondUid);if(!allowed||!first||!second||String(first.uid)===String(second.uid))throw new Error('Mostro non valido.');
- const actor=Number(pc.actor);s.pendingChoice=null;
+ const actor=Number(pc.actor),chooser=Number(pc.player);s.pendingChoice=null;
  const dead=[clone(first),clone(second)];for(const m of dead){const i=(s.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===String(m.uid));if(i>=0)s.board.monsters.splice(i,1)}
- for(const m of dead){const owner=player(s,Number(m.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(m.cardId)}log(s,`${MONSTER_DEFS[m.cardId]?.name||m.cardId} viene ucciso da Offerta Maligna.`);noteMonsterKill(s,actor);gainSoul(s,actor,String(MONSTER_DEFS[m.cardId]?.color||''),1)}
+ for(let i=0;i<dead.length;i++){const m=dead[i],killer=i===0?actor:chooser,owner=player(s,Number(m.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(m.cardId)}log(s,`${MONSTER_DEFS[m.cardId]?.name||m.cardId} viene ucciso da ${player(s,killer)?.name} con Offerta Maligna.`);noteMonsterKill(s,killer);gainSoul(s,killer,String(MONSTER_DEFS[m.cardId]?.color||''),1)}
  const kings=dead.filter((m:any)=>m.cardId==='re_dei_non_morti').length+(s.board?.monsters||[]).filter((m:any)=>m.cardId==='re_dei_non_morti').length;
- for(const m of dead){const tr=lascitoDescriptor(m,actor);if(tr){s._v48Triggers ||= [];for(let z=0;z<1+kings;z++)s._v48Triggers.push(clone(tr))}}
+ for(let i=0;i<dead.length;i++){const m=dead[i],killer=i===0?actor:chooser,tr=lascitoDescriptor(m,killer);if(tr){s._v48Triggers ||= [];for(let z=0;z<1+kings;z++)s._v48Triggers.push(clone(tr))}}
  for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+4;log(s,'Orso Furioso ottiene +4 POW fino alla fine del turno per i due Mostri morti.')}
  promoteLocalTriggers(s);settleGameover(s);return s;
 }
