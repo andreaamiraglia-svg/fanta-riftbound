@@ -3,7 +3,7 @@ const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftboun
 const ART={
  arrivano_i_pirati:'arrivano-i-pirati.webp',colpo_di_cannone:'colpo-di-cannone.webp',galeone_fantasma:'galeone-fantasma.webp',
  furia_della_natura:'furia-della-natura.webp',shuriken:'shuriken.webp',zampata_amichevole:'zampata-amichevole.webp',
- offerta_maligna:'offerta-maligna.webp',scambio_di_anime:'scambio-di-anime.webp',visione_distorta:'visione-distorta.webp',
+ offerta_maligna:'offerta-maligna.webp?rev=ownership-v2',scambio_di_anime:'scambio-di-anime.webp',visione_distorta:'visione-distorta.webp',
  protettore_del_villaggio:'protettore-del-villaggio.webp',valanga:'valanga.webp',esercito_tormenta_neve:'esercito-della-tormenta-di-neve.webp',
  cavaliere_pioggia_frecce:'cavaliere-della-pioggia-di-frecce.webp',forgia_nanica:'forgia-nanica.webp',
  legionario_troll:'legionario-troll.webp',guardia_reale:'guardia-reale.webp'
