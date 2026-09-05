@@ -41,6 +41,7 @@ Object.assign(CARD_DEFS,{
  guardia_reale:{id:'guardia_reale',name:'Guardia Reale',color:'orange',cost:3,speed:'base',type:'Supporto',supportChampion:true,text:'Non può attaccare. Contrattacco. Provocazione.',effect:'support_guardia_reale'}
 });
 Object.assign(CARD_DEFS.legionario_troll,{cost:2,text:'Quando attacca, fornisce +2 POW e Provocazione a un tuo Campione per questo turno.'});
+Object.assign(CARD_DEFS.fino_alla_morte,{text:'Scegli un tuo Campione. Bandisci tutti i Mostri dal tuo Cimitero. Quel Campione ottiene 1 Armatura per ogni Mostro bandito in questo modo fino alla fine del turno.'});
 Object.assign(CHAMPION_DEFS,{
  legionario_troll:{...(CHAMPION_DEFS.legionario_troll||{}),id:'legionario_troll',name:'Legionario Troll',color:'orange',basePow:2,hp:1,supportChampion:true},
  guardia_reale:{id:'guardia_reale',name:'Guardia Reale',color:'orange',basePow:4,hp:1,supportChampion:true,provocazione:true,counterattack:true,cannotAttack:true}
@@ -205,6 +206,16 @@ function queueSnowAtNewTurn(s:any,oldTurn:number){
   for(const x of due){s.stack ||= [];s.stack.push({uid:crypto.randomUUID(),kind:'effect',actor:Number(x.player),cardId:'esercito_tormenta_neve',effectId:'v59_esercito',effectName:'Esercito della Tormenta di Neve',targets:{},meta:{armor:Number(x.amount),replay:'1'},virtual:true});log(s,`Esercito della Tormenta di Neve viene rigiocato con ${x.amount} Armatura.`)}
  if(due.length){s.stackInitiator=Number(due[due.length-1].player);s.priority=other(Number(due[due.length-1].player));s.priorityPasses=0}
 }
+function temporaryArmorSnapshot(s:any){
+ const out=new Map<string,any>();for(const p of [1,2])for(const c of player(s,p)?.champions||[]){const n=Number(c._v59FinoArmorRemaining||0);if(n>0)out.set(`${p}:${c.id}`,{armor:Number(c.armor||0),remaining:n})}return out;
+}
+function trackTemporaryArmorConsumption(s:any,before:Map<string,any>){
+ for(const[key,b]of before){const[p,id]=key.split(':'),c=champ(s,Number(p),id);if(!c)continue;const spent=Math.max(0,Number(b.armor)-Number(c.armor||0));if(spent)c._v59FinoArmorRemaining=Math.max(0,Number(b.remaining)-spent)}
+}
+function registerFinoAllaMorteArmor(s:any,ctx:any){
+ if(!ctx)return;const c=champ(s,Number(ctx.actor),String(ctx.champId||''));if(!c)return;
+ const n=Math.max(0,Number(ctx.count||0));if(n){c._v59FinoArmorRemaining=Number(c._v59FinoArmorRemaining||0)+n;c._v59FinoArmorTurn=Number(s.turn)}
+}
 function resolveOffertaChoice(s:any,p:number,a:any){
  const pc=s.pendingChoice;if(!pc||pc.type!=='v59_offerta_second'||Number(pc.player)!==p||a?.type!=='resolve_choice')throw new Error('Scelta non valida.');
  const secondUid=String(a.monsterUid||a.choice||''),allowed=(pc.options||[]).some((x:any)=>String(x.id)===secondUid),first=monster(s,pc.firstUid),second=monster(s,secondUid);if(!allowed||!first||!second||String(first.uid)===String(second.uid))throw new Error('Mostro non valido.');
@@ -216,11 +227,11 @@ function resolveOffertaChoice(s:any,p:number,a:any){
  for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+4;log(s,'Orso Furioso ottiene +4 POW fino alla fine del turno per i due Mostri morti.')}
  promoteLocalTriggers(s);settleGameover(s);return s;
 }
-function expireTurnEffects(s:any,oldTurn:number){
+function expireTurnEffects(s:any,oldTurn:number,beforeArmor:Map<string,any>){
  if(Number(s.turn)===oldTurn)return;
  const due=s._v59EndTurnHp||[];s._v59EndTurnHp=[];
  for(const x of due.filter((z:any)=>Number(z.turn)===oldTurn)){const c=champ(s,Number(x.player),String(x.champId));if(c&&!c.defeated)woundChampion(s,Number(x.player),c,String(x.source||'Furia della Natura'))}
- for(const p of [1,2]){const q=player(s,p);if(q){q._v59KillsTurn=Number(s.turn);q._v59Kills=0}for(const c of q?.champions||[]){if(c._v59ProvTurn!=null&&Number(c._v59ProvTurn)!==Number(s.turn)){c.provocazione=!!c._v59ProvPrev;delete c._v59ProvTurn;delete c._v59ProvPrev}}}
+ for(const p of [1,2]){const q=player(s,p);if(q){q._v59KillsTurn=Number(s.turn);q._v59Kills=0}for(const c of q?.champions||[]){if(Number(c._v59FinoArmorTurn)===oldTurn){const b=beforeArmor.get(`${p}:${c.id}`);if(b)c.armor=Math.max(0,Number(b.armor||0)-Number(b.remaining||0));delete c._v59FinoArmorRemaining;delete c._v59FinoArmorTurn}if(c._v59ProvTurn!=null&&Number(c._v59ProvTurn)!==Number(s.turn)){c.provocazione=!!c._v59ProvPrev;delete c._v59ProvTurn;delete c._v59ProvPrev}}}
 }
 function trackBaseMonsterKills(s:any,p:number,beforeGraves:number[]){
  const after=[(player(s,1)?.monsterGrave||[]).length,(player(s,2)?.monsterGrave||[]).length],n=Math.max(0,after[0]-beforeGraves[0])+Math.max(0,after[1]-beforeGraves[1]);if(n)noteMonsterKill(s,p,n)
@@ -249,15 +260,18 @@ export function act(state:any,p0:any,move:any){
  guardiaCannotAttack(state,p,move);if(move?.type==='cast')validateCast(state,p,move);
  const oldTurn=Number(state?.turn||0),guard= combatSnapshot(state),beforeGraves=[(player(state,1)?.monsterGrave||[]).length,(player(state,2)?.monsterGrave||[]).length];
  const top=move?.type==='pass_priority'&&state?.stack?.length?clone(state.stack[state.stack.length-1]):null;
+ const fino=top?.kind==='card'&&String(top.cardId)==='fino_alla_morte'?{actor:Number(top.actor),champId:String(top.targets?.ownChamp||''),count:(player(state,Number(top.actor))?.monsterGrave||[]).length}:null;
+ const tempArmorBefore=temporaryArmorSnapshot(state);
  const custom=((top?.kind==='card'&&CUSTOM_IDS.has(String(top.cardId)))||(top?.kind==='effect'&&String(top.effectId)==='v59_esercito'))?top:null;
  const killer=top?Number(top.actor):(state?.combat?Number(state.combat.attacker?.player):p);
  const out=(base.act as any)(state,p,move);
+ if(Number(state.turn)===oldTurn)trackTemporaryArmorConsumption(state,tempArmorBefore);registerFinoAllaMorteArmor(state,fino);
  repairOrangePaymentLog(state,move);
  payAdditionalCosts(state,p,move);
  trackBaseMonsterKills(state,killer,beforeGraves);
  if(custom&&!state.stack?.some((x:any)=>String(x.uid)===String(custom.uid)))resolveCard(state,custom);
  if(guard&&!state.combat&&state.status!=='gameover'){const a=champ(state,guard.attackerPlayer,guard.attackerId);if(a&&!a.defeated&&guard.pow>0){log(state,`Guardia Reale contrattacca con ${guard.pow} POW.`);damageChampion(state,guard.attackerPlayer,guard.attackerId,guard.pow,'Guardia Reale')}}
- expireTurnEffects(state,oldTurn);cleanupSupportDeaths(state);queueSnowAtNewTurn(state,oldTurn);promoteLocalTriggers(state);ensureCombatPriority(state);settleGameover(state);return out||state;
+ expireTurnEffects(state,oldTurn,tempArmorBefore);cleanupSupportDeaths(state);queueSnowAtNewTurn(state,oldTurn);promoteLocalTriggers(state);ensureCombatPriority(state);settleGameover(state);return out||state;
 }
 
 function targetName(s:any,t:any){if(!t)return'';if(t.type==='monster')return MONSTER_DEFS?.[monster(s,t.uid)?.cardId]?.name||'Mostro';return champ(s,Number(t.player),String(t.champId))?.name||'Campione'}
@@ -268,6 +282,6 @@ function targetSummary(s:any,item:any){
 export function publicView(state:any,p0:any){
  ensureCombatPriority(state);const p=Number(p0),v:any=(base.publicView as any)(state,p),raw=state?.stack||[];ensureCombatPriority(state);v.priority=state.priority;
  for(const shown of v?.stack||[]){const item=raw.find((x:any)=>String(x.uid)===String(shown.uid));const summary=targetSummary(state,item);if(summary)shown.targetSummary=summary}
- for(const z of [1,2]){const q=v?.players?.[String(z)];if(!q)continue;delete q._v59KillsTurn;delete q._v59Kills}
+ for(const z of [1,2]){const q=v?.players?.[String(z)];if(!q)continue;delete q._v59KillsTurn;delete q._v59Kills;for(const c of q.champions||[]){delete c._v59FinoArmorRemaining;delete c._v59FinoArmorTurn}}
  delete v._v59EndTurnHp;delete v._v59Snow;return v;
 }
