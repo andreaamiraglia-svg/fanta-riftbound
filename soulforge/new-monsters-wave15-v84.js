@@ -118,8 +118,9 @@ function style(){
 let scheduled=false;
 function boot(){installResolver();repairArts();renderMulti();decorateStack()}
 function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;try{boot()}catch(error){console.error('[wave15-v84]',error)}})}
-style();boot();setTimeout(boot,250);setTimeout(boot,1000);
+style();
+window.sfWave15={ART,repairArts,renderMulti};
+schedule();setTimeout(schedule,250);setTimeout(schedule,1000);
 for(const root of [document.getElementById('app'),document.getElementById('modal')].filter(Boolean))new MutationObserver(schedule).observe(root,{childList:true,subtree:true});
 window.addEventListener('sf-blue-ready',schedule);setInterval(()=>{renderMulti();decorateStack()},500);
-window.sfWave15={ART,repairArts,renderMulti};
 })();
