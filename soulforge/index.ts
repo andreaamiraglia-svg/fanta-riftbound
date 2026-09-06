@@ -19,11 +19,13 @@ const unique=(xs:any[])=>[...new Set((xs||[]).filter(Boolean).map(String))];
 const rematchDeck=(state:any,p:number)=>{
  const q=state?.players?.[String(p)];if(!q)return null;
  if(q._rematchDeck?.champions?.length===2&&q._rematchDeck?.cards?.length===18&&q._rematchDeck?.monsters?.length===12)return q._rematchDeck;
- const stackCards=(state?.stack||[]).filter((x:any)=>Number(x?.actor)===p&&x?.kind==='card').map((x:any)=>x.cardId);
+ const notToken=(id:any)=>String(id)!=='sciamano_del_sole_support';
+ const stackCards=(state?.stack||[]).filter((x:any)=>Number(x?.actor)===p&&x?.kind==='card').map((x:any)=>x.cardId).filter(notToken);
  const boardMonsters=(state?.board?.monsters||[]).filter((m:any)=>Number(m?.owner)===p).map((m:any)=>m.cardId);
+ const supportCards=(q.champions||[]).filter((c:any)=>c?.supportChampion&&!c?.tokenSupport).map((c:any)=>c.sourceCardId||c.id).filter(notToken);
  const cfg={
   champions:unique((q.champions||[]).filter((c:any)=>!c?.supportChampion).map((c:any)=>c.id)),
-  cards:unique([...(q.deck||[]),...(q.hand||[]),...(q.grave||[]),...stackCards,...(q.champions||[]).filter((c:any)=>c?.supportChampion).map((c:any)=>c.sourceCardId||c.id)]),
+  cards:unique([...(q.deck||[]).filter(notToken),...(q.hand||[]).filter(notToken),...(q.grave||[]).filter(notToken),...stackCards,...supportCards]),
   monsters:unique([...(q.monsterDeck||[]),...(q.monsterGrave||[]),...(q.banishedMonsters||[]),...boardMonsters])
  };
  return cfg.champions.length===2&&cfg.cards.length===18&&cfg.monsters.length===12?cfg:null;
