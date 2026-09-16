@@ -6,16 +6,22 @@ export const engine61={
  damageChampion:(...a)=>damageChampion(...a),damageMonster:(...a)=>damageMonster(...a),
  wound:(...a)=>woundChampion(...a),kill:(...a)=>killMonster(...a),
  addMonster:(...a)=>addMonsterToBoard(...a),after:(...a)=>afterTopResolution(...a),
- lascito:(...a)=>enqueueLascito(...a),prepare:(...a)=>prepareTriggers(...a)
+ lascito:(...a)=>enqueueLascito(...a),prepare:(...a)=>prepareTriggers(...a),
+ validate:(...a)=>validateCardTargets(...a),resolve:(...a)=>resolveCardEffect(...a),
+ reduceMonster:(...a)=>reduceMonsterPow(...a),cost:(...a)=>dynamicCost(...a),pay:(...a)=>pay(...a),canPay:(...a)=>canPay(...a)
 };
 const oldPow61=currentPow;
-currentPow=function(s,p,c){return Math.max(0,oldPow61(s,p,c)+(c?.chargeTurn===s.turn&&s.combat?.attacker?.champId===c?.id&&Number(s.combat.attacker.player)===Number(p)?Number(c.charge||0):0))};
+currentPow=function(s,p,c){return Math.max(0,oldPow61(s,p,c)+(c?.chargeTurn===s.turn&&s.combat?.attacker?.champId===c?.id&&Number(s.combat.attacker.player)===Number(p)?Number(c.charge||0):0)+(rules61.pow?.(s,p,c)||0))};
+const oldCost62=dynamicCost;
+dynamicCost=function(s,p,c){return rules61.cost?.(s,p,c)??oldCost62(s,p,c)};
+const oldGuards62=provocationsAgainst;
+provocationsAgainst=function(s,p){const existing=oldGuards62(s,p);for(const m of s.board.monsters)if(Number(m.owner)===Number(other(p))&&m.provocazione&&!existing.some(x=>x.type==='monster'&&x.uid===m.uid))existing.push({type:'monster',uid:m.uid});return existing};
 const oldDamage61=damageChampion;
 damageChampion=function(s,p,id,n,source=''){
- const c=champ(s,p,id);if(c?.immuneDamageTurn===s.turn)return {wounded:false};
+ const c=champ(s,p,id);if(c?.immuneDamageTurn===s.turn||rules61.prevent?.(s,p,c))return {wounded:false};
  const old=Number(c?.damage||0),w=Number(c?.wounds||0),out=oldDamage61(s,p,id,n,source);
  if(c&&!c.defeated&&c.reactivateDamageTurn===s.turn&&(c.damage>old||c.wounds>w))c.tapped=false;
- return out;
+ rules61.damage?.(s,p,c,old,w);return out;
 };
 const oldWound61=woundChampion;
 woundChampion=function(s,p,c,source=''){
@@ -39,12 +45,14 @@ killMonster=function(s,killer,m,reason='',grantSoul=true,kingOverride){
 };
 const oldEffect61=resolveEffect;
 resolveEffect=function(s,item){
+ if(rules61.effect?.(s,item))return;
  const source=MONSTER_DEFS[item.sourceCardId];
  if(source&&String(item.effectId).startsWith('enter_'))s.monsterSource61={owner:item.actor,cardId:source.id};
  try{return oldEffect61(s,item)}finally{delete s.monsterSource61}
 };
 const oldEnter61=processMonsterEnter;
 processMonsterEnter=function(s,m){
+ if(rules61.enter?.(s,m))return;
  if(m?.cardId==='vampiro'){
   const i=s.board.monsters.findIndex(x=>x.uid===m.uid),target=s.board.monsters[i+1];
   if(target){s.monsterSource61=m;try{killMonster(s,Number(m.owner),target,'Vampiro',false)}finally{delete s.monsterSource61}}return;

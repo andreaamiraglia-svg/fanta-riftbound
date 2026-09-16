@@ -1,4 +1,6 @@
-import {cards,monsters} from './september-catalog.js';
+import {cards as firstCards,monsters as firstMonsters} from './september-catalog.js';
+import {cards as newCards,monsters as newMonsters} from './new20-catalog.js';
+const cards=[...firstCards,...newCards],monsters=[...firstMonsters,...newMonsters];
 const definitions=Object.fromEntries([...cards,...monsters].map(c=>[c.id,c]));
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';
 const state=()=>typeof session==='undefined'?null:session.state;
@@ -39,7 +41,7 @@ document.addEventListener('click',e=>{if(!choice||e.target.closest('#sf61-choice
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&choice)finish(null)});
 async function play(id){
  const c=definitions[id];try{
-  const hand=state()?.players[String(me())]?.handCards?.find(x=>x.id===id);if(!hand)return;
+  const hand=playerState(me())?.handCards?.find(x=>x.id===id);if(!hand)return;
   if(typeof canCast==='function'&&!canCast(hand))return showError('Non puoi giocare questa carta ora.');
   let targets={};
   if(c.target==='reflection'){
@@ -47,6 +49,9 @@ async function play(id){
    const enemy=await pickField(c.name+' — scegli un nemico',options('enemy'));if(!enemy)return;targets={champion,enemy};
   }else if(c.target==='monsters'){
    const selected=await pickField(c.name+' — scegli fino a 3 Mostri',options('monster'),true,3);if(!selected)return;targets={monsterUids:selected.map(x=>x.uid)};
+  }else if(c.target==='monsterDiscard'){
+   const discard=await pickField(c.name+' — scegli una carta da scartare',state().players[String(me())].handCards.filter(x=>x.id!==id).map(x=>({value:x.id,cardId:x.id,label:x.name})));if(!discard)return;
+   const target=await pickField(c.name+' — scegli un Mostro',options('monster'));if(!target)return;targets={discardId:discard,target};
   }else if(c.target!=='none'){
    const target=await pickField(c.name+' — scegli il bersaglio',options(c.target));if(!target)return;targets=c.target==='spell'?{stackUid:target.uid}:{target};
   }
@@ -74,3 +79,31 @@ function arrows(){
 const style=document.createElement('style');style.textContent='.sf61-valid{outline:3px solid #f7d874!important;cursor:crosshair!important}.sf61-selected{outline:4px solid #51eab6!important}#sf61-choice{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:10020;background:#161923;color:white;border:1px solid #c6a66b;padding:12px;display:flex;align-items:center;gap:12px;max-width:95vw;overflow:auto}#sf61-choice img{height:100px;display:block}#sf61-choice button{padding:8px;cursor:pointer}#sf61-arrows{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:10000}';document.head.append(style);
 install();setInterval(()=>{install();arrows();if(choice&&!document.querySelector('.sf61-valid,.sf61-selected'))paint()},300);window.addEventListener('resize',arrows);document.addEventListener('scroll',arrows,true);
 window.sf61={pickField,options,play,arrows,fieldElement};
+let pending62Busy=false;
+async function pending62(){
+ const pc=state()?.pendingChoice;if(pending62Busy||!pc?.type?.startsWith('new20_')||Number(pc.player)!==me())return;
+ pending62Busy=true;
+ try{
+  const s=state(),items=pc.cardIds.map(id=>({value:id,cardId:id,label:s.cardDefs[id]?.name||id}));
+  if(pc.type==='new20_bronzo'){
+   const picked=await pickField('Guerriero di Bronzo — un Supporto di costo 1 e uno di costo 2',items,true,2);if(picked)await move({type:'resolve_choice',cardIds:picked});
+  }else{
+   const list=pc.type==='new20_alabardo'?items.map(x=>({...x,ref:{type:'champion',player:me(),champId:x.value}})):items;
+   const id=await pickField(pc.type==='new20_angelo'?'Angelo — scegli una carta di costo 0 dal mazzo':pc.type==='new20_ragno'?'Ragno dei Cadaveri — scegli una carta del tuo Cimitero':'Alabardo — scegli un tuo Campione',list);if(!id)return;
+   if(pc.type!=='new20_angelo')await move({type:'resolve_choice',cardId:id});
+   else{
+    // Reuse every existing card-specific target chooser; only its final command
+    // becomes the deck-play choice. The virtual card exists solely in this client.
+    const previousPlayerState=playerState,previousMove=move,previousCanCast=canCast,original=s.pendingChoice;
+    const def=s.cardDefs[id];
+    playerState=function(p){const z=previousPlayerState(p);return Number(p)===me()?{...z,handCards:[...z.handCards.filter(x=>x.id!==id),def]}:z};
+    move=async function(a){return previousMove(a.type==='cast'&&a.cardId===id?{type:'resolve_choice',cardId:id,targets:a.targets||{}}:a)};
+    canCast=function(card){return card?.id===id||previousCanCast(card)};
+    Object.assign(canCast,previousCanCast);
+    s.pendingChoice=null;
+    try{await chooseForCard(id)}finally{playerState=previousPlayerState;move=previousMove;canCast=previousCanCast;if(state()===s)s.pendingChoice=original;}
+   }
+  }
+ }catch(e){showError(e.message||String(e))}finally{pending62Busy=false}
+}
+setInterval(pending62,600);

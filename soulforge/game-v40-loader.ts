@@ -46,7 +46,7 @@ function freshSupportChampion(id:string){
  const d:any=CHAMPION_DEFS[id];
  return {...d,wounds:0,damage:0,tempPow:0,armor:0,tapped:false,defeated:false,cantAttackTurn:null,supportChampion:true,sourceCardId:id,turnEffects:[]};
 }
-function moveSupportToField(s:any,p:number,id:string){
+export function moveSupportToField(s:any,p:number,id:string){
  const q=player(s,p),d:any=CHAMPION_DEFS[id];
  if(!q||!d)return null;
  const gi=q.grave?.lastIndexOf?.(id)??-1;
