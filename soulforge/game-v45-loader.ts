@@ -68,7 +68,7 @@ function inferIntendedGains(before:any,state:any,move:any,top:any,beforeCombat:a
  const afterUids=new Set((state?.board?.monsters||[]).map((m:any)=>String(m.uid)));
  const newLogs=(state?.log||[]).slice(logStart).map(String);
  for(const m of before.boardMonsters||[]){
-  if(afterUids.has(String(m.uid)))continue;
+  if(afterUids.has(String(m.uid))||state.movedMonsters61?.includes(String(m.uid))||state.noSoulDeaths61?.includes(String(m.uid)))continue;
   const d=monsterDef(m.cardId);if(!d)continue;
   const killer=likelyKiller(move,top,beforeCombat,beforeDelayed,String(m.uid));
   if(!killer)continue;

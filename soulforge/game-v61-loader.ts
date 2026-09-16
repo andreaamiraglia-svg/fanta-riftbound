@@ -1,6 +1,8 @@
 import * as base from './game-v60-loader.ts';
 import {engine61 as E,rules61 as R} from './game-v32-loader.ts?rev=souls-uncapped-v3';
 import {cards,monsters} from './september-catalog.js';
+import {monsterDied61} from './september-runtime.ts';
+R.dead=monsterDied61;
 export const CARD_DEFS:any=base.CARD_DEFS,MONSTER_DEFS:any=base.MONSTER_DEFS,CHAMPION_DEFS:any=base.CHAMPION_DEFS;
 export const DECK_RULES=base.DECK_RULES,newState=base.newState,newPlayer=base.newPlayer;
 for(const c of cards)CARD_DEFS[c.id]=c;
@@ -45,6 +47,7 @@ R.resolve=(s:any,item:any)=>{
  case'ira_del_sottobosco':for(const uid of t.monsterUids)damage(s,p,{type:'monster',uid},3+(player(s,p).fireCloud?1:0),d.name);break;
  case'patto_della_foresta':{
   const pow=E.monsterPow(s,x),def=MONSTER_DEFS[x.cardId];
+  s.movedMonsters61 ||= [];s.movedMonsters61.push(x.uid);
   s.board.monsters.splice(s.board.monsters.indexOf(x),1);
   const c={...def,...x,id:'patto_'+x.uid,name:def.name,basePow:pow-Number(x.tempPow||0),hp:1,wounds:0,tapped:false,defeated:false,supportChampion:true,tokenSupport:true,sourceCardId:x.cardId,monsterOrigin:{cardId:x.cardId,owner:x.owner},turnEffects:[]};
   player(s,p).champions.push(c);s.log.push(def.name+' diventa un Supporto attivo con 1 HP.');break;
@@ -82,18 +85,19 @@ function readyCombat(s:any){
  }
 }
 export function act(s:any,p:any,move:any){
+ s.movedMonsters61=[];s.noSoulDeaths61=[];s.processedDeaths61=[];
  const turn=s.turn,transformed=[1,2].flatMap(owner=>champions(s,owner).filter((c:any)=>c.monsterOrigin).map((c:any)=>({owner,c})));
  const out=base.act(s,p,move);
  for(const {owner,c} of transformed)if(c.defeated){
   const q=player(s,owner),i=q.grave.indexOf(c.sourceCardId);if(i>=0)q.grave.splice(i,1);
   q.champions=q.champions.filter((z:any)=>z!==c);
   player(s,Number(c.monsterOrigin.owner)).monsterGrave.push(c.monsterOrigin.cardId);
-  E.lascito(s,{...c,cardId:c.monsterOrigin.cardId},owner,s.board.monsters.filter((m:any)=>m.cardId==='re_dei_non_morti').length);
-  E.prepare(s);
+  base.queueLascito(s,{...c,cardId:c.monsterOrigin.cardId},owner,s.board.monsters.filter((m:any)=>m.cardId==='re_dei_non_morti').length);
+  base.promote(s);
  }
  if(s.turn!==turn)for(const owner of [1,2])for(const c of player(s,owner)?.champions||[])
   for(const k of ['immuneDamageTurn','extraWoundTurn','reactivateDamageTurn','chargeTurn','charge','septemberCounterTurn'])delete c[k];
- readyCombat(s);return out;
+ readyCombat(s);delete s.movedMonsters61;delete s.noSoulDeaths61;delete s.processedDeaths61;return out;
 }
 export function targetRefs(item:any){
  const t=item.targets||{},rows:any[]=[];

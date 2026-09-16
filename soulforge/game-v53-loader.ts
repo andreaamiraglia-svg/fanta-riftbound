@@ -103,6 +103,7 @@ function compensateTiroKills(s:any,snap:any){
  const allowed=new Set(Array.isArray(q.deckColors)?q.deckColors:(q.champions||[]).map((c:any)=>c.color));
  const deathsByColor=new Map<string,number>();
  for(const m of dead){
+  if(m.noSoulsTurn===s.turn)continue;
   const color=String(MONSTER_DEFS?.[m.cardId]?.color||'');
   if(COLORS.includes(color)&&allowed.has(color))deathsByColor.set(color,(deathsByColor.get(color)||0)+1);
  }

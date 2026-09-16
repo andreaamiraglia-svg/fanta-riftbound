@@ -1,3 +1,5 @@
+import {abilitySources61,monsterDied61} from './september-runtime.ts';
+import {engine61} from './game-v32-loader.ts?rev=souls-uncapped-v3';
 import * as base from './game-v58-loader.ts?rev=set-one-wave-order-v1';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
@@ -55,7 +57,7 @@ function currentChampionPow(s:any,p:number,c:any){
 }
 function currentMonsterPow(s:any,m:any){
  const d=MONSTER_DEFS?.[m?.cardId];if(!d)return 0;
- const ms=s?.board?.monsters||[];
+ const ms=abilitySources61(s);
  let n=Number(d.pow||0)+Number(m?.powMod||0)+Number(m?.tempPow||0);
  n+=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_delle_radici').length;
  const ice=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_glaciale').length;
@@ -70,20 +72,8 @@ function ownSupport(s:any,p:number,id:any){const c=ownChampion(s,p,id);return c?
 function validEnemy(s:any,p:number,t:any){if(t?.type==='monster')return !!monster(s,t.uid);if(t?.type==='champion')return Number(t.player)===other(p)&&!!validChampionRef(s,t);return false}
 function spellAmount(s:any,p:number,n:number){return Math.max(0,Number(n)+(player(s,p)?.fireCloud?1:0))}
 
-function woundChampion(s:any,p:number,c:any,source:string){
- if(!c||c.defeated)return;
- c.wounds=Number(c.wounds||0)+1;c.damage=0;
- log(s,`${c.name} subisce una Ferita (${c.wounds}/${c.hp})${source?` da ${source}`:''}.`);
- if(c.wounds>=Number(c.hp||1)){c.defeated=true;c.tapped=true;log(s,`${c.name} è sconfitto.`)}
-}
-function damageChampion(s:any,p:number,id:string,n:number,source:string){
- const c=champ(s,p,id);if(!c||c.defeated||n<=0)return;
- let left=n;const armor=Math.max(0,Number(c.armor||0)),blocked=Math.min(armor,left);
- if(blocked){c.armor=armor-blocked;left-=blocked;log(s,`${c.name} usa ${blocked} Armatura e annulla ${blocked} dann${blocked===1?'o':'i'}.`)}
- if(left<=0)return;c.damage=Number(c.damage||0)+left;
- const threshold=currentChampionPow(s,p,c);log(s,`${c.name} subisce ${left} dann${left===1?'o':'i'} (${c.damage}/${threshold}).`);
- if(c.damage>=threshold)woundChampion(s,p,c,source);
-}
+function woundChampion(s:any,p:number,c:any,source:string){return engine61.wound(s,p,c,source);}
+function damageChampion(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
 function gainSoul(s:any,p:number,color:string,n=1){
  const q=player(s,p);if(!q||!COLORS.includes(color)||!(q.deckColors||[]).includes(color))return;
  q.souls ||= {};q.souls[color]=Number(q.souls[color]||0)+n;
@@ -117,13 +107,13 @@ function noteMonsterKill(s:any,p:number,n=1){
 }
 function killMonster(s:any,p:number,m:any,source:string){
  const i=(s?.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===String(m?.uid));if(i<0)return null;
- const kings=(s.board.monsters||[]).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
- const dead=clone(s.board.monsters[i]);s.board.monsters.splice(i,1);
+ const kings=abilitySources61(s).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
+ const dead=clone(s.board.monsters[i]);s.board.monsters.splice(i,1);monsterDied61(s,dead);
  const owner=player(s,Number(dead.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(dead.cardId)}
  log(s,`${MONSTER_DEFS[dead.cardId]?.name||dead.cardId} viene sconfitto${source?` da ${source}`:''}.`);
- noteMonsterKill(s,p);gainSoul(s,p,String(MONSTER_DEFS[dead.cardId]?.color||''),1);
+ noteMonsterKill(s,p);if(dead.noSoulsTurn!==s.turn)gainSoul(s,p,String(MONSTER_DEFS[dead.cardId]?.color||''),1);
  const tr=lascitoDescriptor(dead,p);if(tr){s._v48Triggers ||= [];for(let z=0;z<1+kings;z++)s._v48Triggers.push(clone(tr))}
- for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
+ for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
  return dead;
 }
 function damageMonster(s:any,p:number,uid0:string,n:number,source:string){
@@ -211,10 +201,11 @@ function resolveOffertaChoice(s:any,p:number,a:any){
  const secondUid=String(a.monsterUid||a.choice||''),allowed=(pc.options||[]).some((x:any)=>String(x.id)===secondUid),first=monster(s,pc.firstUid),second=monster(s,secondUid);if(!allowed||!first||!second||String(first.uid)===String(second.uid))throw new Error('Mostro non valido.');
  const actor=Number(pc.actor),chooser=Number(pc.player);s.pendingChoice=null;
  const dead=[clone(first),clone(second)];for(const m of dead){const i=(s.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===String(m.uid));if(i>=0)s.board.monsters.splice(i,1)}
- for(let i=0;i<dead.length;i++){const m=dead[i],killer=i===0?actor:chooser,owner=player(s,Number(m.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(m.cardId)}log(s,`${MONSTER_DEFS[m.cardId]?.name||m.cardId} viene ucciso da ${player(s,killer)?.name} con Offerta Maligna.`);noteMonsterKill(s,killer);gainSoul(s,killer,String(MONSTER_DEFS[m.cardId]?.color||''),1)}
- const kings=dead.filter((m:any)=>m.cardId==='re_dei_non_morti').length+(s.board?.monsters||[]).filter((m:any)=>m.cardId==='re_dei_non_morti').length;
+ for(let i=0;i<dead.length;i++){const m=dead[i],killer=i===0?actor:chooser,owner=player(s,Number(m.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(m.cardId)}log(s,`${MONSTER_DEFS[m.cardId]?.name||m.cardId} viene ucciso da ${player(s,killer)?.name} con Offerta Maligna.`);noteMonsterKill(s,killer);if(m.noSoulsTurn!==s.turn)gainSoul(s,killer,String(MONSTER_DEFS[m.cardId]?.color||''),1)}
+ for(const m of dead)monsterDied61(s,m);
+ const kings=dead.filter((m:any)=>m.cardId==='re_dei_non_morti').length+abilitySources61(s).filter((m:any)=>m.cardId==='re_dei_non_morti').length;
  for(let i=0;i<dead.length;i++){const m=dead[i],killer=i===0?actor:chooser,tr=lascitoDescriptor(m,killer);if(tr){s._v48Triggers ||= [];for(let z=0;z<1+kings;z++)s._v48Triggers.push(clone(tr))}}
- for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+4;log(s,'Orso Furioso ottiene +4 POW fino alla fine del turno per i due Mostri morti.')}
+ for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+4;log(s,'Orso Furioso ottiene +4 POW fino alla fine del turno per i due Mostri morti.')}
  promoteLocalTriggers(s);settleGameover(s);return s;
 }
 function expireTurnEffects(s:any,oldTurn:number){

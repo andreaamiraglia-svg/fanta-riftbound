@@ -1,4 +1,5 @@
 export const extensionSource=String.raw`
+function abilitySources61(s){return [...s.board.monsters,...[1,2].flatMap(p=>(pl(s,p)?.champions||[]).filter(c=>c.monsterOrigin&&!c.defeated))]}
 export const rules61={};
 export const engine61={
  pow:(...a)=>currentPow(...a), monsterPow:(...a)=>currentMonsterPow(...a),
@@ -26,10 +27,13 @@ woundChampion=function(s,p,c,source=''){
 const oldKill61=killMonster;
 killMonster=function(s,killer,m,reason='',grantSoul=true,kingOverride){
  if(!m||!monster(s,m.uid))return;
- const dead=clone(m),abominations=s.board.monsters.filter(x=>x.cardId==='abominio_ricucito'&&x.uid!==m.uid);
+ const dead=clone(m);
  const effectiveKiller=s.monsterSource61?Number(s.monsterSource61.owner):killer;
- const out=oldKill61(s,effectiveKiller,m,reason,grantSoul&&m.noSoulsTurn!==s.turn&&!s.monsterSource61,kingOverride);
- for(const source of abominations)for(const x of s.board.monsters)if(x.uid!==source.uid)x.tempPow=(x.tempPow||0)+1;
+ const grants=grantSoul&&m.noSoulsTurn!==s.turn&&!s.monsterSource61;
+ if(!grants){s.noSoulDeaths61 ||= [];s.noSoulDeaths61.push(m.uid)}
+ const out=oldKill61(s,effectiveKiller,m,reason,grants,kingOverride);
+ if(s.monsterSource61&&MONSTER_DEFS[dead.cardId]?.lascito==='sciamano')
+  for(let i=0;i<1+(kingOverride??kingsInPlay(s));i++)s.triggerQueue.push({actor:effectiveKiller,sourceCardId:dead.cardId,effectId:'lascito_sciamano',effectName:'Lascito — Sciamano del Sole'});
  rules61.dead?.(s,dead,effectiveKiller);
  return out;
 };
@@ -58,7 +62,7 @@ resolveCombat=function(s){
  if(c?.attacker?.type==='monster'){
   const m=monster(s,c.attacker.uid),d=c.target?.type==='champion'?champ(s,c.target.player,c.target.champId):null;
   if(m&&d&&!d.defeated&&!c.cancelled){
-   const n=currentMonsterPow(s,m),retaliation=d.counterattack||d.counterattackTurn===s.turn?currentPow(s,c.target.player,d):0;
+   const n=currentMonsterPow(s,m),retaliation=d.counterattack||d.counterattackTurn===s.turn||d.septemberCounterTurn===s.turn?currentPow(s,c.target.player,d):0;
    damageChampion(s,c.target.player,d.id,n,MONSTER_DEFS[m.cardId]?.name);
    if(retaliation>0)damageMonster(s,c.target.player,m.uid,retaliation,d.name);
   }

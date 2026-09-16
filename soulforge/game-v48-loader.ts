@@ -1,3 +1,5 @@
+import {abilitySources61,monsterDied61} from './september-runtime.ts';
+import {engine61} from './game-v32-loader.ts?rev=souls-uncapped-v3';
 import * as base from './game-v46-loader.ts?rev=souls-uncapped-v3';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
@@ -54,7 +56,7 @@ function rawChampionPow(s:any,p:number,c:any){
 }
 function rawMonsterPow(s:any,m:any){
  const d=MONSTER_DEFS?.[m?.cardId];if(!d)return 0;
- const ms=s?.board?.monsters||[];
+ const ms=abilitySources61(s);
  let v=Number(d.pow||0)+Number(m.powMod||0)+Number(m.tempPow||0);
  v+=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_delle_radici').length;
  const ice=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_glaciale').length;
@@ -141,22 +143,8 @@ function validateCustomCast(s:any,p:number,move:any){
  }
 }
 
-function woundChampionLocal(s:any,p:number,c:any,source:string){
- if(!c||c.defeated)return;
- c.wounds=Number(c.wounds||0)+1;c.damage=0;
- log(s,`${c.name} subisce una Ferita (${c.wounds}/${c.hp})${source?` da ${source}`:''}.`);
- if(c.wounds>=Number(c.hp||1)){c.defeated=true;c.tapped=true;log(s,`${c.name} è sconfitto.`)}
-}
-function damageChampionLocal(s:any,p:number,id:string,n:number,source:string){
- const c=champ(s,p,id);if(!c||c.defeated||n<=0)return;
- let left=n;const a=Math.max(0,Number(c.armor||0)),blocked=Math.min(a,left);
- if(blocked){c.armor=a-blocked;left-=blocked;log(s,`${c.name} usa ${blocked} Armatura e annulla ${blocked} dann${blocked===1?'o':'i'}.`)}
- if(left<=0)return;
- c.damage=Number(c.damage||0)+left;
- const th=currentChampionPow(s,p,c);
- log(s,`${c.name} subisce ${left} dann${left===1?'o':'i'} (${c.damage}/${th}).`);
- if(c.damage>=th)woundChampionLocal(s,p,c,source);
-}
+function woundChampionLocal(s:any,p:number,c:any,source:string){return engine61.wound(s,p,c,source);}
+function damageChampionLocal(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
 function addLyrandelTrigger(s:any,p:number,uid:string){
  const q=player(s,p),lyr=champ(s,p,'lyrandel');
  if(!q||!lyr||lyr.defeated||q.lyrandelUsed||!monster(s,uid))return;
@@ -312,12 +300,12 @@ function processLocalTriggers(s:any){
 }
 function killMonsterLocal(s:any,m:any,killer:number,source:string,ctx:any){
  const i=(s.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===String(m.uid));if(i<0)return;
- const kings=(s.board.monsters||[]).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
- const pow=currentMonsterPow(s,m),dead=clone(m);s.board.monsters.splice(i,1);
+ const kings=abilitySources61(s).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
+ const pow=currentMonsterPow(s,m),dead=clone(m);s.board.monsters.splice(i,1);monsterDied61(s,dead);
  const owner=player(s,Number(dead.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(dead.cardId)}
  log(s,`${MONSTER_DEFS[dead.cardId]?.name||dead.cardId} viene sconfitto${source?` da ${source}`:''}.`);
- if(killer===1||killer===2){const q=player(s,killer);if(q)q.killedMonsterThisTurn=true;gainSoulUncapped(s,killer,String(MONSTER_DEFS[dead.cardId]?.color||''),1);const tr=lascitoDescriptor(dead,killer);if(tr)for(let z=0;z<1+kings;z++)queueLocalLascito(s,clone(tr))}
- for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
+ if(killer===1||killer===2){const q=player(s,killer);if(q)q.killedMonsterThisTurn=true;if(dead.noSoulsTurn!==s.turn)gainSoulUncapped(s,killer,String(MONSTER_DEFS[dead.cardId]?.color||''),1);const tr=lascitoDescriptor(dead,killer);if(tr)for(let z=0;z<1+kings;z++)queueLocalLascito(s,clone(tr))}
+ for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
  ctx.localDeaths.push({kind:'monster',pow,cardId:String(dead.cardId)});
 }
 function resolveLocalStateDeaths(s:any,killer:number,source:string,ctx:any){
@@ -346,7 +334,7 @@ function collectDeaths(s:any,before:any,ctx:any){
  const deaths:any[]=[...ctx.localDeaths];
  for(const [key,b] of before.champions){const c=champ(s,b.player,b.id);if(c&&!b.defeated&&c.defeated)deaths.push({kind:'champion',pow:Number(b.pow||0),player:b.player,id:b.id})}
  const afterUids=new Set((s.board?.monsters||[]).map((m:any)=>String(m.uid)));
- for(const [uid,b] of before.monsters){if(ctx.nonDeathUids.has(uid)||afterUids.has(uid))continue;deaths.push({kind:'monster',pow:Number(b.pow||0),cardId:b.cardId,uid})}
+ for(const [uid,b] of before.monsters){if(ctx.nonDeathUids.has(uid)||afterUids.has(uid)||s.movedMonsters61?.includes(uid))continue;deaths.push({kind:'monster',pow:Number(b.pow||0),cardId:b.cardId,uid})}
  for(const x of ctx.scatolaSummons)if(!afterUids.has(String(x.uid)))deaths.push({kind:'monster',pow:Number(x.pow||0),cardId:x.cardId,uid:x.uid});
  return deaths;
 }

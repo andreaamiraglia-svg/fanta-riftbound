@@ -21,7 +21,7 @@ const rematchDeck=(state:any,p:number)=>{
  if(q._rematchDeck?.champions?.length===2&&q._rematchDeck?.cards?.length===18&&q._rematchDeck?.monsters?.length===12)return q._rematchDeck;
  const notToken=(id:any)=>String(id)!=='sciamano_del_sole_support';
  const stackCards=(state?.stack||[]).filter((x:any)=>Number(x?.actor)===p&&x?.kind==='card').map((x:any)=>x.cardId).filter(notToken);
- const boardMonsters=(state?.board?.monsters||[]).filter((m:any)=>Number(m?.owner)===p).map((m:any)=>m.cardId);
+ const boardMonsters=[...(state?.board?.monsters||[]).filter((m:any)=>Number(m?.owner)===p).map((m:any)=>m.cardId),...[1,2].flatMap(owner=>(state?.players?.[String(owner)]?.champions||[]).filter((c:any)=>Number(c.monsterOrigin?.owner)===p).map((c:any)=>c.monsterOrigin.cardId))];
  const supportCards=(q.champions||[]).filter((c:any)=>c?.supportChampion&&!c?.tokenSupport).map((c:any)=>c.sourceCardId||c.id).filter(notToken);
  const cfg={
   champions:unique((q.champions||[]).filter((c:any)=>!c?.supportChampion).map((c:any)=>c.id)),

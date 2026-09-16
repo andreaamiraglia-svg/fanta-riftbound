@@ -1,3 +1,4 @@
+import {abilitySources61,monsterDied61} from './september-runtime.ts';
 import * as base from './game-v45-loader.ts?rev=souls-uncapped-v3';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
@@ -48,7 +49,7 @@ export function publicView(state:any,p:any){
 
 function monsterPow(s:any,m:any){
  const d=MONSTER_DEFS?.[m?.cardId];if(!d)return 0;
- const monsters=s?.board?.monsters||[];
+ const monsters=abilitySources61(s);
  let v=Number(d.pow||0)+Number(m?.powMod||0)+Number(m?.tempPow||0);
  v+=monsters.filter((x:any)=>x.cardId==='lupo_delle_radici'&&x.uid!==m.uid).length;
  const ice=monsters.filter((x:any)=>x.cardId==='lupo_glaciale'&&x.uid!==m.uid).length;
@@ -135,15 +136,15 @@ function processQueuedLascito(s:any){
 function killByPowState(s:any,uid:string,killer:number|null){
  const m=monster(s,uid);if(!m)return;
  const idx=(s.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===uid);if(idx<0)return;
- const kings=(s.board.monsters||[]).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
+ const kings=abilitySources61(s).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
  const dead=clone(m),def=MONSTER_DEFS?.[dead.cardId];
- s.board.monsters.splice(idx,1);
+ s.board.monsters.splice(idx,1);monsterDied61(s,dead);
  const owner=player(s,Number(dead.owner));
  if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(dead.cardId);}
  log(s,`${def?.name||dead.cardId} viene sconfitto perché i suoi danni sono pari o superiori al suo POW.`);
  if(killer===1||killer===2){
   const q=player(s,killer);if(q)q.killedMonsterThisTurn=true;
-  gainSoulUncapped(s,killer,String(def?.color||''),1);
+  if(dead.noSoulsTurn!==s.turn)gainSoulUncapped(s,killer,String(def?.color||''),1);
   const desc=lascitoDescriptor(dead,killer);
   if(desc){
    s._orangeTriggers ||= [];
@@ -151,7 +152,7 @@ function killByPowState(s:any,uid:string,killer:number|null){
    log(s,`${def?.name||dead.cardId}: Lascito viene ottenuto da ${q?.name||`Giocatore ${killer}`}${kings?` (${1+kings} attivazioni)`:''}.`);
   }
  }
- for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){
+ for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){
   b.tempPow=Number(b.tempPow||0)+2;
   log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.');
  }

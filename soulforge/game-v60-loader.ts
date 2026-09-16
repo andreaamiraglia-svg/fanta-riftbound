@@ -1,3 +1,5 @@
+import {abilitySources61,monsterDied61} from './september-runtime.ts';
+import {engine61} from './game-v32-loader.ts?rev=souls-uncapped-v3';
 import * as base from './game-v59-loader.ts?rev=new-monsters-wave-15-v1';
 
 export const CARD_DEFS:any=base.CARD_DEFS;
@@ -68,7 +70,7 @@ const monsterName=(id:any)=>MONSTER_DEFS?.[String(id)]?.name||String(id||'Mostro
 const cardName=(id:any)=>CARD_DEFS?.[String(id)]?.name||String(id||'Carta');
 const log=(s:any,msg:string)=>{s.log ||= [];s.log.push(msg);if(s.log.length>180)s.log=s.log.slice(-180)};
 const activeChampions=(s:any,p:number)=>(player(s,p)?.champions||[]).filter((c:any)=>!c.defeated);
-const hasMonster=(s:any,id:string)=>(s?.board?.monsters||[]).some((m:any)=>String(m.cardId)===id);
+const hasMonster=(s:any,id:string)=>abilitySources61(s).some((m:any)=>String(m.cardId)===id);
 const remainingHp=(c:any)=>Math.max(0,Number(c?.hp||1)-Number(c?.wounds||0));
 const colorLabel=(c:string)=>c==='red'?'Rossa':c==='green'?'Verde':c==='black'?'Nera':c==='blue'?'Blu':'Arancione';
 
@@ -79,7 +81,7 @@ function currentChampionPow(s:any,p:number,c:any){
 }
 function currentMonsterPow(s:any,m:any){
  const d=MONSTER_DEFS?.[m?.cardId];if(!d)return 0;
- const ms=s?.board?.monsters||[];
+ const ms=abilitySources61(s);
  let n=Number(d.pow||0)+Number(m?.powMod||0)+Number(m?.tempPow||0);
  n+=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_delle_radici').length;
  const wolves=ms.filter((x:any)=>x.uid!==m.uid&&x.cardId==='lupo_glaciale').length;
@@ -204,7 +206,7 @@ function installMedusaReplacement(s:any,enabled:boolean){
   restorers.push(()=>{delete target[key];if(descriptor&&descriptor.get)Object.defineProperty(target,key,descriptor);else target[key]=value});
  };
  for(const p of [1,2])for(const c of activeChampions(s,p))watch(c,'tempPow',{kind:'champion',player:p,id:String(c.id),name:String(c.name||c.id)});
- for(const m of s?.board?.monsters||[]){
+ for(const m of abilitySources61(s)){
   const info={kind:'monster' as const,id:String(m.uid),name:monsterName(m.cardId)};
   watch(m,'tempPow',info);watch(m,'powMod',info);
  }
@@ -266,7 +268,7 @@ function pushStackEffect(s:any,tr:any,targets:any){
  s.stack.push({uid:crypto.randomUUID(),kind:'effect',actor:Number(tr.actor),sourceCardId:tr.sourceCardId,effectId:tr.effectId,effectName:tr.effectName,targets:targets||tr.targets||{},meta:tr.meta||{}});
  s.priority=other(Number(tr.actor));s.priorityPasses=0;
 }
-function promote(s:any){
+export function promote(s:any){
  if(s?.status==='gameover'||s?.pendingChoice)return;
  const q=s?._v60Triggers;
  if(!Array.isArray(q)||!q.length)return;
@@ -329,7 +331,7 @@ function baseLascito(dead:any,actor:number){
  if(d?.lascito==='scarabeo_dorato')return{effectId:'v60_scarabeo_draw'};
  return null;
 }
-function queueLascito(s:any,dead:any,killer:number,kings:number){
+export function queueLascito(s:any,dead:any,killer:number,kings:number){
  if(killer!==1&&killer!==2)return;
  const count=1+Math.max(0,kings);
  if(dead.cardId==='scorpione_delle_ceneri'){
@@ -356,33 +358,18 @@ function applyGhoulDeath(s:any,dead:any){
 }
 function killMonster(s:any,killer:number,m:any,source:string){
  const index=(s?.board?.monsters||[]).findIndex((x:any)=>String(x.uid)===String(m?.uid));if(index<0)return;
- const kings=(s.board.monsters||[]).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
- const dead=clone(s.board.monsters[index]);s.board.monsters.splice(index,1);
+ const kings=abilitySources61(s).filter((x:any)=>x.cardId==='re_dei_non_morti').length;
+ const dead=clone(s.board.monsters[index]);s.board.monsters.splice(index,1);monsterDied61(s,dead);
  const owner=player(s,Number(dead.owner));if(owner){owner.monsterGrave ||= [];owner.monsterGrave.push(dead.cardId)}
  log(s,`${monsterName(dead.cardId)} viene sconfitto${source?` da ${source}`:''}.`);
- if(killer===1||killer===2){noteKill(s,killer);gainSoul(s,killer,String(MONSTER_DEFS?.[dead.cardId]?.color||''),1)}
- for(const b of s.board.monsters.filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
+ if(killer===1||killer===2){noteKill(s,killer);if(dead.noSoulsTurn!==s.turn)gainSoul(s,killer,String(MONSTER_DEFS?.[dead.cardId]?.color||''),1)}
+ for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
  applyGhoulDeath(s,dead);queueLascito(s,dead,killer,kings);
  if(Number(dead.richiamoBrancoTurn)===Number(s.turn))for(let i=0;i<1+kings;i++)queueChoice(s,killer,'richiamo_del_branco','lascito_richiamo_branco','Lascito — Richiamo del Branco','enemyChampion');
 }
 
-function woundChampion(s:any,p:number,c:any,source:string){
- if(!c||c.defeated)return;c.wounds=Number(c.wounds||0)+1;c.damage=0;
- log(s,`${c.name} subisce una Ferita (${c.wounds}/${c.hp})${source?` da ${source}`:''}.`);
- if(c.wounds>=Number(c.hp||1)){c.defeated=true;c.tapped=true;log(s,`${c.name} è sconfitto.`)}
-}
-function damageChampion(s:any,p:number,id:string,n:number,source:string){
- const c=champ(s,p,id);if(!c||c.defeated||n<=0)return;
- if(hasMonster(s,'gorilla_della_giungla')&&remainingHp(c)===1){log(s,`Gorilla della Giungla previene ${n} dann${n===1?'o':'i'} a ${c.name}.`);return}
- if(hasMonster(s,'ariete_sacro')&&Number(c._v60ArietePreventTurn)!==Number(s.turn)){
-  c._v60ArietePreventTurn=Number(s.turn);log(s,`Ariete Sacro previene ${n} dann${n===1?'o':'i'} a ${c.name}.`);return;
- }
- let left=n;const armor=Math.max(0,Number(c.armor||0)),blocked=Math.min(armor,left);
- if(blocked){c.armor=armor-blocked;left-=blocked;log(s,`${c.name} usa ${blocked} Armatura e annulla ${blocked} dann${blocked===1?'o':'i'}.`)}
- if(left<=0)return;c.damage=Number(c.damage||0)+left;
- const threshold=currentChampionPow(s,p,c);log(s,`${c.name} subisce ${left} dann${left===1?'o':'i'} (${c.damage}/${threshold}).`);
- if(c.damage>=threshold)woundChampion(s,p,c,source);
-}
+function woundChampion(s:any,p:number,c:any,source:string){return engine61.wound(s,p,c,source);}
+function damageChampion(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
 function damageMonster(s:any,killer:number,uid:string,n:number,source:string){
  const m=monster(s,uid);if(!m||n<=0)return;
  let left=n;const armor=Math.max(0,Number(m.armor||0)),blocked=Math.min(armor,left);
@@ -391,7 +378,7 @@ function damageMonster(s:any,killer:number,uid:string,n:number,source:string){
  if(m.cardId==='gigante_del_cratere'&&(killer===1||killer===2))queueEffect(s,killer,m.cardId,'v60_gigante_hit','Effetto — Gigante del Cratere');
  if(Number(m.damage)>=currentMonsterPow(s,m)){killMonster(s,killer,m,source);return}
  if(m.cardId==='treant_millenario'){m.armor=Number(m.armor||0)+2;log(s,'Treant Millenario subisce danni e ottiene 2 Armatura.')}
- for(const cervo of s.board.monsters.filter((x:any)=>x.cardId==='cervo_antico'&&x.uid!==m.uid))queueEffect(s,Number(cervo.owner),cervo.cardId,'cervo_antico_pow','Effetto — Cervo Antico',{}, {targetUid:String(m.uid)});
+ for(const cervo of abilitySources61(s).filter((x:any)=>x.cardId==='cervo_antico'&&x.uid!==m.uid))queueEffect(s,Number(cervo.owner),cervo.cardId,'cervo_antico_pow','Effetto — Cervo Antico',{}, {targetUid:String(m.uid)});
 }
 
 function applyScarletDiscard(s:any,p:number){
@@ -447,7 +434,7 @@ function detectNewLasciti(s:any,before:any,defaultKiller:number,killerByUid:Map<
  const alive=new Set((s?.board?.monsters||[]).map((m:any)=>String(m.uid)));
  const kings=[...before.board.values()].filter((m:any)=>m.cardId==='re_dei_non_morti').length;
  for(const dead of before.board.values()){
-  if(alive.has(String(dead.uid))||!['scorpione_delle_ceneri','marionetta_maledetta'].includes(String(dead.cardId)))continue;
+  if(s.movedMonsters61?.includes(String(dead.uid))||alive.has(String(dead.uid))||!['scorpione_delle_ceneri','marionetta_maledetta'].includes(String(dead.cardId)))continue;
   queueLascito(s,dead,killerByUid.get(String(dead.uid))||defaultKiller,kings);
  }
 }
@@ -468,7 +455,7 @@ function applyGuardianoDraws(s:any,lines:string[]){
   for(const p of [1,2]){const name=String(player(s,p)?.name||'');if(name&&line.includes(`${name} pesca`))events[String(p)]++}
  }
  for(const p of [1,2]){
-  const guardians=(s?.board?.monsters||[]).filter((m:any)=>m.cardId==='guardiano_del_tesoro'&&Number(m.owner)===p).length;
+  const guardians=abilitySources61(s).filter((m:any)=>m.cardId==='guardiano_del_tesoro'&&Number(m.owner)===p).length;
   const count=events[String(p)]*guardians,q=player(s,p);
   for(let i=0;i<count;i++){
    const id=q?.deck?.shift?.();if(!id){log(s,`Guardiano del Tesoro non trova altre carte nel Mazzo di ${q?.name}.`);continue}

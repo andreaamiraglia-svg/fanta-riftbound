@@ -1,3 +1,4 @@
+import {engine61} from './game-v32-loader.ts?rev=souls-uncapped-v3';
 import * as base from './game-v38-loader.ts?rev=souls-uncapped-v3';
 
 export const CARD_DEFS=base.CARD_DEFS;
@@ -45,17 +46,7 @@ function wound(s:any,p:number,c:any,source:string){
   }
  }
 }
-function damageChampion(s:any,p:number,id:string,n:number,source:string){
- const c=champ(s,p,id);if(!c||c.defeated||n<=0)return;
- const armor=Math.max(0,Number(c.armor||0));
- const blocked=Math.min(armor,n);
- if(blocked){c.armor=armor-blocked;log(s,`${c.name} usa ${blocked} Armatura e annulla ${blocked} dann${blocked===1?'o':'i'}.`)}
- n-=blocked;if(n<=0)return;
- c.damage=Number(c.damage||0)+n;
- const threshold=Math.max(1,rawPow(s,p,c));
- log(s,`${c.name} subisce ${n} dann${n===1?'o':'i'} (${c.damage}/${threshold}).`);
- if(c.damage>=threshold)wound(s,p,c,source);
-}
+function damageChampion(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
 
 export function act(state:any,p:any,move:any){
  const restores:Array<()=>void>=[];
