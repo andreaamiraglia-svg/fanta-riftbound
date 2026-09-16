@@ -48,6 +48,12 @@ function patchChampHtml(){
  const previous=champHtml;
  const wrapped=function(c,owner,isOwn){
   let html=previous(c,owner,isOwn);
+  // Keep the paid tap visible during every redraw, before postRender runs.
+  html=html.replace(/class="champ ([^"]*)"/,(_,cls)=>{
+   const list=String(cls).split(/\s+/).filter(Boolean).filter(x=>x!=='sf-tapped');
+   if(c.tapped&&!c.defeated)list.push('sf-tapped');
+   return `class="champ ${list.join(' ')}"`;
+  });
   if(!isOwn){
    const guards=enemyGuards();
    const allowed=!guards.length||guards.some(g=>g.type==='champion'&&Number(g.player)===Number(owner)&&String(g.champId)===String(c.id));

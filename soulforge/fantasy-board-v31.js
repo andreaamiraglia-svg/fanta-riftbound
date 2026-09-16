@@ -27,7 +27,8 @@ function applyTo(el,html,sig){
 }
 function decorateStats(){
  queued=false;
- if(!document.body.classList.contains('sf-fantasy-game'))return;
+ // v41 replaces this overlay. Running both observers creates an endless DOM loop.
+ if(window.sfCardHud41||!document.body.classList.contains('sf-fantasy-game'))return;
  document.querySelectorAll('.champ[data-owner][data-champ-id]').forEach(el=>{
   const c=championState(el.dataset.owner,el.dataset.champId);if(!c)return;
   const sig=['c',c.pow,c.hp,c.wounds,c.damage,c.armor,c.tapped,c.defeated].join('|');

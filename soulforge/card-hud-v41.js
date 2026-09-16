@@ -1,4 +1,6 @@
 (()=>{
+// This HUD owns statistics; the legacy decorator must not recreate removed nodes.
+window.sfCardHud41=true;
 let scheduled=false;
 
 function normalizeStat(stat){
