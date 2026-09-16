@@ -62,7 +62,8 @@ body.sf-fantasy-game .champions>.champ .sf-champ-shell{
   height:179px!important;
   margin:auto!important;
   transform-origin:50% 50%!important;
-  transition:transform .34s cubic-bezier(.2,.8,.2,1),filter .2s ease!important;
+  transition:filter .2s ease!important;
+  animation:none!important;
   overflow:visible!important;
 }
 
@@ -74,11 +75,11 @@ body.sf-fantasy-game .champions>.champ.sf-support-champ.sf-tapped .sf-champ-shel
 }
 body.sf-fantasy-game .champions>.champ.sf-tap-anim .sf-champ-shell,
 body.sf-fantasy-game .champions>.champ.sf-support-champ.sf-tap-anim .sf-champ-shell{
-  animation:sfCompactTap61 .34s cubic-bezier(.2,.8,.2,1) both!important;
+  animation:none!important;
 }
 body.sf-fantasy-game .champions>.champ.sf-untap-anim .sf-champ-shell,
 body.sf-fantasy-game .champions>.champ.sf-support-champ.sf-untap-anim .sf-champ-shell{
-  animation:sfCompactUntap61 .34s cubic-bezier(.2,.8,.2,1) both!important;
+  animation:none!important;
 }
 @keyframes sfCompactTap61{
   from{transform:rotate(0deg) scale(1)}

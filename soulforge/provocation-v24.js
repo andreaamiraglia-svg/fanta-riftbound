@@ -1,5 +1,4 @@
 (()=>{
-const tapStates=new Map();
 let divMode=null;
 let divSourceKey=null;
 let graveObserverScheduled=false;
@@ -74,10 +73,10 @@ function injectStyle(){
  .sf-stat-pow{border-color:rgba(255,159,67,.65)!important;background:rgba(255,159,67,.13)!important;color:#ffad55!important}.sf-stat-pow b{color:#ffad55!important}
  .sf-stat-hp{border-color:rgba(82,210,115,.62)!important;background:rgba(82,210,115,.12)!important;color:#62db82!important}.sf-stat-hp b{color:#62db82!important}
  .sf-stat-damage{border-color:rgba(255,92,92,.62)!important;background:rgba(255,92,92,.12)!important;color:#ff7474!important}.sf-stat-damage b{color:#ff7474!important}
- .champ .champ-art{transform-origin:50% 50%;will-change:transform;transition:transform .34s cubic-bezier(.2,.8,.2,1)}
+ .champ .champ-art{transform-origin:50% 50%;transition:none;animation:none}
  .champ.sf-tapped .champ-art{transform:rotate(90deg) scale(.72)}
- .champ.sf-tap-anim .champ-art{animation:sfTapCard .34s cubic-bezier(.2,.8,.2,1) both}
- .champ.sf-untap-anim .champ-art{animation:sfUntapCard .34s cubic-bezier(.2,.8,.2,1) both}
+ .champ.sf-tap-anim .champ-art{animation:none}
+ .champ.sf-untap-anim .champ-art{animation:none}
  @keyframes sfTapCard{from{transform:rotate(0deg) scale(1)}to{transform:rotate(90deg) scale(.72)}}
  @keyframes sfUntapCard{from{transform:rotate(90deg) scale(.72)}to{transform:rotate(0deg) scale(1)}}
  .champ.sf-divoratore-ready{cursor:pointer!important;box-shadow:0 0 0 2px rgba(177,94,255,.55) inset,0 0 26px rgba(122,45,184,.18)}
@@ -117,11 +116,10 @@ function canUseDivoratore(){
 function processChampions(){
  document.querySelectorAll('.champ[data-owner][data-champ-id]').forEach(el=>{
   const c=championState(el.dataset.owner,el.dataset.champId);if(!c)return;
-  const key=`${el.dataset.owner}:${el.dataset.champId}`,tapped=!!c.tapped&&!c.defeated,prev=tapStates.get(key);
+  const tapped=!!c.tapped&&!c.defeated;
   el.classList.toggle('sf-tapped',tapped);
   el.classList.remove('sf-tap-anim','sf-untap-anim');
-  if(prev!==undefined&&prev!==tapped)el.classList.add(tapped?'sf-tap-anim':'sf-untap-anim');
-  tapStates.set(key,tapped);
+  // Tap is a stable orientation, never a replayed keyframe animation.
   if(Number(el.dataset.owner)===Number(session.player)&&el.dataset.champId==='divoratore_campione')el.classList.toggle('sf-divoratore-ready',canUseDivoratore());
   el.querySelectorAll('.stats .stat').forEach(stat=>{
    const text=stat.textContent.trim();

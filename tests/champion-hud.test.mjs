@@ -47,3 +47,12 @@ test('A tapped Champion is rendered tapped immediately and stays tapped on repea
  assert.doesNotMatch(context.champHtml({id:'hilda',tapped:true,defeated:true},1,true),/sf-tapped/);
  assert.match(context.champHtml({id:'hilda',tapped:true},2,false),/sf-tapped/);
 });
+test('Repeated tap processing never adds an animation that can restart the card rotation',()=>{
+ const code=provocation.slice(provocation.indexOf('function processChampions()'),provocation.indexOf('function ensureDivLayers()'));
+ const classes=new Set(['sf-tap-anim']),champ={id:'hilda',tapped:true};
+ const element={dataset:{owner:'1',champId:'hilda'},classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name),remove:(...names)=>names.forEach(n=>classes.delete(n)),add:name=>classes.add(name)},querySelectorAll:()=>[]};
+ const context=vm.createContext({document:{querySelectorAll:s=>s.startsWith('.champ[')?[element]:[]},championState:()=>champ,session:{player:1}});
+ vm.runInContext(code,context);
+ for(let i=0;i<20;i++){context.processChampions();assert.ok(classes.has('sf-tapped'));assert.ok(!classes.has('sf-tap-anim'));assert.ok(!classes.has('sf-untap-anim'))}
+ champ.tapped=false;context.processChampions();assert.ok(!classes.has('sf-tapped'));assert.ok(!classes.has('sf-untap-anim'));
+});

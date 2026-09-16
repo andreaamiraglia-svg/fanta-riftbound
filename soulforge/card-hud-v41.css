@@ -27,7 +27,8 @@ body.sf-fantasy-game .champ .sf-champ-shell{
   align-self:center!important;
   margin:auto!important;
   transform-origin:50% 50%!important;
-  transition:transform .34s cubic-bezier(.2,.8,.2,1)!important;
+  transition:none!important;
+  animation:none!important;
 }
 body.sf-fantasy-game .champ .sf-champ-shell .champ-art{
   position:absolute!important;
@@ -186,10 +187,10 @@ body.sf-fantasy-game .champ.sf-untap-anim .champ-art{
   animation:none!important;
 }
 body.sf-fantasy-game .champ.sf-tap-anim .sf-champ-shell{
-  animation:sfHudTap .34s cubic-bezier(.2,.8,.2,1) both!important;
+  animation:none!important;
 }
 body.sf-fantasy-game .champ.sf-untap-anim .sf-champ-shell{
-  animation:sfHudUntap .34s cubic-bezier(.2,.8,.2,1) both!important;
+  animation:none!important;
 }
 @keyframes sfHudTap{from{transform:rotate(0deg) scale(1)}to{transform:rotate(90deg) scale(.72)}}
 @keyframes sfHudUntap{from{transform:rotate(90deg) scale(.72)}to{transform:rotate(0deg) scale(1)}}
