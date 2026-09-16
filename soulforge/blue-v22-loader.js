@@ -4,7 +4,20 @@ const ART_FIXES=[];
 Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(p+' HTTP '+r.status);return r.text()})).then(xs=>{
  let js=xs.join('');
  for(const [from,to] of ART_FIXES)js=js.replace(from,to);
+ // Renderers close over artUrl: route that local function through the current
+ // shared resolver, while keeping its legacy fallback free of recursion.
+ if(!js.includes('const artUrl=id=>')||!js.includes('window.sfArtUrl21=artUrl;'))throw new Error('Art resolver patch missing');
+ js=js.replace('const artUrl=id=>','const legacyArtUrl21=id=>');
+ js=js.replace('const artImg=',"const artUrl=id=>typeof window.sfArtUrl21==='function'?window.sfArtUrl21(id):legacyArtUrl21(id);\nconst artImg=");
+ js=js.replace('window.sfArtUrl21=artUrl;','window.sfArtUrl21=legacyArtUrl21;');
  (0,eval)(js);
+ const previousSelect=renderSelect;
+ renderSelect=function(...args){
+  const opponent=playerState(otherP());
+  const champions=(opponent?.champions||[]).filter(c=>!c.supportChampion);
+  const matchup=champions.length?`<section class="panel sf-opening-opponent" aria-label="Campioni avversari" style="margin-bottom:14px"><h2>Campioni avversari</h2><p>${esc(opponent.name)} — scegli le tue carte conoscendo i suoi Campioni.</p><div class="champions">${champions.map(c=>champHtml(c,otherP(),false)).join('')}</div></section>`:'';
+  return matchup+previousSelect.apply(this,args);
+ };
  const colors=['red','green','black','blue'];
  const labels={red:'Rosse',green:'Verdi',black:'Nere',blue:'Blu'};
  soulsHtml=function(p){

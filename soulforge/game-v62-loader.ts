@@ -4,7 +4,16 @@ import {cards,monsters} from './new20-catalog.js';
 import {abilitySources61} from './september-runtime.ts';
 import {moveSupportToField} from './game-v40-loader.ts';
 export const CARD_DEFS:any=base.CARD_DEFS,MONSTER_DEFS:any=base.MONSTER_DEFS,CHAMPION_DEFS:any=base.CHAMPION_DEFS;
-export const DECK_RULES=base.DECK_RULES,newState=base.newState,newPlayer=base.newPlayer;
+export const DECK_RULES=base.DECK_RULES;
+function initialSouls(player:any){
+ if(!player)return player;
+ const colors=new Set((player.champions||[]).filter((c:any)=>!c.supportChampion).map((c:any)=>c.color));
+ player.souls=Object.fromEntries(['red','green','black','blue','orange'].map(color=>[color,colors.has(color)?2:0]));
+ return player;
+}
+export function newPlayer(...args:any[]){return initialSouls((base.newPlayer as any)(...args))}
+export function newState(...args:any[]){const state=(base.newState as any)(...args);for(const p of Object.values(state.players))initialSouls(p);return state}
+function normalizeOpening(s:any){if(Number(s.turn)===1&&['waiting','select'].includes(s.status))for(const p of Object.values(s.players))initialSouls(p)}
 Object.assign(CARD_DEFS,Object.fromEntries(cards.map(c=>[c.id,c])));
 Object.assign(MONSTER_DEFS,Object.fromEntries(monsters.map(c=>[c.id,c])));
 export const STARTER_DECK=[...base.STARTER_DECK,...cards.map(c=>c.id)];
@@ -122,6 +131,7 @@ function opening(s:any){
  E.prepare(s);
 }
 export function act(s:any,p:any,move:any){
+ normalizeOpening(s);
  s.drawn62={};const previousLog=[...s.log];
  sync(s,s.turn);const turn=s.turn,before=[1,2].flatMap(n=>active(s,n).map((x:any)=>({p:n,id:x.id,armor:x.armor}))),hands={1:[...q(s,1)?.hand||[]],2:[...q(s,2)?.hand||[]]};
  if(s.pendingChoice?.type?.startsWith('new20_')){
@@ -166,6 +176,7 @@ export function act(s:any,p:any,move:any){
  sync(s,turn);opening(s);if(s.triggerQueue.length&&!s.pendingChoice)E.prepare(s);return out;
 }
 export function publicView(s:any,p:any){
+ normalizeOpening(s);
  sync(s,s.turn);const v=base.publicView(s,p);
  for(const x of v.board.monsters){const raw=m(s,x.uid);x.provocazione=!!(raw?.provocazione||MONSTER_DEFS[raw?.cardId]?.provocazione)}
  for(const item of v.stack){const raw=s.stack.find((x:any)=>x.uid===item.uid);if(raw?.meta?.targets){item.targets=raw.meta.targets;item.targetRefs=base.targetRefs({actor:item.actor,targets:raw.meta.targets})}if(raw?.meta?.participants)item.targetRefs=raw.meta.participants}
