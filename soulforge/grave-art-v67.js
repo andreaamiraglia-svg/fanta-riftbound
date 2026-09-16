@@ -13,7 +13,7 @@ const FILE={
  taglio_ninjitsu:'taglio_ninjitsu.webp',sguardo_ninjitsu:'sguardo_ninjitsu.webp',tutto_per_la_festa:'tutto_per_la_festa.webp',alta_marea:'alta_marea.webp',doppia_katana:'doppia_katana.webp',albero_della_vita:'albero_della_vita.webp',mille_lame:'mille_lame.webp',
  evocatore_anime_vacue:'evocatore-di-anime-vacue.webp',anima_esplosiva:'anima-esplosiva.webp',spacca_ossa:'spacca-ossa.webp',eclipse_fang:'eclipse-fang.webp',fino_alla_morte:'fino-alla-morte.webp',ammazza_morte:'ammazza-morte.webp',
  flusso_gelido:'flusso-gelido.webp',freddo_puro:'freddo-puro.webp',in_guardia:'in-guardia.webp',ali_del_protettore:'ali-del-protettore.webp',staffa_del_mare:'staffa-del-mare.webp',specchio_acqua:'specchio-d-acqua.webp',muro_di_ghiaccio:'muro-di-ghiaccio.webp',custode_dei_deboli:'custode-dei-deboli.webp',distruzione_totale:'distruzione-totale.webp',
- colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp',
+ colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',richiamo_del_branco:'richiamo-del-branco-nero.webp',grandine_brillante:'grandine-brillante.webp',
  kroth:'kroth-il-fulminatore.webp',alabardo:'alabardo.webp',drago_aureo:'drago-aureo.webp',falco_dell_alba:'falco-dell-alba.webp',frecce_divine:'frecce-divine.webp',golem_d_ambra:'golem-d-ambra.webp',grifone_imperiale:'grifone-imperiale.webp',legionario_troll:'legionario-troll.webp',leone_solare:'leone-solare.webp',loda_il_sole:'loda-il-sole.webp',parry:'parry.webp',perfezione:'perfezione.webp',pugno_in_faccia:'pugno-in-faccia.webp',sciamano_del_sole:'sciamano-del-sole.webp',sciamano_del_sole_support:'sciamano-del-sole.webp',soldato_corrotto:'soldato-corrotto.webp',spacca_teste:'spacca-teste-orange.webp',su_gli_scudi:'su-gli-scudi.webp'
 };
 
@@ -34,6 +34,7 @@ function cardId(el){
  return idFromName(el?.querySelector?.('.sf-grave-name')?.textContent||'');
 }
 function candidates(id){
+ if(String(id)==='richiamo_del_branco')return ['https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/richiamo-del-branco-nero.webp'];
  const out=[];
  try{const u=window.sfArtUrl21?.(id);if(u)out.push(String(u))}catch{}
  const file=FILE[id];

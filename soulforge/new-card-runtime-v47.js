@@ -4,11 +4,11 @@ const ART={
  colpo_in_testa:'colpo-in-testa.webp',
  fabbro_ninjitsu:'fabbro-ninjitsu.webp',
  fino_alla_morte:'fino-alla-morte.webp',
- richiamo_del_branco:'richiamo-del-branco.webp',
+ richiamo_del_branco:'richiamo-del-branco-nero.webp',
  grandine_brillante:'grandine-brillante.webp'
 };
 const NEW_IDS=new Set(Object.keys(ART));
-const artUrl=id=>ART[String(id)]?BASE+ART[String(id)]:'';
+const artUrl=id=>String(id)==='richiamo_del_branco'?'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/richiamo-del-branco-nero.webp':ART[String(id)]?BASE+ART[String(id)]:'';
 let hoverTimer=null;
 
 function cardIdOf(el){

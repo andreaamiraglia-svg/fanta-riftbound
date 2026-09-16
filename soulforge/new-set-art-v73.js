@@ -8,7 +8,7 @@ const ART={
   aurelius:'aurelius-re-dell-opulenza.webp',
   colpo_in_testa:'colpo-in-testa.webp',
   fabbro_ninjitsu:'fabbro-ninjitsu.webp',
-  richiamo_del_branco:'richiamo-del-branco.webp',
+  richiamo_del_branco:'richiamo-del-branco-nero.webp',
   grandine_brillante:'grandine-brillante.webp',
   fino_alla_morte:'fino-alla-morte.webp',
   bang:'bang.webp',
@@ -34,7 +34,7 @@ const BLUE_FIX={
   yeti:BASE+'yeti.webp?rev=yeti-404c3869'
 };
 const artUrl=file=>BASE+encodeURIComponent(file).replace(/'/g,'%27');
-const ownUrl=id=>BLUE_FIX[id]||(ART[id]?artUrl(ART[id]):'');
+const ownUrl=id=>String(id)==='richiamo_del_branco'?'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/richiamo-del-branco-nero.webp':BLUE_FIX[id]||(ART[id]?artUrl(ART[id]):'');
 const ids=new Set([...Object.keys(ART),...Object.keys(BLUE_FIX)]);
 
 function idOf(el){
