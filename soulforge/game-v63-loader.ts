@@ -66,7 +66,7 @@ R.resolve=(s:any,item:any)=>{
  case'lascito_profanato':if(x&&power(s,t.target)<=2&&hasLascito(s,x)){
   const kings=s.board.monsters.filter((m:any)=>m.cardId==='re_dei_non_morti').length;
   if(['scorpione_delle_ceneri','marionetta_maledetta'].includes(x.cardId)||['sciamano','scarabeo_dorato'].includes(MONSTER_DEFS[x.cardId]?.lascito)){queueLascito(s,x,p,kings);promote(s)}else E.lascito(s,x,p,kings);
-  if(x.richiamoBrancoTurn===s.turn)for(let i=0;i<=kings;i++)s.triggerQueue.push({actor:p,sourceCardId:'richiamo_del_branco',effectId:'lascito_richiamo_branco',choiceType:'enemyChampion',effectName:'Lascito — Richiamo del Branco'});
+  if(x.richiamoBrancoTurn===s.turn)for(let i=0;i<=kings;i++)s.triggerQueue.push({actor:p,sourceCardId:'richiamo_del_branco',effectId:'lascito_richiamo_branco',choiceType:'enemyChampion',effectName:'Lascito — Richiamo del Branco (Nero)'});
   // A granted resurrection Lascito on a living Monster has nothing to revive.
  }break;
  case'risveglio_selvaggio':for(const c of active(s,p))c.tapped=false;break;

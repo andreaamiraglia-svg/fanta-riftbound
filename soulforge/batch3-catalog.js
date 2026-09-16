@@ -11,7 +11,7 @@ export const cards = [
  ['lascito_profanato','Lascito Profanato','black',0,'base','lascitoMonster','Attiva il Lascito di un Mostro in gioco con 2 POW o meno, senza ucciderlo.'],
  ['risveglio_selvaggio','Risveglio Selvaggio','green',3,'base','none','Attiva tutti i tuoi Campioni.'],
  ['guardiano_delle_radici','Guardiano delle Radici','green',2,'base','monster','Scegli un Mostro. Ottiene +4 POW e Provocazione fino alla fine del turno.'],
- ['richiamo_del_branco_verde','Richiamo del Branco','green',0,'instant','any','Scegli un bersaglio. Non può ottenere Provocazione in questo turno. Se ha Provocazione, rimuovila fino alla fine del turno.'],
+ ['richiamo_del_branco_verde','Richiamo del Branco (Verde)','green',0,'instant','any','Scegli un bersaglio. Non può ottenere Provocazione in questo turno. Se ha Provocazione, rimuovila fino alla fine del turno.'],
  ['spaccacorazze_della_giungla','Spaccacorazze della Giungla','green',0,'response','monster','Infliggi 1 danno a un Mostro; se ha Armatura, infliggine 3 invece.'],
  ['tutto_per_la_vittoria','Tutto per la Vittoria','red',2,'response','chargeDiscard','Come costo aggiuntivo, scarta 1 carta dalla tua mano. Un tuo Campione ottiene Carica 6 fino alla fine del turno.'],
  ['doppio_colpo','Doppio Colpo','red',2,'base','twoEnemies','Infliggi 2 danni a due nemici diversi.'],

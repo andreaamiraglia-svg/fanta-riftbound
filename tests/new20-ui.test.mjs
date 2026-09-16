@@ -23,3 +23,6 @@ const deck=new Function(prefix+'return ('+defaultExpression+')();')();
 assert.equal(deck.cards.length,18);
 assert.equal(deck.monsters.length,12);
 console.log('Deck builder: 20 new cards, unique IDs, artwork, sorted cost/POW and valid 18/12 default verified.');
+
+const black=pools.CARDS.find(c=>c.id==='richiamo_del_branco'),green=pools.CARDS.find(c=>c.id==='richiamo_del_branco_verde');
+assert.equal(black.name,'Richiamo del Branco (Nero)');assert.equal(green.name,'Richiamo del Branco (Verde)');assert.equal(black.color,'black');assert.equal(green.color,'green');assert.equal(black.cost,2);assert.equal(green.cost,0);assert.equal(pools.V27_ART[black.id],'richiamo-del-branco-nero.webp');assert.equal(pools.V27_ART[green.id],'richiamo-del-branco-verde.webp');

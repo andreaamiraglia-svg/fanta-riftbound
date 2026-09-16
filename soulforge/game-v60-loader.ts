@@ -366,7 +366,7 @@ function killMonster(s:any,killer:number,m:any,source:string){
  if(killer===1||killer===2){noteKill(s,killer);if(dead.noSoulsTurn!==s.turn)gainSoul(s,killer,String(MONSTER_DEFS?.[dead.cardId]?.color||''),1)}
  for(const b of abilitySources61(s).filter((x:any)=>x.cardId==='orso_furioso')){b.tempPow=Number(b.tempPow||0)+2;log(s,'Orso Furioso ottiene +2 POW fino alla fine del turno.')}
  applyGhoulDeath(s,dead);queueLascito(s,dead,killer,kings);
- if(Number(dead.richiamoBrancoTurn)===Number(s.turn))for(let i=0;i<1+kings;i++)queueChoice(s,killer,'richiamo_del_branco','lascito_richiamo_branco','Lascito — Richiamo del Branco','enemyChampion');
+ if(Number(dead.richiamoBrancoTurn)===Number(s.turn))for(let i=0;i<1+kings;i++)queueChoice(s,killer,'richiamo_del_branco','lascito_richiamo_branco','Lascito — Richiamo del Branco (Nero)','enemyChampion');
 }
 
 function woundChampion(s:any,p:number,c:any,source:string){return engine61.wound(s,p,c,source);}
