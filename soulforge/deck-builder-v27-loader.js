@@ -1,7 +1,8 @@
 (async()=>{
 const firstWave=await import('./september-catalog.js');
 const wave62=await import('./new20-catalog.js');
-const rawSeptemberCards=[...firstWave.cards,...wave62.cards],septemberMonsters=[...firstWave.monsters,...wave62.monsters];
+const wave63=await import('./batch3-catalog.js');
+const rawSeptemberCards=[...firstWave.cards,...wave62.cards,...wave63.cards],septemberMonsters=[...firstWave.monsters,...wave62.monsters];
 const septemberCards=rawSeptemberCards.map(c=>({...c,speed:{base:'Base',instant:'Istantanea',response:'Risposta'}[c.speed]}));
 const parts=['/deck-builder-v22.p01.txt','/deck-builder-v22.p02.txt','/deck-builder-v22.p03.txt'];
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';

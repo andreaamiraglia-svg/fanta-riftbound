@@ -11,7 +11,7 @@ globalThis.fetch=async input=>{
  return nativeFetch(input);
 };
 
-const game=await import(process.env.SF_ENGINE==='62'?'../soulforge/game-v62-loader.ts':'../soulforge/game-v60-loader.ts?unit-tests=1');
+const game=await import('../soulforge/game-v'+(process.env.SF_ENGINE||60)+'-loader.ts'+(process.env.SF_ENGINE?'':'?unit-tests=1'));
 
 const RED_GREEN_MONSTERS=[
  'scorpione_delle_ceneri','gigante_del_cratere','cinghiale_zannaverde','gorilla_della_giungla',

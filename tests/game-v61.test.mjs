@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 globalThis.fetch=async input=>new Response(await fs.readFile(new URL('../soulforge/'+String(input).split('/').pop().split('?')[0],import.meta.url),'utf8'));
-const game=await import(process.env.SF_ENGINE==='62'?'../soulforge/game-v62-loader.ts':'../soulforge/game-v61-loader.ts');
+const game=await import('../soulforge/game-v'+(process.env.SF_ENGINE||61)+'-loader.ts');
 const {engine61:E}=await import('../soulforge/game-v32-loader.ts?rev=souls-uncapped-v3');
 const {cards,monsters}=await import('../soulforge/september-catalog.js');
 const cp=(p,id)=>({type:'champion',player:p,champId:id});

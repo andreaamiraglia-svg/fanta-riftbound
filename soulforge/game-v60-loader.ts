@@ -238,6 +238,7 @@ function queueChoice(s:any,actor:number,sourceCardId:string,effectId:string,effe
  queue(s,{mode:'choice',actor,sourceCardId,effectId,effectName,choiceType,meta});
 }
 function queueEntry(s:any,m:any,vermeCondition:boolean){
+ if(m.skipEnter63)return;
  const p=Number(m.owner),id=String(m.cardId);
  if(id==='cinghiale_zannaverde')queueEffect(s,p,id,'v60_cinghiale_enter','Effetto — Cinghiale Zannaverde',{}, {uid:String(m.uid)});
  else if(id==='elementale_della_brina')queueEffect(s,p,id,'v60_elementale_enter','Effetto — Elementale della Brina',{}, {uid:String(m.uid)});

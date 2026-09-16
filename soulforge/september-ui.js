@@ -1,6 +1,7 @@
 import {cards as firstCards,monsters as firstMonsters} from './september-catalog.js';
 import {cards as newCards,monsters as newMonsters} from './new20-catalog.js';
-const cards=[...firstCards,...newCards],monsters=[...firstMonsters,...newMonsters];
+import {cards as batch3Cards} from './batch3-catalog.js';
+const cards=[...firstCards,...newCards,...batch3Cards],monsters=[...firstMonsters,...newMonsters];
 const definitions=Object.fromEntries([...cards,...monsters].map(c=>[c.id,c]));
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';
 const state=()=>typeof session==='undefined'?null:session.state;
@@ -44,7 +45,22 @@ async function play(id){
   const hand=playerState(me())?.handCards?.find(x=>x.id===id);if(!hand)return;
   if(typeof canCast==='function'&&!canCast(hand))return showError('Non puoi giocare questa carta ora.');
   let targets={};
-  if(c.target==='reflection'){
+  if(c.target==='tapEnemy'||c.target==='damageHeal'){
+   const champion=await pickField(c.name+' — scegli un tuo Campione'+(c.target==='tapEnemy'?' attivo da tappare':''),options('own').filter(x=>c.target!=='tapEnemy'||!state().players[String(me())].champions.find(y=>y.id===x.value.champId)?.tapped));if(!champion)return;
+   const enemy=await pickField(c.name+' — scegli un nemico',options('enemy'));if(!enemy)return;targets={champion,enemy};
+  }else if(c.target==='graveMonster'){
+   const graveMonsterId=await pickField(c.name+' — scegli un Mostro dal tuo Cimitero',[...new Set(state().players[String(me())].monsterGrave)].map(id=>({value:id,cardId:id,label:state().monsterDefs[id]?.name||id})));if(!graveMonsterId)return;targets={graveMonsterId};
+  }else if(c.target==='enemySoul'){
+   const color=await pickField(c.name+' — scegli il colore dell’anima',['red','green','black','blue','orange'].filter(color=>state().players[String(3-me())].souls[color]>0).map(color=>({value:color,label:{red:'Rossa',green:'Verde',black:'Nera',blue:'Blu',orange:'Arancione'}[color]})));if(!color)return;targets={color};
+  }else if(c.target==='twoEnemies'){
+   const first=await pickField(c.name+' — scegli il primo nemico',options('enemy'));if(!first)return;
+   const second=await pickField(c.name+' — scegli un altro nemico',options('enemy').filter(x=>key(x.value)!==key(first)));if(!second)return;targets={enemies:[first,second]};
+  }else if(c.target==='chargeDiscard'){
+   const discardId=await pickField(c.name+' — scegli una carta da scartare',playerState(me()).handCards.filter(x=>x.id!==id).map(x=>({value:x.id,cardId:x.id,label:x.name})));if(!discardId)return;
+   const target=await pickField(c.name+' — scegli un tuo Campione',options('own'));if(!target)return;targets={discardId,target};
+  }else if(c.target==='lascitoMonster'){
+   const target=await pickField(c.name+' — scegli un Mostro con Lascito e massimo 2 POW',options('monster').filter(x=>{const m=state().board.monsters.find(y=>y.uid===x.value.uid);return x.pow<=2&&(state().monsterDefs[x.cardId]?.lascito||['scorpione_delle_ceneri','marionetta_maledetta'].includes(x.cardId)||m?.richiamoBrancoTurn===state().turn||m?.rinascita63)}));if(!target)return;targets={target};
+  }else if(c.target==='reflection'){
    const champion=await pickField(c.name+' — scegli un tuo Campione',options('own'));if(!champion)return;
    const enemy=await pickField(c.name+' — scegli un nemico',options('enemy'));if(!enemy)return;targets={champion,enemy};
   }else if(c.target==='monsters'){
@@ -107,3 +123,13 @@ async function pending62(){
  }catch(e){showError(e.message||String(e))}finally{pending62Busy=false}
 }
 setInterval(pending62,600);
+let pending63Busy=false;
+async function pending63(){
+ const pc=state()?.pendingChoice;if(pending63Busy||pc?.type!=='batch3_discard'||Number(pc.player)!==me())return;pending63Busy=true;
+ try{
+  const accept=await pickField('Ritorsione Cremisi scartata — vuoi giocarla pagando il costo?',[{value:true,cardId:pc.cardId,label:'Gioca Ritorsione Cremisi'},{value:false,label:'Passa'}]);
+  if(!accept){await move({type:'resolve_choice',decline:true});return}
+  const target=await pickField('Ritorsione Cremisi — scegli un Mostro',options('monster'));if(target)await move({type:'resolve_choice',targets:{target}});else await move({type:'resolve_choice',decline:true});
+ }catch(e){showError(e.message||String(e))}finally{pending63Busy=false}
+}
+setInterval(pending63,600);

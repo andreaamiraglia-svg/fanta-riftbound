@@ -2,9 +2,10 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import * as first from '../soulforge/september-catalog.js';
 import * as wave from '../soulforge/new20-catalog.js';
+import * as wave63 from '../soulforge/batch3-catalog.js';
 let built;
 let source=await fs.readFile(new URL('../soulforge/deck-builder-v27-loader.js',import.meta.url),'utf8');
-source=source.replace("await import('./september-catalog.js')",JSON.stringify(first)).replace("await import('./new20-catalog.js')",JSON.stringify(wave)).replace('(0,eval)(js)','capture(js)');
+source=source.replace("await import('./september-catalog.js')",JSON.stringify(first)).replace("await import('./new20-catalog.js')",JSON.stringify(wave)).replace("await import('./batch3-catalog.js')",JSON.stringify(wave63)).replace('(0,eval)(js)','capture(js)');
 const fetch=async path=>new Response(await fs.readFile(new URL('../soulforge/'+path.split('/').pop(),import.meta.url),'utf8'));
 await new Function('fetch','window','capture',source)(fetch,{},s=>built=s);
 for(let i=0;i<30&&!built;i++)await new Promise(r=>setTimeout(r,10));
@@ -13,7 +14,7 @@ const prefix=built.slice(0,built.indexOf('const RULES=')).replace(/^\s*\(\(\)\s*
 const pools=new Function(prefix+'return {CARDS,MONSTERS,V27_ART};')();
 assert.equal(new Set(pools.CARDS.map(x=>x.id)).size,pools.CARDS.length);
 assert.equal(new Set(pools.MONSTERS.map(x=>x.id)).size,pools.MONSTERS.length);
-for(const d of wave.cards){assert.ok(pools.CARDS.some(x=>x.id===d.id&&x.cost===d.cost));assert.equal(pools.V27_ART[d.id],d.art)}
+for(const d of [...wave.cards,...wave63.cards]){assert.ok(pools.CARDS.some(x=>x.id===d.id&&x.cost===d.cost));assert.equal(pools.V27_ART[d.id],d.art)}
 for(const d of wave.monsters){assert.ok(pools.MONSTERS.some(x=>x.id===d.id&&x.pow===d.pow));assert.equal(pools.V27_ART[d.id],d.art)}
 assert.ok(pools.CARDS.every((x,i,a)=>!i||x.cost>=a[i-1].cost));
 assert.ok(pools.MONSTERS.every((x,i,a)=>!i||x.pow>=a[i-1].pow));

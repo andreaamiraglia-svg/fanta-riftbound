@@ -8,14 +8,17 @@ export const engine61={
  addMonster:(...a)=>addMonsterToBoard(...a),after:(...a)=>afterTopResolution(...a),
  lascito:(...a)=>enqueueLascito(...a),prepare:(...a)=>prepareTriggers(...a),
  validate:(...a)=>validateCardTargets(...a),resolve:(...a)=>resolveCardEffect(...a),
- reduceMonster:(...a)=>reduceMonsterPow(...a),cost:(...a)=>dynamicCost(...a),pay:(...a)=>pay(...a),canPay:(...a)=>canPay(...a)
+ reduceMonster:(...a)=>reduceMonsterPow(...a),reduceChampion:(...a)=>reduceChampionPow(...a),cost:(...a)=>dynamicCost(...a),pay:(...a)=>pay(...a),canPay:(...a)=>canPay(...a),
+ beginDamage:(...a)=>beginDamageEvent(...a),endDamage:(...a)=>endDamageEvent(...a)
 };
+const oldReduce63=reduceMonsterPow;
+reduceMonsterPow=function(s,m,n,source){const before=m?currentMonsterPow(s,m):0;const result=oldReduce63(s,m,n,source);if(m&&s.resolvingCard63&&currentMonsterPow(s,m)<before)rules61.reduced?.(s,m);return result};
 const oldPow61=currentPow;
 currentPow=function(s,p,c){return Math.max(0,oldPow61(s,p,c)+(c?.chargeTurn===s.turn&&s.combat?.attacker?.champId===c?.id&&Number(s.combat.attacker.player)===Number(p)?Number(c.charge||0):0)+(rules61.pow?.(s,p,c)||0))};
 const oldCost62=dynamicCost;
 dynamicCost=function(s,p,c){return rules61.cost?.(s,p,c)??oldCost62(s,p,c)};
 const oldGuards62=provocationsAgainst;
-provocationsAgainst=function(s,p){const existing=oldGuards62(s,p);for(const m of s.board.monsters)if(Number(m.owner)===Number(other(p))&&m.provocazione&&!existing.some(x=>x.type==='monster'&&x.uid===m.uid))existing.push({type:'monster',uid:m.uid});return existing};
+provocationsAgainst=function(s,p){const existing=oldGuards62(s,p);for(const m of s.board.monsters)if(Number(m.owner)===Number(other(p))&&m.provocazione&&!existing.some(x=>x.type==='monster'&&x.uid===m.uid))existing.push({type:'monster',uid:m.uid});return existing.filter(t=>{const x=t.type==='monster'?monster(s,t.uid):champ(s,t.player,t.champId);return x?.noProv63?.turn!==s.turn})};
 const oldDamage61=damageChampion;
 damageChampion=function(s,p,id,n,source=''){
  const c=champ(s,p,id);if(c?.immuneDamageTurn===s.turn||rules61.prevent?.(s,p,c))return {wounded:false};
@@ -52,6 +55,7 @@ resolveEffect=function(s,item){
 };
 const oldEnter61=processMonsterEnter;
 processMonsterEnter=function(s,m){
+ if(m?.skipEnter63)return;
  if(rules61.enter?.(s,m))return;
  if(m?.cardId==='vampiro'){
   const i=s.board.monsters.findIndex(x=>x.uid===m.uid),target=s.board.monsters[i+1];
@@ -63,7 +67,7 @@ processMonsterEnter=function(s,m){
 const oldValidate61=validateCardTargets;
 validateCardTargets=function(s,p,c,t){if(rules61.validate?.(s,p,c,t))return;return oldValidate61(s,p,c,t)};
 const oldResolve61=resolveCardEffect;
-resolveCardEffect=function(s,item){if(rules61.resolve?.(s,item))return false;return oldResolve61(s,item)};
+resolveCardEffect=function(s,item){const old=s.resolvingCard63;s.resolvingCard63=item;try{if(rules61.resolve?.(s,item))return false;return oldResolve61(s,item)}finally{if(old)s.resolvingCard63=old;else delete s.resolvingCard63}};
 const oldCombat61=resolveCombat;
 resolveCombat=function(s){
  const c=s.combat;

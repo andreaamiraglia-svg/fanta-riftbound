@@ -151,6 +151,7 @@ export function act(s:any,p:any,move:any){
    E.validate(s,Number(p),CARD_DEFS[id],move.targets||{});
    if(!E.canPay(s,Number(p),CARD_DEFS[id]))throw Error('Non hai abbastanza anime per il costo modificato della carta.');
    const paid=E.pay(s,Number(p),CARD_DEFS[id]);
+   R.paid?.(s,Number(p),CARD_DEFS[id],move.targets||{});
    if(id==='munizioni_d_emergenza'){const discard=move.targets.discardId;q(s,p).hand.splice(q(s,p).hand.indexOf(discard),1);q(s,p).grave.push(discard)}
    q(s,p).deck.splice(q(s,p).deck.indexOf(id),1);s.pendingChoice=null;
    s.stack.push({uid:crypto.randomUUID(),kind:'card',actor:Number(p),cardId:id,targets:move.targets||{},paidCost:paid});E.prepare(s);

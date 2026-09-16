@@ -86,6 +86,7 @@ patch("if (c.effect === 'occhio' && pl(s, p).deck.length < 5)\n    throw new Err
 patch("for (const m of s.board.monsters) {\n    m.damage = 0;\n    m.tempPow = 0;\n    m.armor = 0;\n}","for (const m of s.board.monsters) {\n    m.damage = 0;\n    m.tempPow = 0;\n    m.armor = 0;\n    delete m.richiamoBrancoTurn;\n}",'Richiamo cleanup');
 
 // Passive sources include Monsters transformed by Patto; target scans still use board.monsters.
+patch("q.hand = q.hand.filter((id) => id !== c.id);", "q.hand = q.hand.filter((id) => id !== c.id); rules61.paid?.(s,p,c,a.targets || {});",'additional costs before stack');
 source=source.replace(/(?:\(s\.board\.monsters \|\| \[\]\)|s\.board\.monsters)\.filter\(\((\w+)\) => \1\.cardId ===/g,'abilitySources61(s).filter(($1) => $1.cardId ===');
 source+=extensionSource;
 const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(source));
