@@ -8,7 +8,7 @@ const ART={
   aurelius:'aurelius-re-dell-opulenza.webp',
   colpo_in_testa:'colpo-in-testa.webp',
   fabbro_ninjitsu:'fabbro-ninjitsu.webp',
-  richiamo_del_branco:'richiamo-del-branco-nero.webp',
+  richiamo_del_branco:'richiamo-del-branco.webp',
   grandine_brillante:'grandine-brillante.webp',
   fino_alla_morte:'fino-alla-morte.webp',
   bang:'bang.webp',

@@ -4,7 +4,7 @@ const ART={
  colpo_in_testa:'colpo-in-testa.webp',
  fabbro_ninjitsu:'fabbro-ninjitsu.webp',
  fino_alla_morte:'fino-alla-morte.webp',
- richiamo_del_branco:'richiamo-del-branco-nero.webp',
+ richiamo_del_branco:'richiamo-del-branco.webp',
  grandine_brillante:'grandine-brillante.webp'
 };
 const NEW_IDS=new Set(Object.keys(ART));

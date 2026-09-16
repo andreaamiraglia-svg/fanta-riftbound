@@ -1,6 +1,6 @@
 (()=>{
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
-const ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco-nero.webp',grandine_brillante:'grandine-brillante.webp'};
+const ART={colpo_in_testa:'colpo-in-testa.webp',fabbro_ninjitsu:'fabbro-ninjitsu.webp',fino_alla_morte:'fino-alla-morte.webp',richiamo_del_branco:'richiamo-del-branco.webp',grandine_brillante:'grandine-brillante.webp'};
 let mode=null,chooserInstalled=false;
 function artUrl(id){return ART[id]?BASE+ART[id]:''}
 function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfNewCards46)return;const prev=cur;const fn=(id)=>artUrl(String(id))||(typeof prev==='function'?prev(id):'');fn.__sfNewCards46=true;fn.__previous=prev;window.sfArtUrl21=fn}
