@@ -54,12 +54,12 @@ async function play(id){
  }catch(e){showError(e.message||String(e))}
 }
 function install(){
- if(typeof chooseForCard==='function'&&!chooseForCard.sf61){const previous=chooseForCard,fn=id=>cards.some(c=>c.id===id)?play(id):previous(id);fn.sf61=true;window.chooseForCard=fn;chooseForCard=fn}
+ if(typeof chooseForCard==='function'&&!chooseForCard.sf61){const previous=chooseForCard,fn=id=>cards.some(c=>c.id===id)?play(id):previous(id);Object.assign(fn,previous);fn.sf61=true;window.chooseForCard=fn;chooseForCard=fn}
  if(typeof pick==='function'&&!pick.sf61){
   const fn=(title,items)=>pickField(title,items.map(x=>{let ref=x.value;if(typeof ref!=='object')ref=entities().find(e=>e.value.uid===String(x.value)||e.value.champId===String(x.value)||e.label===x.label)?.value;return{...x,ref,cardId:x.cardId||entities().find(e=>key(e.value)===key(ref))?.cardId||String(x.value)}}));
   fn.sf61=true;window.pick=fn;pick=fn;
  }
- if(!window.sfArtUrl21?.sf61){const previous=window.sfArtUrl21,fn=id=>definitions[id]?BASE+definitions[id].art:previous?.(id)||'';fn.sf61=true;window.sfArtUrl21=fn}
+ if(!window.sfArtUrl21?.sf61){const previous=window.sfArtUrl21,fn=id=>definitions[id]?BASE+definitions[id].art:previous?.(id)||'';Object.assign(fn,previous);fn.sf61=true;window.sfArtUrl21=fn}
 }
 function arrows(){
  const s=state();if(!s)return;const stack=[...s.stack].reverse();[...document.querySelectorAll('.chainitem')].forEach((e,i)=>{if(stack[i])e.dataset.stackUid=stack[i].uid});

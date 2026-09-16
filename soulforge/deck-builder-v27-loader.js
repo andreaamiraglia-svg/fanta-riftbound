@@ -1,5 +1,6 @@
 (async()=>{
-const {cards:septemberCards,monsters:septemberMonsters}=await import('./september-catalog.js');
+const {cards:rawSeptemberCards,monsters:septemberMonsters}=await import('./september-catalog.js');
+const septemberCards=rawSeptemberCards.map(c=>({...c,speed:{base:'Base',instant:'Istantanea',response:'Risposta'}[c.speed]}));
 const parts=['/deck-builder-v22.p01.txt','/deck-builder-v22.p02.txt','/deck-builder-v22.p03.txt'];
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/champion-of-the-souls-carte-ottimizzate/cards/';
 const NEW=[
@@ -52,6 +53,7 @@ Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.
  js=patch(js,"CHAMPIONS.map(x=>pickCardHtml(x,'champions')).join('')","[...CHAMPIONS].sort((a,b)=>({red:0,green:1,black:2,blue:3,orange:4}[a.color]??99)-({red:0,green:1,black:2,blue:3,orange:4}[b.color]??99)).map(x=>pickCardHtml(x,'champions')).join('')",'champion sort');
  for(const id of REQUIRED)if(!js.includes("'"+id+"'"))throw new Error('Deck Builder v27: carta mancante dopo build: '+id);
  js=patch(js,'const RULES=',`CARDS.push(...${JSON.stringify(septemberCards)});MONSTERS.push(...${JSON.stringify(septemberMonsters)});CARDS.sort(compareCards);MONSTERS.sort(compareMonsters);\nconst RULES=`,'September catalogue');
+ js=patch(js,"cards:CARDS.filter(x=>['red','green'].includes(x.color)&&",`cards:CARDS.filter(x=>!${JSON.stringify(septemberCards.map(c=>c.id))}.includes(x.id)&&['red','green'].includes(x.color)&&`,'keep default deck at 18');
  (0,eval)(js);window.sfDeckBuilderVersion='september-20';
 }).catch(e=>{console.error('deck-builder-v27 loader',e);try{showError(e.message)}catch{}});
 })();
