@@ -1,3 +1,4 @@
+import {extensionSource} from './september-core.ts';
 const urls=[
 'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p01.txt',
 'https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/main/soulforge/game-v22.p02.txt',
@@ -84,7 +85,10 @@ patch("if (['sfera', 'fendente', 'eclipse_fang', 'staffa_mare', 'custode_deboli'
 patch("if (c.effect === 'occhio' && pl(s, p).deck.length < 5)\n    throw new Error('Occhio di Drago richiede almeno 5 carte nel mazzo.'); }",`if (c.effect === 'occhio' && pl(s, p).deck.length < 5) throw new Error('Occhio di Drago richiede almeno 5 carte nel mazzo.'); if (c.effect === 'fabbro_ninjitsu') { const id = String(t?.deckCardId || ''); if (!pl(s, p).deck.includes(id) || !CARD_DEFS[id] || !String(CARD_DEFS[id].name || '').toLowerCase().includes('ninjitsu')) throw new Error('Fabbro Ninjitsu richiede una carta Ninjitsu presente nel tuo Mazzo.'); } }`,'Fabbro deck validation');
 patch("for (const m of s.board.monsters) {\n    m.damage = 0;\n    m.tempPow = 0;\n    m.armor = 0;\n}","for (const m of s.board.monsters) {\n    m.damage = 0;\n    m.tempPow = 0;\n    m.armor = 0;\n    delete m.richiamoBrancoTurn;\n}",'Richiamo cleanup');
 
+source+=extensionSource;
 const mod=await import('data:text/javascript;charset=utf-8,'+encodeURIComponent(source));
+export const engine61=mod.engine61;
+export const rules61=mod.rules61;
 const COLORS=['red','green','black','blue'];
 function enforceSoulColorsOnPlayer(q:any){ if(!q)return q; const allowed=new Set(Array.isArray(q.deckColors)&&q.deckColors.length?q.deckColors:(q.champions||[]).map((c:any)=>c?.color).filter(Boolean)); q.souls ||= {}; for(const c of COLORS){ const n=Math.max(0,Number(q.souls[c]||0)); q.souls[c]=allowed.has(c)?n:0; } return q; }
 function enforceSoulColors(state:any){ if(!state?.players)return state; enforceSoulColorsOnPlayer(state.players['1']); enforceSoulColorsOnPlayer(state.players['2']); return state; }
