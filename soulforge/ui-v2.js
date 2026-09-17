@@ -34,7 +34,7 @@ function bindPreview(){document.querySelectorAll('[data-preview-card]').forEach(
 
 renderSelect=function(){
  const me=playerState(session.player);if(me.selected)return '<div class="panel"><h2>Selezione confermata</h2><p>Hai scelto le tue 6 carte. Attendo l’altro giocatore.</p></div>';
- return `<div class="panel"><div class="select-head"><div><h2 style="margin:0">Scegli 6 carte</h2><div class="sub">Clicca l’immagine per selezionarla. Hover 1 secondo = zoom.</div></div><b>${selected.size}/6</b></div><div class="select-gallery">${(me.deckCards||[]).map(c=>`<div class="select-card ${selected.has(c.id)?'selected':''}" data-select-card="${c.id}" data-preview-card="${c.id}">${img(c.id)}<div class="select-check">✓</div></div>`).join('')}</div><div class="controls"><button id="confirmSelect" class="btn primary" ${selected.size!==6?'disabled':''}>Conferma 6 carte</button></div></div>`;
+ return `<div class="panel"><div class="select-head"><div><h2 style="margin:0">Scegli 6 carte</h2></div><b>${selected.size}/6</b></div><div class="select-gallery">${(me.deckCards||[]).map(c=>`<div class="select-card ${selected.has(c.id)?'selected':''}" data-select-card="${c.id}" data-preview-card="${c.id}">${img(c.id)}<div class="select-check">✓</div></div>`).join('')}</div><div class="controls"><button id="confirmSelect" class="btn primary" ${selected.size!==6?'disabled':''}>Conferma 6 carte</button></div></div>`;
 };
 
 function guardActive(){return !!session.state?.board?.monsters?.some(m=>m.cardId==='guardiano_della_foresta')}
