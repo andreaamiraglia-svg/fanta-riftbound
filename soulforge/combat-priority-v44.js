@@ -4,9 +4,9 @@ let passing=false;
 function gameState(){
   try{return session?.state||null}catch{return null}
 }
-function canPassCombat(){
+function canPassPriority(){
   const s=gameState();
-  return !!(s&&s.status==='main'&&s.combat&&Number(s.priority)===Number(session?.player)&&!(s.stack||[]).length&&!s.pendingChoice);
+  return !!(s&&s.status==='main'&&Number(s.priority)===Number(session?.player)&&!s.pendingChoice);
 }
 function clearAttackUi(){
   try{window.__v17AttackSource=null}catch{}
@@ -18,17 +18,17 @@ function clearAttackUi(){
   });
 }
 
-// Un solo handler capture per il passaggio di priorità in combattimento.
+// Un solo handler capture per il passaggio di priorità, sia in Catena sia in combattimento.
 // Non wrappa render, non usa MutationObserver e non crea timer periodici.
 document.addEventListener('click',e=>{
   const btn=e.target.closest?.('#passPriority');
-  if(!btn||!canPassCombat())return;
+  if(!btn||!canPassPriority())return;
 
   e.preventDefault();
   e.stopPropagation();
   e.stopImmediatePropagation();
 
-  if(passing)return;
+  if(passing||busy)return;
   passing=true;
   clearAttackUi();
   btn.disabled=true;
@@ -36,7 +36,7 @@ document.addEventListener('click',e=>{
 
   Promise.resolve(move({type:'pass_priority'}))
     .catch(err=>{try{showError(err?.message||'Errore nel passaggio di priorità')}catch{}})
-    .finally(()=>{passing=false});
+    .finally(()=>{passing=false;if(btn.isConnected){btn.disabled=false;btn.textContent='Passa priorità'}});
 },true);
 
 // Rimuove eventuali residui visivi lasciati dalle versioni precedenti.
