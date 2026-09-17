@@ -16,7 +16,9 @@ function setInitialSouls(q:any){
  if(!q)return q;
  q.souls ||= {};
  for(const c of COLORS)q.souls[c]=0;
- for(const c of q.deckColors||[])q.souls[c]=2;
+ const colors=[...new Set((q.deckColors||[]).filter((c:string)=>COLORS.includes(c)))];
+ const initial=colors.length===1?4:2;
+ for(const c of colors)q.souls[c]=initial;
  return q;
 }
 export function newPlayer(name:any,deckConfig:any){
