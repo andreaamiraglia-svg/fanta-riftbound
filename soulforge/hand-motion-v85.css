@@ -4,7 +4,7 @@ body.sf-fantasy-game .hand-fan .hand-card:hover{
  translate:none!important;
  transition:transform .16s cubic-bezier(.2,.75,.2,1),opacity .16s ease!important;
  transform-style:flat;
- will-change:transform;
+ will-change:auto!important;
 }
 body.sf-fantasy-game .hand-fan .hand-card img{
  width:100%!important;
@@ -36,3 +36,12 @@ body.sf-fantasy-game .hand-fan .hand-card.sf-hand-focus img{filter:none!importan
 body.sf-fantasy-game .hand-fan .hand-card.sf-hand-near img{filter:none!important}
 body.sf-fantasy-game .hand-fan.sf-hand-active .hand-card:not(.sf-hand-focus):not(.sf-hand-near){filter:drop-shadow(0 10px 11px #000a)!important}
 @media(prefers-reduced-motion:reduce){body.sf-fantasy-game .hand-fan .hand-card{transition:none!important}}
+
+/* Let the browser rasterize the source image at its final zoom size instead
+   of retaining the thumbnail's GPU texture. Do not apply legacy 3D hints. */
+body.sf-fantasy-game .hand-fan .hand-card img{
+ image-rendering:auto!important;
+ backface-visibility:visible!important;
+ will-change:auto!important;
+ transform:none!important;
+}
