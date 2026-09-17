@@ -12,7 +12,8 @@ const cleanName=(v:any)=>String(v||'Giocatore').trim().slice(0,24)||'Giocatore';
 const cleanRoom=(v:any)=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 const roomCode=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const n of a)s+=chars[n%chars.length];return s;};
 const token=()=>crypto.randomUUID()+crypto.randomUUID().replaceAll('-','');
-const tossCoin=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return (a[0]&1)===0?'testa':'croce';};
+const randomStartingPlayer=()=>{const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]<128?1:2;};
+const tossCoin=()=>randomStartingPlayer()===1?'testa':'croce';
 const otherPlayer=(p:number)=>p===1?2:1;
 const desiredFocus=(state:any)=>{const starter=Number(state?.startingPlayer)===2?2:1;return Number(state?.turn||1)%2===1?starter:otherPlayer(starter);};
 const unique=(xs:any[])=>[...new Set((xs||[]).filter(Boolean).map(String))];
@@ -61,8 +62,8 @@ Deno.serve(async(req:Request)=>{
   if(game.p2_token)return err('La stanza è già piena.',409);
   const name=cleanName(body.name),p2Token=token(),state=game.state;
   try{state.players['2']=newPlayer(name,body.deck)}catch(e){return err(e instanceof Error?e.message:String(e))}
-  const result=tossCoin();
-  const startingPlayer=result==='testa'?1:2;
+  const startingPlayer=randomStartingPlayer();
+  const result=startingPlayer===1?'testa':'croce';
   state.startingPlayer=startingPlayer;
   state.coinToss={id:crypto.randomUUID(),result,winner:startingPlayer};
   state.status='select';
@@ -84,7 +85,7 @@ Deno.serve(async(req:Request)=>{
    if(!d1||!d2)return err('Non riesco a ricostruire uno dei mazzi per il rematch. Tornate alla home e create una nuova stanza.');
    const n1=cleanName(state.players?.['1']?.name||game.p1_name),n2=cleanName(state.players?.['2']?.name||game.p2_name);
    let next:any;try{next=newState(n1,d1);next.players['2']=newPlayer(n2,d2)}catch(e){return err(e instanceof Error?e.message:String(e))}
-   const result=tossCoin(),startingPlayer=result==='testa'?1:2,winnerName=startingPlayer===1?n1:n2;
+   const startingPlayer=randomStartingPlayer(),result=startingPlayer===1?'testa':'croce',winnerName=startingPlayer===1?n1:n2;
    next.startingPlayer=startingPlayer;
    next.coinToss={id:crypto.randomUUID(),result,winner:startingPlayer};
    next.status='select';
