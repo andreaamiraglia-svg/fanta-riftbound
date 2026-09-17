@@ -96,7 +96,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 
 const prevBind=bind;
 bind=function(){prevBind();
- document.querySelectorAll('[data-select-card]').forEach(el=>el.onclick=()=>{const cards=playerState(session.player).deckCards||[],need=Math.min(6,cards.length),id=el.dataset.selectCard;if(selected.has(id))selected.delete(id);else if(selected.size<need)selected.add(id);render()});
+ document.querySelectorAll('[data-select-card]').forEach(el=>el.onclick=()=>{const cards=playerState(session.player).deckCards||[],need=Math.min(6,cards.length),id=el.dataset.selectCard;if(selected.has(id))selected.delete(id);else if(selected.size<need)selected.add(id);window.sfUpdateSelection16?window.sfUpdateSelection16():render()});
  const conf=document.querySelector('#confirmSelect');if(conf)conf.onclick=()=>move({type:'select_cards',cardIds:[...selected]});
  document.querySelectorAll('[data-hand-card]').forEach(el=>{el.ondblclick=()=>{if(!el.classList.contains('disabled'))window.chooseForCard(el.dataset.handCard)};el.ondragstart=e=>{if(el.classList.contains('disabled'))return e.preventDefault();e.dataTransfer.setData('text/plain',el.dataset.handCard);el.classList.add('dragging')};el.ondragend=()=>el.classList.remove('dragging')});
  const dz=document.querySelector('#playDropZone');if(dz){dz.ondrop=e=>{e.preventDefault();dz.classList.remove('dragover');const id=e.dataTransfer.getData('text/plain');if(id)window.chooseForCard(id)}}

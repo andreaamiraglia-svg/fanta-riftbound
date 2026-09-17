@@ -81,7 +81,7 @@ function choosePhoenixPayment(){
 const baseBind=bind;
 bind=function(){
  baseBind();
- document.querySelectorAll('[data-select-card]').forEach(el=>el.onclick=()=>{const id=el.dataset.selectCard;if(selected.has(id))selected.delete(id);else if(selected.size<6)selected.add(id);render()});
+ document.querySelectorAll('[data-select-card]').forEach(el=>el.onclick=()=>{const id=el.dataset.selectCard;if(selected.has(id))selected.delete(id);else if(selected.size<6)selected.add(id);window.sfUpdateSelection16?window.sfUpdateSelection16():render()});
  bindPreview();
  document.querySelectorAll('[data-hand-card]').forEach(el=>{el.ondragstart=e=>{if(el.classList.contains('disabled'))return e.preventDefault();el.classList.add('dragging');e.dataTransfer.setData('text/plain',el.dataset.handCard)};el.ondragend=()=>el.classList.remove('dragging');el.ondblclick=()=>{if(!el.classList.contains('disabled'))chooseForCard(el.dataset.handCard)}});
  const dz=document.querySelector('#playDropZone');if(dz){dz.ondragover=e=>{e.preventDefault();dz.classList.add('dragover')};dz.ondragleave=()=>dz.classList.remove('dragover');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('dragover');const id=e.dataTransfer.getData('text/plain');if(id)chooseForCard(id)}}

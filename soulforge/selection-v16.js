@@ -1,6 +1,17 @@
 (()=>{
   if(typeof renderSelect!=='function') return;
   const previousRenderSelect=renderSelect;
+  window.sfUpdateSelection16=function(){
+    const cards=playerState(session.player)?.deckCards||[],need=Math.min(6,cards.length);
+    document.querySelectorAll('.select-gallery .select-card').forEach(el=>{
+      const picked=selected.has(el.dataset.selectCard||el.dataset.previewCard);
+      el.classList.toggle('selected',picked);
+    });
+    const count=document.querySelector('.select-head > b');
+    if(count)count.textContent=selected.size+'/'+need;
+    const confirm=document.querySelector('#confirmSelect');
+    if(confirm)confirm.disabled=selected.size!==need;
+  };
 
   renderSelect=function(){
     const me=playerState(session.player);
