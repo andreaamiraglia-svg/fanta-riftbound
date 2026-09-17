@@ -86,7 +86,7 @@ function patch(root=document){
 function setImgPreview(preview,id){const img=preview?.querySelector('img'),src=ownUrl(id);if(img&&src&&img.getAttribute('src')!==src)img.setAttribute('src',src)}
 function installResolver(){
   const cur=window.sfArtUrl21;
-  if(cur?.__sfArtV73Current)return;
+  if(window.sfHasLayer(cur,'__sfArtV73Current'))return;
   const prev=cur;
   const fn=id=>ownUrl(String(id))||(typeof prev==='function'?prev(id):'');
   fn.__sfArtV73=true;fn.__sfArtV73Current=true;fn.__previous=prev;

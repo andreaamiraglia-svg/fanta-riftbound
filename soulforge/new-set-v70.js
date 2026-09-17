@@ -10,7 +10,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function me(){try{return typeof playerState==='function'?playerState(session.player):session?.state?.players?.[String(session.player)]}catch{return null}}
 function handCard(id){return me()?.handCards?.find(c=>String(c?.id)===String(id))||null}
 function art(id){return ART[id]?BASE+ART[id]:''}
-function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfNewSet70)return;const prev=cur;const fn=id=>art(String(id))||(typeof prev==='function'?prev(id):'');fn.__sfNewSet70=true;fn.__previous=prev;window.sfArtUrl21=fn}
+function installArt(){const cur=window.sfArtUrl21;if(window.sfHasLayer(cur,'__sfNewSet70'))return;const prev=cur;const fn=id=>art(String(id))||(typeof prev==='function'?prev(id):'');fn.__sfNewSet70=true;fn.__previous=prev;window.sfArtUrl21=fn}
 function patchImages(root=document){root.querySelectorAll?.('[data-hand-card],[data-preview-card],[data-select-card],[data-card-id],[data-card]').forEach(el=>{const id=el.dataset.handCard||el.dataset.previewCard||el.dataset.selectCard||el.dataset.cardId||el.dataset.card,u=art(id);if(!u)return;const img=el.matches('img')?el:el.querySelector('img');if(img&&img.src!==u)img.src=u})}
 function showErr(s){try{showError(s)}catch{console.warn(s)}}
 function legal(card){try{return typeof canCast==='function'?!!canCast(card):true}catch{return false}}

@@ -1,4 +1,12 @@
 (()=>{
+window.sfHasLayer=function(fn,flag){
+ const seen=new Set();
+ while(typeof fn==='function'&&!seen.has(fn)){
+  if(fn[flag])return true;
+  seen.add(fn);fn=fn.__previous;
+ }
+ return false;
+};
 const BASE='https://raw.githubusercontent.com/andreaamiraglia-svg/fanta-riftbound/soulforge-playtest/champion-of-the-souls-carte-ottimizzate/cards/';
 const ART={
  kael:'kael.webp',lyrandel:'lyrandel.webp',

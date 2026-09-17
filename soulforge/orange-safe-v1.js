@@ -33,7 +33,7 @@ const deckColorsOf=p=>{
 
 function installArtResolver(){
  const current=window.sfArtUrl21;
- if(current?.__sfOrangeSafeV1)return;
+ if(window.sfHasLayer(current,'__sfOrangeSafeV1'))return;
  const previous=current;
  const wrapped=id=>artUrl(id)||(typeof previous==='function'?previous(id):'');
  wrapped.__sfOrangeSafeV1=true;
@@ -43,7 +43,7 @@ function installArtResolver(){
 
 function installSoulRenderer(){
  const current=window.soulsHtml;
- if(typeof current!=='function'||current.__sfOrangeSafeV1)return;
+ if(typeof current!=='function'||window.sfHasLayer(current,'__sfOrangeSafeV1'))return;
  const previous=current;
  const wrapped=function(p){
   const colors=deckColorsOf(p);
@@ -59,7 +59,7 @@ function installSoulRenderer(){
 
 function installColorName(){
  const current=window.colorName;
- if(typeof current!=='function'||current.__sfOrangeSafeV1)return;
+ if(typeof current!=='function'||window.sfHasLayer(current,'__sfOrangeSafeV1'))return;
  const previous=current;
  const wrapped=c=>String(c)==='orange'?'Arancione':previous(c);
  wrapped.__sfOrangeSafeV1=true;
@@ -70,7 +70,7 @@ function installColorName(){
 
 function installRecycle(){
  const current=window.showRecycle;
- if(typeof current!=='function'||current.__sfOrangeSafeV1)return;
+ if(typeof current!=='function'||window.sfHasLayer(current,'__sfOrangeSafeV1'))return;
  const previous=current;
  const wrapped=function(){
   const q=me(),colors=deckColorsOf(q);
@@ -149,7 +149,7 @@ async function chooseOrange(card){
 
 function installChooser(){
  const current=window.chooseForCard;
- if(typeof current!=='function'||current.__sfOrangeSafeV1)return;
+ if(typeof current!=='function'||window.sfHasLayer(current,'__sfOrangeSafeV1'))return;
  const previous=current;
  const wrapped=function(id){
   const card=me()?.handCards?.find(c=>String(c.id)===String(id));

@@ -74,7 +74,7 @@ function bindHover(root=document){
 
 function installGlobalArtFallback(){
  const cur=window.sfArtUrl21;
- if(cur?.__sf47)return;
+ if(window.sfHasLayer(cur,'__sf47'))return;
  const prev=cur;
  const fn=id=>artUrl(id)||(typeof prev==='function'?prev(id):'');
  fn.__sf47=true;fn.__previous=prev;

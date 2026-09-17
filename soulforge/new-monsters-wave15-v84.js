@@ -19,7 +19,7 @@ const state=()=>{try{return session?.state||null}catch{return null}};
 
 function installResolver(){
  const current=window.sfArtUrl21;
- if(current?.__sfWave15)return;
+ if(window.sfHasLayer(current,'__sfWave15'))return;
  const previous=current;
  const resolver=id=>ART[String(id)]?BASE+ART[String(id)]:(typeof previous==='function'?previous(id):'');
  resolver.__sfWave15=true;resolver.__previous=previous;window.sfArtUrl21=resolver;

@@ -94,5 +94,24 @@ test('Hand hover opens no details; right click explicitly opens them',async()=>{
  handlers.mouseover({target});assert.equal(scheduled,0);assert.equal(shown,0);
  handlers.contextmenu({target,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});assert.equal(shown,1);
 });
+test('Opponent hand decoration does not retrigger its own observer',async()=>{
+ const code=await read('coin-hand-v40.js');let writes=0,count=6;
+ const badge={dataset:{},set innerHTML(v){writes++}};
+ const info={querySelector:()=>badge},zone={querySelector:()=>info};
+ const c=vm.createContext({gameState:()=>({}),getPlayer:()=>({handCount:count}),opponentId:()=>2,document:{querySelector:()=>zone}});
+ vm.runInContext(code.slice(code.indexOf('function decorateOpponentHand'),code.indexOf('function closeCoin')),c);
+ for(let i=0;i<100;i++)c.decorateOpponentHand();assert.equal(writes,1);
+ count=5;c.decorateOpponentHand();assert.equal(writes,2);
+});
+test('Artwork layers do not grow when the decorators alternate',async()=>{
+ const ui=await read('ui-v2.js'),helper=ui.slice(ui.indexOf('window.sfHasLayer='),ui.indexOf('const BASE='));
+ const c=vm.createContext({window:{sfArtUrl21:()=>''},BASE:'/',ART:{},ownUrl:()=>'',art:()=>''});vm.runInContext(helper,c);
+ for(const [file,start,end,name] of [['new-set-art-v73.js','function installResolver','let queued','install73'],['latest-set-v82.js','function installArt','function elementId','install82'],['new-monsters-wave15-v84.js','function installResolver','function idOf','install84']]){
+  const code=await read(file);vm.runInContext(code.slice(code.indexOf(start),code.indexOf(end,code.indexOf(start))).replace(start,'function '+name),c);
+ }
+ for(let i=0;i<100;i++){c.install73();c.install82();c.install84();}
+ let depth=0;for(let fn=c.window.sfArtUrl21;fn;fn=fn.__previous)depth++;
+ assert.equal(depth,4);
+});
 for(const [n,fn]of tests){await fn();console.log('✓ '+n)}
 console.log(tests.length+' visual behavior tests passed');

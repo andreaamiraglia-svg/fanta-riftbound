@@ -74,7 +74,7 @@ function repairImages(root=document){
 
 function installResolver(){
  const current=window.sfArtUrl21;
- if(current?.__sfOrangeUiV3)return;
+ if(window.sfHasLayer(current,'__sfOrangeUiV3'))return;
  const previous=current;
  const wrapped=id=>url(id)||(typeof previous==='function'?previous(id):'');
  wrapped.__sfOrangeUiV3=true;

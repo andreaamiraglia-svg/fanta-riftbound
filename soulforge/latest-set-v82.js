@@ -60,11 +60,11 @@ async function chooseCard(id){
  }catch(e){showErr(e?.message||e);return true}
 }
 function installChooser(){
- const cur=window.chooseForCard;if(typeof cur!=='function'||cur.__sfLatestSet82)return;
+ const cur=window.chooseForCard;if(typeof cur!=='function'||window.sfHasLayer(cur,'__sfLatestSet82'))return;
  const wrapped=function(id){id=String(id||'');if(IDS.has(id))return chooseCard(id);return cur(id)};
  wrapped.__sfLatestSet82=true;wrapped.__previous=cur;window.chooseForCard=wrapped;try{chooseForCard=wrapped}catch{}
 }
-function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfLatestSet82)return;const fn=id=>ART[String(id)]?BASE+ART[String(id)]:(typeof cur==='function'?cur(id):'');fn.__sfLatestSet82=true;fn.__previous=cur;window.sfArtUrl21=fn}
+function installArt(){const cur=window.sfArtUrl21;if(window.sfHasLayer(cur,'__sfLatestSet82'))return;const fn=id=>ART[String(id)]?BASE+ART[String(id)]:(typeof cur==='function'?cur(id):'');fn.__sfLatestSet82=true;fn.__previous=cur;window.sfArtUrl21=fn}
 function elementId(el){return el?.dataset?.handCard||el?.dataset?.previewCard||el?.dataset?.selectCard||el?.dataset?.cardId||el?.dataset?.card||el?.dataset?.deckId||''}
 function repair(root=document){
  root.querySelectorAll?.('[data-hand-card],[data-preview-card],[data-select-card],[data-card-id],[data-card],[data-deck-id]').forEach(el=>{

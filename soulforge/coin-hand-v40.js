@@ -29,6 +29,8 @@ function decorateOpponentHand(){
     if(name)name.insertAdjacentElement('afterend',badge);else info.prepend(badge);
   }
   const count=Math.max(0,Number(op.handCount??op.hand?.length??0));
+  if(badge.dataset.handCount===String(count))return;
+  badge.dataset.handCount=String(count);
   badge.innerHTML='<span class="sf-hand-stack-icon" aria-hidden="true"><i></i><i></i><i></i></span><span class="sf-hand-count-label">MANO</span><strong>'+count+'</strong>';
   badge.title='Carte nella mano avversaria: '+count;
 }
