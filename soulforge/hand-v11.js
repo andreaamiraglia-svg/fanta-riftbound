@@ -2,6 +2,7 @@
 let lastSelectResetKey=null;
 let handListeners=null;
 let lastPointer=null;
+let focusedCardId=null;
 
 function selectionResetKey(){
   try{
@@ -70,6 +71,7 @@ function bindFancyHand(){
   const reset=()=>{
     if(activeIndex===-1&&!dragging&&!fan.classList.contains('sf-hand-active')&&!fan.classList.contains('sf-hand-dragging')&&!cards.some(el=>el.classList.contains('sf-hand-drag-source')||el.classList.contains('dragging')))return;
     activeIndex=-1;
+    focusedCardId=null;
     fan.classList.remove('sf-hand-active');
     cards.forEach(el=>{
       el.classList.remove('sf-hand-focus','sf-hand-near','sf-hand-drag-source','dragging');
@@ -93,6 +95,7 @@ function bindFancyHand(){
   const focusAt=(index)=>{
     if(dragging||index<0||index>=cards.length||index===activeIndex)return;
     activeIndex=index;
+    focusedCardId=cards[index].dataset.handCard||'index:'+index;
     fan.classList.add('sf-hand-active');
 
     cards.forEach((el,i)=>{
@@ -119,13 +122,16 @@ function bindFancyHand(){
     const left=rect.left+rect.width/2+Math.min(...bases.map(b=>b.x))-width/2;
     const right=rect.left+rect.width/2+Math.max(...bases.map(b=>b.x))+width*1.5;
     const top=rect.bottom-width*1.45-60;
-    if(activeIndex>=0&&e.clientY<top){
+    // Keep the card until the pointer leaves both its expanded rectangle and
+    // the original activation strip. The strip covers the area vacated by lift.
+    if(activeIndex>=0){
       const base=bases[activeIndex],center=rect.left+rect.width/2+base.x+width/2;
-      const bottom=rect.bottom+base.y-12,height=width*1024/762*zoom;
-      if(e.clientX>=center-width*zoom/2&&e.clientX<=center+width*zoom/2&&e.clientY>=bottom-height&&e.clientY<=bottom)return;
-      reset();return;
+      const raisedBottom=rect.bottom+base.y-12,height=width*1024/762*zoom;
+      const stickyBottom=rect.bottom+base.y+8;
+      if(e.clientX>=center-width*zoom/2-4&&e.clientX<=center+width*zoom/2+4&&e.clientY>=raisedBottom-height-4&&e.clientY<=stickyBottom)return;
+      reset();
     }
-    if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+30){reset();return}
+    if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+Math.max(...bases.map(b=>b.y))+8){reset();return}
     const localX=e.clientX-(rect.left+rect.width/2+width/2);
     let best=0,bestDist=Infinity;
     for(let i=0;i<bases.length;i++){
@@ -139,6 +145,10 @@ function bindFancyHand(){
   fan.addEventListener('pointerdown',()=>{pressed=true},{signal});
   document.addEventListener('pointerup',()=>{pressed=false},{signal});
   document.addEventListener('pointercancel',()=>{pressed=false;reset()},{signal});
+  if(focusedCardId){
+    const index=cards.findIndex((el,i)=>(el.dataset.handCard||'index:'+i)===focusedCardId);
+    if(index>=0)focusAt(index);else focusedCardId=null;
+  }
   if(lastPointer)trackPointer(lastPointer);
 
   fan.addEventListener('pointercancel',()=>{if(!dragging)reset()});

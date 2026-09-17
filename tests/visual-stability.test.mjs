@@ -69,10 +69,14 @@ test('Hand hover stays stable near overlap edges and old listeners are removed o
  assert.ok(current.cards[1].style.transform.includes('scale(1.967'));
  doc.fire('pointermove',{clientX:361,clientY:50});assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'zoom stays open inside the enlarged card');
  doc.fire('pointermove',{clientX:404,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
- doc.fire('pointermove',{clientX:420,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
+ doc.fire('pointermove',{clientX:450,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'moving over a neighbour inside the zoom does not switch cards');
+ current=fan();c.render();assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'redraw retains the card identity rather than selecting the neighbour');
+ for(let i=0;i<30;i++){doc.fire('pointermove',{clientX:450,clientY:299+i%3});assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'the strip vacated by lifting cannot restart hover');}
+ doc.fire('pointermove',{clientX:500,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'),'leaving the expanded card can select the next card');
  current.fire('pointerdown',{});
  doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
  doc.fire('pointerup',{});
+ doc.fire('pointermove',{clientX:0,clientY:0});assert.ok(current.cards.every(x=>!x.classList.contains('sf-hand-focus')));
  doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
  current=fan();c.render();assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'redraw retains the hovered card');
  assert.equal(current.cards[1].style['z-index'],'120');
