@@ -45,12 +45,19 @@ test('Araldo e Guardiano aggiungono una sola carta bonus per pescata multipla',(
 test('Angelo paga le tasse di Ragno dei Germogli e permette bersagli della carta scelta',()=>{const s=fresh();mon(s,'ragno_dei_germogli');s.players[1].deck=['linfa_vitale'];spell(s,'angelo');const before=s.players[1].souls.green;game.act(s,1,{type:'resolve_choice',cardId:'linfa_vitale',targets:{target:cp(1,champ(s).id)}});assert.equal(s.players[1].souls.green,before-1);assert.equal(s.stack.at(-1).paidCost,1)});
 test('Bronzo rifiuta due Supporti dello stesso costo senza consumarli',()=>{const s=fresh();s.players[1].hand=['angelo','furia_del_ferito_supporto'];spell(s,'guerriero_di_bronzo');assert.throws(()=>game.act(s,1,{type:'resolve_choice',cardIds:['angelo','furia_del_ferito_supporto']}));assert.ok(s.players[1].hand.includes('angelo'));assert.ok(s.players[1].hand.includes('furia_del_ferito_supporto'))});
 test('Viverna mostra entrambi i partecipanti a entrambi i giocatori',()=>{const s=fresh();mon(s,'viverna');game.act(s,1,{type:'attack',champId:champ(s).id,target:cp(2,champ(s,2).id)});const a=game.publicView(s,1).stack.at(-1),b=game.publicView(s,2).stack.at(-1);assert.equal(a.targetRefs.length,2);assert.deepEqual(a.targetRefs,b.targetRefs)});
-test('Monocolore: entrambi i giocatori partono con 2 anime, non 4',()=>{
+test('Monocolore: entrambi i giocatori partono con 4 anime anche dopo la selezione',()=>{
  const d={champions:['scarlet','kael'],cards:Object.values(game.CARD_DEFS).filter(x=>x.color==='red'&&!x.tokenSupport).slice(0,18).map(x=>x.id),monsters:Object.values(game.MONSTER_DEFS).filter(x=>x.color==='red').slice(0,12).map(x=>x.id)};
  const s=game.newState('A',d);s.players[2]=game.newPlayer('B',d);s.status='select';
- for(const p of [1,2])assert.deepEqual(s.players[p].souls,{red:2,green:0,black:0,blue:0,orange:0});
+ for(const p of [1,2])assert.deepEqual(s.players[p].souls,{red:4,green:0,black:0,blue:0,orange:0});
  game.act(s,1,{type:'select_cards',cardIds:s.players[1].deck.slice(0,6)});game.act(s,2,{type:'select_cards',cardIds:s.players[2].deck.slice(0,6)});
- for(const p of [1,2])assert.equal(s.players[p].souls.red,2);
+ for(const p of [1,2])assert.equal(s.players[p].souls.red,4);
+});
+test('Mononero: entrambi i giocatori partono con 4 anime anche dopo la selezione',()=>{
+ const d={champions:['grinn','divoratore_campione'],cards:Object.values(game.CARD_DEFS).filter(x=>x.color==='black'&&!x.tokenSupport).slice(0,18).map(x=>x.id),monsters:Object.values(game.MONSTER_DEFS).filter(x=>x.color==='black').slice(0,12).map(x=>x.id)};
+ const s=game.newState('A',d);s.players[2]=game.newPlayer('B',d);s.status='select';
+ for(const p of [1,2])assert.deepEqual(s.players[p].souls,{red:0,green:0,black:4,blue:0,orange:0});
+ game.act(s,1,{type:'select_cards',cardIds:s.players[1].deck.slice(0,6)});game.act(s,2,{type:'select_cards',cardIds:s.players[2].deck.slice(0,6)});
+ for(const p of [1,2])assert.equal(s.players[p].souls.black,4);
 });
 test('Corregge vecchie stanze iniziali senza azzerare anime in partita',()=>{
  const s=fresh();s.turn=1;s.status='select';for(const p of [1,2])s.players[p].souls.red=4;

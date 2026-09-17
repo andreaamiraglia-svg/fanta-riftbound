@@ -8,7 +8,7 @@ export const DECK_RULES=base.DECK_RULES;
 function initialSouls(player:any){
  if(!player)return player;
  const colors=new Set((player.champions||[]).filter((c:any)=>!c.supportChampion).map((c:any)=>c.color));
- player.souls=Object.fromEntries(['red','green','black','blue','orange'].map(color=>[color,colors.has(color)?2:0]));
+ player.souls=Object.fromEntries(['red','green','black','blue','orange'].map(color=>[color,colors.has(color)?(colors.size===1?4:2):0]));
  return player;
 }
 export function newPlayer(...args:any[]){return initialSouls((base.newPlayer as any)(...args))}
