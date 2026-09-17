@@ -1,6 +1,7 @@
 (()=>{
 let lastSelectResetKey=null;
 let handListeners=null;
+let lastPointer=null;
 
 function selectionResetKey(){
   try{
@@ -37,7 +38,8 @@ function baseTransform(el){
 
 function bindFancyHand(){
   const fan=document.querySelector('.hand-fan');
-  if(!fan||fan.dataset.sfFancyBound==='1')return;
+  if(!fan){handListeners?.abort();return;}
+  if(fan.dataset.sfFancyBound==='1')return;
   fan.dataset.sfFancyBound='1';
   handListeners?.abort();
   handListeners=new AbortController();
@@ -49,6 +51,8 @@ function bindFancyHand(){
     const base=el.style.transform||'';
     el.dataset.sfBaseTransform=base;
     el.dataset.sfHandIndex=String(i);
+    el.dataset.sfBaseZ=el.style.zIndex||String(10+i);
+    el.style.setProperty('z-index',el.dataset.sfBaseZ,'important');
     const parsed=parseBaseTransform(el);
     bases.push(parsed||{x:i*82,y:0,r:0});
     setTransform(el,base);
@@ -56,6 +60,7 @@ function bindFancyHand(){
 
   let activeIndex=-1;
   let dragging=false;
+  let pressed=false;
 
   /* Always restore every card. Do not early-return when activeIndex is -1:
      a cancelled native drag can leave classes/z-index behind even after the
@@ -67,7 +72,7 @@ function bindFancyHand(){
     cards.forEach(el=>{
       el.classList.remove('sf-hand-focus','sf-hand-near','sf-hand-drag-source','dragging');
       setTransform(el,baseTransform(el));
-      el.style.removeProperty('z-index');
+      el.style.setProperty('z-index',el.dataset.sfBaseZ,'important');
       el.style.removeProperty('opacity');
       el.style.removeProperty('filter');
     });
@@ -94,18 +99,19 @@ function bindFancyHand(){
 
       if(i===index){
         el.classList.add('sf-hand-focus');
-        setTransform(el,`translate(${base.x}px,${base.y-34}px) rotate(0deg) scale(1.09)`);
-        el.style.setProperty('z-index','120');
+        setTransform(el,`translate(${base.x}px,${base.y-22}px) rotate(0deg) scale(1.04)`);
+        el.style.setProperty('z-index','120','important');
       }else{
         if(Math.abs(i-index)===1)el.classList.add('sf-hand-near');
         setTransform(el,baseTransform(el));
-        el.style.setProperty('z-index',String(60-Math.abs(i-index)));
+        el.style.setProperty('z-index',String(60-Math.abs(i-index)),'important');
       }
     });
   };
 
-  document.addEventListener('pointermove',e=>{
-    if(dragging||!cards.length)return;
+  const trackPointer=e=>{
+    lastPointer={clientX:e.clientX,clientY:e.clientY};
+    if(dragging||pressed||!cards.length)return;
     const rect=fan.getBoundingClientRect();
     const width=cards[0]?.offsetWidth||150;
     const left=rect.left+rect.width/2+Math.min(...bases.map(b=>b.x))-width/2;
@@ -120,7 +126,12 @@ function bindFancyHand(){
     }
     if(activeIndex>=0&&Math.abs(localX-bases[activeIndex].x)<=Math.abs(localX-bases[best].x)+10)return;
     focusAt(best);
-  },{signal,passive:true});
+  };
+  document.addEventListener('pointermove',trackPointer,{signal,passive:true});
+  fan.addEventListener('pointerdown',()=>{pressed=true},{signal});
+  document.addEventListener('pointerup',()=>{pressed=false},{signal});
+  document.addEventListener('pointercancel',()=>{pressed=false;reset()},{signal});
+  if(lastPointer)trackPointer(lastPointer);
 
   fan.addEventListener('pointercancel',()=>{if(!dragging)reset()});
 
@@ -152,7 +163,7 @@ const prevRender=render;
 render=function(){
   resetSelectionForNewRound();
   const out=prevRender.apply(this,arguments);
-  requestAnimationFrame(bindFancyHand);
+  bindFancyHand();
   return out;
 };
 

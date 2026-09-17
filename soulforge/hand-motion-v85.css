@@ -1,0 +1,30 @@
+/* One owner for hand motion and stacking; legacy :hover rules cannot fight it. */
+body.sf-fantasy-game .hand-fan .hand-card,
+body.sf-fantasy-game .hand-fan .hand-card:hover{
+ translate:none!important;
+ transition:transform .16s cubic-bezier(.2,.75,.2,1),opacity .16s ease!important;
+ transform-style:flat;
+ will-change:transform;
+}
+body.sf-fantasy-game .hand-fan .hand-card img{
+ width:100%!important;
+ height:auto!important;
+ aspect-ratio:762/1024;
+ object-fit:contain;
+ pointer-events:none!important;
+ user-select:none;
+ transition:filter .16s ease!important;
+}
+body.sf-fantasy-game .hand-fan .hand-card:hover{
+ filter:drop-shadow(0 10px 11px #000a)!important;
+}
+body.sf-fantasy-game .hand-fan .hand-card.sf-hand-focus{
+ z-index:120!important;
+ filter:drop-shadow(0 10px 11px #000a)!important;
+}
+body.sf-fantasy-game .hand-fan.sf-hand-dragging .hand-card,
+body.sf-v69-dragging .hand-fan .hand-card{transition:none!important}
+@media(prefers-reduced-motion:reduce){
+ body.sf-fantasy-game .hand-fan .hand-card,
+ body.sf-fantasy-game .hand-fan .hand-card img{transition:none!important}
+}

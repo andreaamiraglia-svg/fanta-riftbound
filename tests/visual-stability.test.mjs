@@ -56,7 +56,6 @@ test('Spell layer draws one Corazza arrow and no duplicate combat arrow',async()
  c.drawArrows();assert.equal((svg.innerHTML.match(/<line /g)||[]).length,1);
  s.stack=[];c.drawArrows();assert.equal((svg.innerHTML.match(/<line /g)||[]).length,0);
 });
-
 test('Hand hover stays stable near overlap edges and old listeners are removed on redraw',async()=>{
  const code=await read('hand-v11.js');
  class Events{constructor(){this.events={}}addEventListener(n,f,o={}){(this.events[n]||=[]).push({f,signal:o.signal})}fire(n,e){for(const x of this.events[n]||[])if(!x.signal?.aborted)x.f(e)}}
@@ -69,11 +68,16 @@ test('Hand hover stays stable near overlap edges and old listeners are removed o
  doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
  doc.fire('pointermove',{clientX:404,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
  doc.fire('pointermove',{clientX:420,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
+ current.fire('pointerdown',{});
+ doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
+ doc.fire('pointerup',{});
+ doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
+ current=fan();c.render();assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'redraw retains the hovered card');
+ assert.equal(current.cards[1].style['z-index'],'120');
  doc.fire('pointermove',{clientX:0,clientY:0});assert.ok(current.cards.every(x=>!x.classList.contains('sf-hand-focus')));
  for(let i=0;i<8;i++){current=fan();c.render()}
  assert.equal(doc.events.pointermove.filter(x=>!x.signal.aborted).length,1);
  assert.equal(win.events.blur.filter(x=>!x.signal.aborted).length,1);
 });
-
 for(const [n,fn]of tests){await fn();console.log('✓ '+n)}
 console.log(tests.length+' visual behavior tests passed');
