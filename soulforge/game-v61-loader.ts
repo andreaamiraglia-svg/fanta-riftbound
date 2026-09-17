@@ -86,6 +86,11 @@ function readyCombat(s:any){
 }
 export function act(s:any,p:any,move:any){
  s.movedMonsters61=[];s.noSoulDeaths61=[];s.processedDeaths61=[];
+ // Priority can come back from persisted JSON as a numeric-looking value. Keep the
+ // authoritative server actor numeric as well, otherwise a valid defender can see
+ // the priority UI but fail the strict comparison in the legacy engine.
+ if(s?.priority!=null&&[1,2].includes(Number(s.priority)))s.priority=Number(s.priority);
+ p=Number(p);
  const turn=s.turn,transformed=[1,2].flatMap(owner=>champions(s,owner).filter((c:any)=>c.monsterOrigin).map((c:any)=>({owner,c})));
  const out=base.act(s,p,move);
  for(const {owner,c} of transformed)if(c.defeated){
@@ -97,7 +102,15 @@ export function act(s:any,p:any,move:any){
  }
  if(s.turn!==turn)for(const owner of [1,2])for(const c of player(s,owner)?.champions||[])
   for(const k of ['immuneDamageTurn','extraWoundTurn','reactivateDamageTurn','chargeTurn','charge','septemberCounterTurn'])delete c[k];
- readyCombat(s);delete s.movedMonsters61;delete s.noSoulDeaths61;delete s.processedDeaths61;return out;
+ readyCombat(s);
+ // A normal declared attack always opens the first response window for the defender.
+ // Re-assert it after all wrappers have run, but only when no trigger/choice/stack is
+ // taking precedence over combat priority.
+ if(move?.type==='attack'&&s.combat&&!s.pendingChoice&&!(s.stack||[]).length){
+  const initiator=Number(s.combat.initiator);
+  if(initiator===1||initiator===2){s.combatPasses=0;s.priority=3-initiator;}
+ }
+ delete s.movedMonsters61;delete s.noSoulDeaths61;delete s.processedDeaths61;return out;
 }
 export function targetRefs(item:any){
  const t=item.targets||{},rows:any[]=[];
