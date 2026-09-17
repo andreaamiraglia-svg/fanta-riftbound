@@ -122,22 +122,29 @@ function bindFancyHand(){
     const left=rect.left+rect.width/2+Math.min(...bases.map(b=>b.x))-width/2;
     const right=rect.left+rect.width/2+Math.max(...bases.map(b=>b.x))+width*1.5;
     const top=rect.bottom-width*1.45-60;
-    // Keep the card until the pointer leaves both its expanded rectangle and
-    // the original activation strip. The strip covers the area vacated by lift.
-    if(activeIndex>=0){
-      const base=bases[activeIndex],center=rect.left+rect.width/2+base.x+width/2;
-      const raisedBottom=rect.bottom+base.y-12,height=width*1024/762*zoom;
-      const stickyBottom=rect.bottom+base.y+8;
-      if(e.clientX>=center-width*zoom/2-4&&e.clientX<=center+width*zoom/2+4&&e.clientY>=raisedBottom-height-4&&e.clientY<=stickyBottom)return;
-      reset();
-    }
-    if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+Math.max(...bases.map(b=>b.y))+8){reset();return}
+    // Horizontal selection always follows the resting fan, never the enlarged
+    // card's hit box: a zoomed card can span several neighbouring card centres.
     const localX=e.clientX-(rect.left+rect.width/2+width/2);
     let best=0,bestDist=Infinity;
     for(let i=0;i<bases.length;i++){
       const d=Math.abs(localX-bases[i].x);
       if(d<bestDist){bestDist=d;best=i;}
     }
+    // Keep the card until the pointer leaves both its expanded rectangle and
+    // the original activation strip. The strip covers the area vacated by lift.
+    if(activeIndex>=0){
+      const base=bases[activeIndex],center=rect.left+rect.width/2+base.x+width/2;
+      const raisedBottom=rect.bottom+base.y-12,height=width*1024/762*zoom;
+      const stickyBottom=rect.bottom+base.y+8;
+      if(e.clientX>=center-width*zoom/2-4&&e.clientX<=center+width*zoom/2+4&&e.clientY>=raisedBottom-height-4&&e.clientY<=stickyBottom){
+        // Keep vertical access to the readable card, but allow horizontal
+        // movement to its immediate neighbours even inside the zoomed image.
+        if(best!==activeIndex&&e.clientX>=left&&e.clientX<=right)focusAt(best);
+        return;
+      }
+      reset();
+    }
+    if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+Math.max(...bases.map(b=>b.y))+8){reset();return}
     if(activeIndex>=0&&Math.abs(localX-bases[activeIndex].x)<=Math.abs(localX-bases[best].x)+10)return;
     focusAt(best);
   };
