@@ -101,7 +101,9 @@ function targetEl(t){
  return null;
 }
 function uniqueTargets(item){
- const out=[],t=item?.targets||{},effect=session.state?.cardDefs?.[item.cardId]?.effect;
+ const out=[...(item?.targetRefs||[])],t=item?.targets||item?.meta?.targets||{},effect=session.state?.cardDefs?.[item.cardId]?.effect;
+ const walk=v=>{if(!v||typeof v!=='object')return;if(v.type==='monster'&&v.uid||v.champId&&v.player||v.type==='stack'&&v.uid){out.push(v);return}for(const x of Object.values(v))walk(x)};
+ walk(t);
  if(t.enemy)out.push(t.enemy);
  if(t.character)out.push(t.character);
  if(t.champion)out.push({type:'champion',player:Number(t.champion.player),champId:t.champion.champId});
@@ -123,21 +125,18 @@ function line(a,b,color,marker){
 function drawArrows(){
  const svg=ensureArrowLayer(),s=session.state;
  let body='';
- if(s?.combat){
-  const a=s.combat.attacker;
-  const from=document.querySelector(`[data-owner="${a.player}"][data-champ-id="${a.champId}"]`);
-  body+=line(mid(from),mid(targetEl(s.combat.target)),'#ff765f','sfCombatArrow');
- }
  const stackEls=[...document.querySelectorAll('.stack-card')];
  (s?.stack||[]).forEach((item,i)=>{
-  const from=stackEls[i];
+  const from=stackEls.find(el=>el.dataset.stackUid===String(item.uid))||stackEls[i];
+  if(from&&from.dataset.stackUid!==String(item.uid))from.dataset.stackUid=String(item.uid);
   for(const t of uniqueTargets(item))body+=line(mid(from),mid(targetEl(t)),'#66d4ff','sfSpellArrow');
  });
- svg.innerHTML=`<defs>
+ const markup=`<defs>
   <marker id="sfCombatArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ff765f"/></marker>
   <marker id="sfSpellArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#66d4ff"/></marker>
   <filter id="sfGlow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
  </defs>${body}`;
+ if(svg.innerHTML!==markup)svg.innerHTML=markup;
 }
 function enhance(){enhanceGraves();drawArrows()}
 

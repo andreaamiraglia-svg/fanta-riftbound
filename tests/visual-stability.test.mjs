@@ -1,0 +1,79 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import vm from 'node:vm';
+const read=n=>fs.readFile(new URL('../soulforge/'+n,import.meta.url),'utf8');
+let mutations=0;
+class Node {
+ constructor(cls=''){this.className=cls;this.dataset={};this.children=[];this.parent=null;this.html=''}
+ appendChild(n){n.parent=this;this.children.push(n);mutations++;return n}
+ prepend(n){n.parent=this;this.children.unshift(n);mutations++}
+ remove(){if(this.parent){this.parent.children=this.parent.children.filter(x=>x!==this);mutations++;this.parent=null}}
+ setAttribute(){}
+ querySelector(sel){return this.querySelectorAll(sel)[0]||null}
+ querySelectorAll(sel){const cls=sel.replace(':scope > ','').replace(/^\./,'');return this.children.filter(x=>x.className===cls)}
+ get innerHTML(){return this.html}
+ set innerHTML(x){this.html=x;mutations++}
+ getBoundingClientRect(){return {left:10,top:10,width:100,height:140}}
+}
+const tests=[];const test=(n,fn)=>tests.push([n,fn]);
+test('Board decoration reaches a stable DOM and updates only changed empty slots',async()=>{
+ const code=await read('fantasy-board-v30.js'),lane=new Node();
+ lane.appendChild(new Node('monster'));lane.appendChild(new Node('monster'));
+ const grid={querySelector:sel=>sel==='.monsters'?lane:null};
+ const c=vm.createContext({queued:false,document:{querySelector:sel=>sel==='.game-grid'?grid:null,createElement:()=>new Node()}});
+ vm.runInContext(code.slice(code.indexOf('function decorateReferenceBoard'),code.indexOf('function queue')),c);
+ c.decorateReferenceBoard();assert.equal(lane.querySelectorAll('.sf-empty-monster-slot').length,4);
+ const before=mutations;for(let i=0;i<12;i++)c.decorateReferenceBoard();assert.equal(mutations,before);
+ lane.appendChild(new Node('monster'));c.decorateReferenceBoard();assert.equal(lane.querySelectorAll('.sf-empty-monster-slot').length,3);
+});
+test('Stack thumbnails retain their nodes across observer callbacks',async()=>{
+ const code=await read('new-monsters-wave15-v84.js'),card=new Node('stack-card');
+ const s={stack:[{targetCards:[{cardId:'scarlet',name:'Scarlet'}]}]};
+ const c=vm.createContext({state:()=>s,targetCards:item=>item?.targetCards||[],art:id=>id+'.webp',esc:x=>x,
+ document:{querySelectorAll:sel=>sel==='.stack-card'?[card]:[],createElement:()=>new Node()}});
+ vm.runInContext(code.slice(code.indexOf('function decorateStack'),code.indexOf('function style')),c);
+ c.decorateStack();const node=card.children[0],before=mutations;for(let i=0;i<12;i++)c.decorateStack();
+ assert.equal(mutations,before);assert.equal(card.children[0],node);
+ s.stack[0].targetCards=[];c.decorateStack();assert.equal(card.children.length,0);
+});
+test('Corazza and nested targets have identical deduplicated arrows for both viewers',async()=>{
+ const code=await read('grave-targets-v4.js');
+ for(const player of [1,2]){
+  const target={type:'champion',player:1,champId:'grinn'};
+  const c=vm.createContext({session:{player,state:{cardDefs:{},combat:null}}});
+  vm.runInContext(code.slice(code.indexOf('function uniqueTargets'),code.indexOf('function line')),c);
+  assert.equal(c.uniqueTargets({actor:1,cardId:'corazza_dei_caduti',targetRefs:[target],targets:{target}}).length,1);
+  const refs=c.uniqueTargets({actor:1,targets:{enemies:[target,{type:'monster',uid:'m1'}]},targetRefs:[target]});
+  assert.equal(refs.length,2);
+ }
+});
+test('Spell layer draws one Corazza arrow and no duplicate combat arrow',async()=>{
+ const code=await read('grave-targets-v4.js'),source=new Node(),target=new Node(),svg=new Node();
+ const s={combat:{attacker:{player:1,champId:'grinn'},target:{type:'champion',player:2,champId:'scarlet'}},stack:[{uid:'s1',actor:1,cardId:'corazza_dei_caduti',targets:{target:{type:'champion',player:1,champId:'grinn'}}}],cardDefs:{}};
+ const c=vm.createContext({session:{state:s},ensureArrowLayer:()=>svg,targetEl:()=>target,
+ document:{querySelectorAll:()=>[source],querySelector:()=>source}});
+ vm.runInContext(code.slice(code.indexOf('function mid'),code.indexOf('function enhance()')),c);
+ c.drawArrows();assert.equal((svg.innerHTML.match(/<line /g)||[]).length,1);
+ s.stack=[];c.drawArrows();assert.equal((svg.innerHTML.match(/<line /g)||[]).length,0);
+});
+
+test('Hand hover stays stable near overlap edges and old listeners are removed on redraw',async()=>{
+ const code=await read('hand-v11.js');
+ class Events{constructor(){this.events={}}addEventListener(n,f,o={}){(this.events[n]||=[]).push({f,signal:o.signal})}fire(n,e){for(const x of this.events[n]||[])if(!x.signal?.aborted)x.f(e)}}
+ const classes=()=>{const set=new Set();return{add:(...ns)=>ns.forEach(n=>set.add(n)),remove:(...ns)=>ns.forEach(n=>set.delete(n)),contains:n=>set.has(n)}};
+ const cards=()=>[-82,0,82].map(x=>({dataset:{},offsetWidth:122,classList:classes(),style:{transform:'translate('+x+'px, 0px) rotate(0deg)',setProperty(n,v){this[n]=v},removeProperty(n){delete this[n]}}}));
+ const fan=()=>Object.assign(new Events(),{dataset:{},classList:classes(),cards:cards(),querySelectorAll(){return this.cards},getBoundingClientRect:()=>({left:0,width:600,bottom:300})});
+ let current=fan();const doc=Object.assign(new Events(),{querySelector:()=>current}),win=new Events();
+ const c=vm.createContext({document:doc,window:win,AbortController,session:{state:{status:'main'}},render:()=>{},requestAnimationFrame:f=>f(),setTimeout:f=>f()});
+ vm.runInContext(code,c);
+ doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
+ doc.fire('pointermove',{clientX:404,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
+ doc.fire('pointermove',{clientX:420,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
+ doc.fire('pointermove',{clientX:0,clientY:0});assert.ok(current.cards.every(x=>!x.classList.contains('sf-hand-focus')));
+ for(let i=0;i<8;i++){current=fan();c.render()}
+ assert.equal(doc.events.pointermove.filter(x=>!x.signal.aborted).length,1);
+ assert.equal(win.events.blur.filter(x=>!x.signal.aborted).length,1);
+});
+
+for(const [n,fn]of tests){await fn();console.log('✓ '+n)}
+console.log(tests.length+' visual behavior tests passed');

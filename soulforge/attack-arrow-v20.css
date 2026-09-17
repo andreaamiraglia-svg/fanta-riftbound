@@ -13,3 +13,6 @@
 #sfAttackHint.show{opacity:1}
 #sfAttackHint.combat{border-color:rgba(255,65,65,.65)}
 @media(max-width:760px){#sfAttackHint{bottom:12px;font-size:12px;padding:8px 12px}.attack-mode .sf-attack-valid:hover,.sf-attack-hover{transform:none}}
+
+/* The persistent attack has one owner: sfAttackOverlay. */
+.attack-arrow,#sf61-arrows{display:none!important}

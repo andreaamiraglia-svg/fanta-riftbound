@@ -3,6 +3,7 @@ let active=null;
 let locked=null;
 let pointer={x:innerWidth/2,y:innerHeight/2};
 let invalidUntil=0;
+let lastClasses=null;
 
 function ensureUi(){
  let svg=document.querySelector('#sfAttackOverlay');
@@ -78,7 +79,8 @@ function sourceLabel(el){return el?.querySelector?.('h3')?.textContent?.trim()||
 
 function renderAttackUi(){
  const ui=ensureUi(),s=gameState(),combat=s?.combat||null;
- cleanClasses();
+ const signature=JSON.stringify([combat?.attacker,combat?.target,active,locked&&Date.now()<locked.until?locked:null,active?hoveredTarget()?.dataset:null]);
+ if(signature!==lastClasses){cleanClasses();lastClasses=signature}
  if(combat){
   active=null;document.body.classList.remove('attack-mode');
   const src=findChamp(combat.attacker?.player,combat.attacker?.champId),tgt=findTarget(combat.target);

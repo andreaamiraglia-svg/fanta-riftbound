@@ -83,17 +83,23 @@ function submitMulti(){
 
 function targetCards(item){return Array.isArray(item?.targetCards)?item.targetCards.filter(x=>x?.cardId||x?.id):[]}
 function decorateStack(){
- const stack=state()?.stack||[],cards=[...document.querySelectorAll('.stack-card')];
- cards.forEach((el,index)=>{
-  el.querySelector(':scope > .sfw15-stack-targets')?.remove();
-  const targets=targetCards(stack[index]);if(!targets.length)return;
-  const box=document.createElement('div');box.className='sfw15-stack-targets';box.setAttribute('aria-label','Bersagli scelti');
-  box.innerHTML=targets.map(t=>`<span title="${esc(t.name||t.cardId||t.id)}"><img src="${esc(art(t.cardId||t.id))}" alt="${esc(t.name||t.cardId||t.id)}"></span>`).join('');el.appendChild(box);
+ const stack=state()?.stack||[];
+ function update(el,cls,targets,markup){
+  let box=el.querySelector(':scope > .'+cls);
+  if(!targets.length){if(box)box.remove();return}
+  const signature=JSON.stringify(targets);
+  if(box?.dataset.signature===signature)return;
+  if(!box){box=document.createElement('div');box.className=cls;box.setAttribute('aria-label','Bersagli scelti');el.appendChild(box)}
+  box.dataset.signature=signature;box.innerHTML=markup;
+ }
+ [...document.querySelectorAll('.stack-card')].forEach((el,index)=>{
+  const targets=targetCards(stack[index]);
+  update(el,'sfw15-stack-targets',targets,targets.map(t=>`<span title="${esc(t.name||t.cardId||t.id)}"><img src="${esc(art(t.cardId||t.id))}" alt="${esc(t.name||t.cardId||t.id)}"></span>`).join(''));
  });
- const chain=[...document.querySelectorAll('.chainitem')],reverse=[...stack].reverse();
- chain.forEach((el,index)=>{
-  el.querySelector(':scope > .sfw15-chain-targets')?.remove();const targets=targetCards(reverse[index]);if(!targets.length)return;
-  const box=document.createElement('div');box.className='sfw15-chain-targets';box.innerHTML=targets.map(t=>`<img src="${esc(art(t.cardId||t.id))}" alt="${esc(t.name||t.cardId||t.id)}" title="${esc(t.name||t.cardId||t.id)}">`).join('');el.appendChild(box);
+ const reverse=[...stack].reverse();
+ [...document.querySelectorAll('.chainitem')].forEach((el,index)=>{
+  const targets=targetCards(reverse[index]);
+  update(el,'sfw15-chain-targets',targets,targets.map(t=>`<img src="${esc(art(t.cardId||t.id))}" alt="${esc(t.name||t.cardId||t.id)}" title="${esc(t.name||t.cardId||t.id)}">`).join(''));
  });
 }
 function style(){

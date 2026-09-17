@@ -1,5 +1,6 @@
 (()=>{
 let lastSelectResetKey=null;
+let handListeners=null;
 
 function selectionResetKey(){
   try{
@@ -38,6 +39,9 @@ function bindFancyHand(){
   const fan=document.querySelector('.hand-fan');
   if(!fan||fan.dataset.sfFancyBound==='1')return;
   fan.dataset.sfFancyBound='1';
+  handListeners?.abort();
+  handListeners=new AbortController();
+  const signal=handListeners.signal;
 
   const cards=[...fan.querySelectorAll('.hand-card')];
   const bases=[];
@@ -57,6 +61,7 @@ function bindFancyHand(){
      a cancelled native drag can leave classes/z-index behind even after the
      hover state itself has already been cleared. */
   const reset=()=>{
+    if(activeIndex===-1&&!dragging&&!fan.classList.contains('sf-hand-active')&&!fan.classList.contains('sf-hand-dragging')&&!cards.some(el=>el.classList.contains('sf-hand-drag-source')||el.classList.contains('dragging')))return;
     activeIndex=-1;
     fan.classList.remove('sf-hand-active');
     cards.forEach(el=>{
@@ -99,19 +104,24 @@ function bindFancyHand(){
     });
   };
 
-  fan.addEventListener('pointermove',e=>{
+  document.addEventListener('pointermove',e=>{
     if(dragging||!cards.length)return;
     const rect=fan.getBoundingClientRect();
-    const localX=e.clientX-(rect.left+rect.width/2);
+    const width=cards[0]?.offsetWidth||150;
+    const left=rect.left+rect.width/2+Math.min(...bases.map(b=>b.x))-width/2;
+    const right=rect.left+rect.width/2+Math.max(...bases.map(b=>b.x))+width*1.5;
+    const top=rect.bottom-width*1.45-60;
+    if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+30){reset();return}
+    const localX=e.clientX-(rect.left+rect.width/2+width/2);
     let best=0,bestDist=Infinity;
     for(let i=0;i<bases.length;i++){
       const d=Math.abs(localX-bases[i].x);
       if(d<bestDist){bestDist=d;best=i;}
     }
+    if(activeIndex>=0&&Math.abs(localX-bases[activeIndex].x)<=Math.abs(localX-bases[best].x)+10)return;
     focusAt(best);
-  });
+  },{signal,passive:true});
 
-  fan.addEventListener('pointerleave',()=>{if(!dragging)reset()});
   fan.addEventListener('pointercancel',()=>{if(!dragging)reset()});
 
   /* Native HTML drag temporarily changes hit-testing and can suppress the normal
@@ -133,9 +143,9 @@ function bindFancyHand(){
   /* ESC is the usual way browsers cancel a native drag. dragend should fire,
      but this extra cleanup also covers browser-specific cancelled-drag paths. */
   document.addEventListener('keyup',e=>{
-    if(e.key==='Escape'&&dragging)finishDrag();
-  });
-  window.addEventListener('blur',()=>{if(dragging)finishDrag()});
+    if(e.key==='Escape'){if(dragging)finishDrag();else reset()}
+  },{signal});
+  window.addEventListener('blur',()=>{if(dragging)finishDrag();else reset()},{signal});
 }
 
 const prevRender=render;

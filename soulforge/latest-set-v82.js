@@ -68,7 +68,7 @@ function installArt(){const cur=window.sfArtUrl21;if(cur?.__sfLatestSet82)return
 function elementId(el){return el?.dataset?.handCard||el?.dataset?.previewCard||el?.dataset?.selectCard||el?.dataset?.cardId||el?.dataset?.card||el?.dataset?.deckId||''}
 function repair(root=document){
  root.querySelectorAll?.('[data-hand-card],[data-preview-card],[data-select-card],[data-card-id],[data-card],[data-deck-id]').forEach(el=>{
-  const id=String(elementId(el));if(!ART[id])return;const src=BASE+ART[id];let imgs=el.matches?.('img')?[el]:[...el.querySelectorAll('img')];
+  const id=String(elementId(el));if(!ART[id])return;const src=BASE+ART[id];let imgs=el.matches?.('img')?[el]:[...el.querySelectorAll(':scope > img,:scope > .sf-card-shell > img')];
   if(!imgs.length&&!el.matches?.('img')){const img=document.createElement('img');img.alt=card(id)?.name||id;img.loading='lazy';el.prepend(img);imgs=[img]}
   const img=imgs[0];if(img?.getAttribute('src')!==src)img?.setAttribute('src',src);for(const extra of imgs.slice(1))extra.remove();
  });
