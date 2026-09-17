@@ -14,7 +14,7 @@ const NEW=[
  ['shuriken','Shuriken','green','Magia','Base','shuriken.webp'],
  ['zampata_amichevole','Zampata amichevole','green','Magia','Istantanea','zampata-amichevole.webp'],
  ['offerta_maligna','Offerta Maligna','black','Magia','Base','offerta-maligna.webp'],
- ['scambio_di_anime','Scambio di Anime','black','Magia','Istantanea','scambio-di-anime.webp'],
+ ['scambio_di_anime','Scambio di Anime','black','Magia','Istantanea','scambio-di-anime.webp?rev=cost2-20260917'],
  ['visione_distorta','Visione Distorta','black','Magia','Base','visione-distorta.webp'],
  ['protettore_del_villaggio','Protettore del villaggio','blue','Magia','Istantanea','protettore-del-villaggio.webp'],
  ['valanga','Valanga','blue','Magia','Base','valanga.webp'],
@@ -43,7 +43,7 @@ Promise.all(parts.map(async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.
  const costs={
   arrivano_i_pirati:0,colpo_di_cannone:2,galeone_fantasma:3,colpo_in_testa:3,bang:1,barile_esplosivo:0,taglio_fiammante:0,sfera_incandescente:0,corazza_esplosiva:0,occhio_di_drago:0,mano_del_caos:1,nube_di_fuoco:1,tornado_bollente:1,fendente_di_fuoco:1,berserk:2,
   furia_della_natura:1,shuriken:2,zampata_amichevole:2,fabbro_ninjitsu:1,spacca_corazze:1,tiro_rotante:0,stupido:0,riflesso:0,tutto_per_la_festa:0,taglio_ninjitsu:0,doppia_katana:1,alta_marea:1,albero_della_vita:1,sguardo_ninjitsu:1,mille_lame:12,
-  offerta_maligna:0,scambio_di_anime:3,visione_distorta:5,richiamo_del_branco:2,circo_infestato:0,scatola_incantata:3,evocatore_anime_vacue:0,anima_esplosiva:0,sacrificio:0,collasso:0,spacca_ossa:1,eclipse_fang:1,fino_alla_morte:1,mietitore:2,ammazza_morte:3,
+  offerta_maligna:0,scambio_di_anime:2,visione_distorta:5,richiamo_del_branco:2,circo_infestato:0,scatola_incantata:3,evocatore_anime_vacue:0,anima_esplosiva:0,sacrificio:0,collasso:0,spacca_ossa:1,eclipse_fang:1,fino_alla_morte:1,mietitore:2,ammazza_morte:3,
   protettore_del_villaggio:1,valanga:2,esercito_tormenta_neve:3,grandine_brillante:1,cacciatrice_della_tempesta:2,tempesta_di_ghiaccio:0,flusso_gelido:0,freddo_puro:0,in_guardia:0,ali_del_protettore:0,staffa_del_mare:1,specchio_acqua:1,muro_di_ghiaccio:2,custode_dei_deboli:3,distruzione_totale:1,
   cavaliere_pioggia_frecce:0,forgia_nanica:1,guardia_reale:3,frecce_divine:0,loda_il_sole:0,parry:2,perfezione:1,pugno_in_faccia:0,spacca_teste:1,su_gli_scudi:1,alabardo:1,soldato_corrotto:2,legionario_troll:2,servo_del_sovrano:1,dono_ai_poveri:0
  };
