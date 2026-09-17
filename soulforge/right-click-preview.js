@@ -54,12 +54,21 @@ function details(c){
  if(c.kind==='champion')return `<h3>${safe(c.name)}</h3><div class="tag">Campione${c.tapped?' • Tappato':''}${c.defeated?' • Sconfitto':''}</div>${statBlock(c)}${description(c.text||'')}`;
  return `<h3>${safe(c.name||c.id)}</h3>${description('')}`;
 }
-function show(ref,x,y,mode='context'){if(!ref?.id)return;const url=artUrl(ref.id);if(!url)return;const c=info(ref),b=box();b.innerHTML=`<img src="${url}" alt="${safe(c.name||ref.id)}"><div class="ptext">${details(c)}<div class="tiny sf-preview-help">Hover 1 secondo o tasto destro • Click / ESC per chiudere</div></div>`;const w=Math.min(820,innerWidth*.94),h=Math.min(560,innerHeight*.92);let left=x+18,top=y-100;if(left+w>innerWidth-16)left=Math.max(16,x-w-18);if(top+h>innerHeight-16)top=Math.max(16,innerHeight-h-16);if(top<16)top=16;b.style.left=left+'px';b.style.top=top+'px';b.style.setProperty('display','flex','important');b.style.pointerEvents='none';b.classList.add('show');opened=true;openedMode=mode}
+function show(ref,x,y,mode='context'){if(!ref?.id)return;const url=artUrl(ref.id);if(!url)return;const c=info(ref),b=box();b.innerHTML=`<img src="${url}" alt="${safe(c.name||ref.id)}"><div class="ptext">${details(c)}<div class="tiny sf-preview-help">Tasto destro per i dettagli • Click / ESC per chiudere</div></div>`;const w=Math.min(820,innerWidth*.94),h=Math.min(560,innerHeight*.92);let left=x+18,top=y-100;if(left+w>innerWidth-16)left=Math.max(16,x-w-18);if(top+h>innerHeight-16)top=Math.max(16,innerHeight-h-16);if(top<16)top=16;b.style.left=left+'px';b.style.top=top+'px';b.style.setProperty('display','flex','important');b.style.pointerEvents='none';b.classList.add('show');opened=true;openedMode=mode}
 function close(){const b=document.getElementById('sfRightPreview');if(!b)return;b.classList.remove('show');b.style.removeProperty('display');opened=false;openedMode=null}
 function cancelHoverTimer(){if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null}}
 function leaveHoverRoot(root,related){if(!root||root!==hoverRoot)return;if(related instanceof Node&&root.contains(related))return;cancelHoverTimer();hoverRoot=null;if(opened&&openedMode==='hover')close()}
 
+document.addEventListener('contextmenu',e=>{
+ const root=e.target instanceof Element?e.target.closest('.hand-card[data-hand-card]'):null;
+ if(!root)return;
+ const ref=refFromTarget(root);if(!ref?.id||!artUrl(ref.id))return;
+ e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+ cancelHoverTimer();hoverRoot=null;show(ref,e.clientX,e.clientY,'context');
+},true);
+
 document.addEventListener('mouseover',e=>{
+ if(e.target instanceof Element&&e.target.closest('.hand-card')){cancelHoverTimer();hoverRoot=null;if(openedMode==='hover')close();return;}
  const root=previewRoot(e.target);if(!root)return;
  if(root===hoverRoot)return;
  cancelHoverTimer();hoverRoot=root;hoverX=e.clientX;hoverY=e.clientY;

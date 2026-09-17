@@ -63,9 +63,11 @@ test('Hand hover stays stable near overlap edges and old listeners are removed o
  const cards=()=>[-82,0,82].map(x=>({dataset:{},offsetWidth:122,classList:classes(),style:{transform:'translate('+x+'px, 0px) rotate(0deg)',setProperty(n,v){this[n]=v},removeProperty(n){delete this[n]}}}));
  const fan=()=>Object.assign(new Events(),{dataset:{},classList:classes(),cards:cards(),querySelectorAll(){return this.cards},getBoundingClientRect:()=>({left:0,width:600,bottom:300})});
  let current=fan();const doc=Object.assign(new Events(),{querySelector:()=>current}),win=new Events();
- const c=vm.createContext({document:doc,window:win,AbortController,session:{state:{status:'main'}},render:()=>{},requestAnimationFrame:f=>f(),setTimeout:f=>f()});
+ const c=vm.createContext({document:doc,window:win,AbortController,innerHeight:800,session:{state:{status:'main'}},render:()=>{},requestAnimationFrame:f=>f(),setTimeout:f=>f()});
  vm.runInContext(code,c);
  doc.fire('pointermove',{clientX:361,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
+ assert.ok(current.cards[1].style.transform.includes('scale(1.967'));
+ doc.fire('pointermove',{clientX:361,clientY:50});assert.ok(current.cards[1].classList.contains('sf-hand-focus'),'zoom stays open inside the enlarged card');
  doc.fire('pointermove',{clientX:404,clientY:210});assert.ok(current.cards[1].classList.contains('sf-hand-focus'));
  doc.fire('pointermove',{clientX:420,clientY:210});assert.ok(current.cards[2].classList.contains('sf-hand-focus'));
  current.fire('pointerdown',{});
@@ -78,6 +80,15 @@ test('Hand hover stays stable near overlap edges and old listeners are removed o
  for(let i=0;i<8;i++){current=fan();c.render()}
  assert.equal(doc.events.pointermove.filter(x=>!x.signal.aborted).length,1);
  assert.equal(win.events.blur.filter(x=>!x.signal.aborted).length,1);
+});
+test('Hand hover opens no details; right click explicitly opens them',async()=>{
+ const code=await read('right-click-preview.js'),handlers={};let scheduled=0,shown=0;
+ class Element{closest(selector){return selector.includes('hand-card')?this:null}}
+ const target=new Element();
+ const c=vm.createContext({Element,document:{addEventListener:(name,fn)=>handlers[name]=fn},cancelHoverTimer(){},hoverRoot:null,openedMode:null,close(){},refFromTarget:()=>({id:'card'}),artUrl:()=>'/card.webp',show:()=>shown++,previewRoot:()=>target,setTimeout:()=>scheduled++});
+ vm.runInContext(code.slice(code.indexOf("document.addEventListener('contextmenu'"),code.indexOf("document.addEventListener('mousemove'")),c);
+ handlers.mouseover({target});assert.equal(scheduled,0);assert.equal(shown,0);
+ handlers.contextmenu({target,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});assert.equal(shown,1);
 });
 for(const [n,fn]of tests){await fn();console.log('✓ '+n)}
 console.log(tests.length+' visual behavior tests passed');

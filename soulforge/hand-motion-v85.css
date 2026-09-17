@@ -28,3 +28,11 @@ body.sf-v69-dragging .hand-fan .hand-card{transition:none!important}
  body.sf-fantasy-game .hand-fan .hand-card,
  body.sf-fantasy-game .hand-fan .hand-card img{transition:none!important}
 }
+/* Clean, readable in-hand zoom. Text details are opened explicitly. */
+body.sf-fantasy-game .hand-fan .hand-card{transform-origin:50% 100%!important;transition:transform .18s cubic-bezier(.2,.8,.2,1),opacity .16s ease!important}
+body.sf-fantasy-game .hand-fan .hand-card.sf-hand-focus,
+body.sf-fantasy-game .hand-fan .hand-card.sf-hand-focus.disabled{opacity:1!important;filter:none!important}
+body.sf-fantasy-game .hand-fan .hand-card.sf-hand-focus img{filter:none!important;box-shadow:0 12px 32px #0008!important}
+body.sf-fantasy-game .hand-fan .hand-card.sf-hand-near img{filter:none!important}
+body.sf-fantasy-game .hand-fan.sf-hand-active .hand-card:not(.sf-hand-focus):not(.sf-hand-near){filter:drop-shadow(0 10px 11px #000a)!important}
+@media(prefers-reduced-motion:reduce){body.sf-fantasy-game .hand-fan .hand-card{transition:none!important}}

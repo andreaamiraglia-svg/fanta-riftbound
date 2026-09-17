@@ -47,6 +47,8 @@ function bindFancyHand(){
 
   const cards=[...fan.querySelectorAll('.hand-card')];
   const bases=[];
+  const cardWidth=cards[0]?.offsetWidth||122;
+  const zoom=Math.max(1.25,Math.min(2,240/cardWidth,(innerHeight*.48)/(cardWidth*1024/762)));
   cards.forEach((el,i)=>{
     const base=el.style.transform||'';
     el.dataset.sfBaseTransform=base;
@@ -99,7 +101,7 @@ function bindFancyHand(){
 
       if(i===index){
         el.classList.add('sf-hand-focus');
-        setTransform(el,`translate(${base.x}px,${base.y-22}px) rotate(0deg) scale(1.04)`);
+        setTransform(el,`translate(${base.x}px,${base.y-12}px) rotate(0deg) scale(${zoom})`);
         el.style.setProperty('z-index','120','important');
       }else{
         if(Math.abs(i-index)===1)el.classList.add('sf-hand-near');
@@ -117,6 +119,12 @@ function bindFancyHand(){
     const left=rect.left+rect.width/2+Math.min(...bases.map(b=>b.x))-width/2;
     const right=rect.left+rect.width/2+Math.max(...bases.map(b=>b.x))+width*1.5;
     const top=rect.bottom-width*1.45-60;
+    if(activeIndex>=0&&e.clientY<top){
+      const base=bases[activeIndex],center=rect.left+rect.width/2+base.x+width/2;
+      const bottom=rect.bottom+base.y-12,height=width*1024/762*zoom;
+      if(e.clientX>=center-width*zoom/2&&e.clientX<=center+width*zoom/2&&e.clientY>=bottom-height&&e.clientY<=bottom)return;
+      reset();return;
+    }
     if(e.clientX<left||e.clientX>right||e.clientY<top||e.clientY>rect.bottom+30){reset();return}
     const localX=e.clientX-(rect.left+rect.width/2+width/2);
     let best=0,bestDist=Infinity;
