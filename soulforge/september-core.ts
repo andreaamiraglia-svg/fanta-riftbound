@@ -23,7 +23,10 @@ const oldDamage61=damageChampion;
 damageChampion=function(s,p,id,n,source=''){
  const c=champ(s,p,id);if(c?.immuneDamageTurn===s.turn||rules61.prevent?.(s,p,c))return {wounded:false};
  const old=Number(c?.damage||0),w=Number(c?.wounds||0),out=oldDamage61(s,p,id,n,source);
- if(c&&!c.defeated&&c.reactivateDamageTurn===s.turn&&(c.damage>old||c.wounds>w))c.tapped=false;
+ if(c&&!c.defeated&&c.chargeOnDamageTurn===s.turn&&(c.damage>old||c.wounds>w)){
+  c.charge=(c.chargeTurn===s.turn?Number(c.charge||0):0)+4;c.chargeTurn=s.turn;
+  log(s,c.name+' ottiene Carica 4 grazie a Furia del Ferito.');
+ }
  rules61.damage?.(s,p,c,old,w);return out;
 };
 const oldWound61=woundChampion;

@@ -59,7 +59,7 @@ R.resolve=(s:any,item:any)=>{
   const m=E.addMonster(s,cardId,p);
   s.septemberCombat={initiator:p,attacker:{type:'monster',player:p,uid:m.uid},target:t.target,cancelled:false};break;
  }
- case'furia_del_ferito':x.reactivateDamageTurn=s.turn;break;
+ case'furia_del_ferito':x.chargeOnDamageTurn=s.turn;break;
  case'sigillo_dell_oblio':x.noSoulsTurn=s.turn;damage(s,p,t.target,1+(player(s,p).fireCloud?1:0),d.name);break;
  case'scaglie_di_gelo':x.armor=Number(x.armor||0)+3;break;
  case'fortezza_di_cristallo':x.armor=Number(x.armor||0)*2;break;
@@ -101,7 +101,7 @@ export function act(s:any,p:any,move:any){
   base.promote(s);
  }
  if(s.turn!==turn)for(const owner of [1,2])for(const c of player(s,owner)?.champions||[])
-  for(const k of ['immuneDamageTurn','extraWoundTurn','reactivateDamageTurn','chargeTurn','charge','septemberCounterTurn'])delete c[k];
+  for(const k of ['immuneDamageTurn','extraWoundTurn','reactivateDamageTurn','chargeOnDamageTurn','chargeTurn','charge','septemberCounterTurn'])delete c[k];
  readyCombat(s);
  // A normal declared attack always opens the first response window for the defender.
  // Re-assert it after all wrappers have run, but only when no trigger/choice/stack is

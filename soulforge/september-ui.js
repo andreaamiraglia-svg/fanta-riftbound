@@ -1,4 +1,4 @@
-import {cards as firstCards,monsters as firstMonsters} from './september-catalog.js';
+import {cards as firstCards,monsters as firstMonsters} from './september-catalog.js?v=furia-charge4-1';
 import {cards as newCards,monsters as newMonsters} from './new20-catalog.js';
 import {cards as batch3Cards} from './batch3-catalog.js';
 const cards=[...firstCards,...newCards,...batch3Cards],monsters=[...firstMonsters,...newMonsters];

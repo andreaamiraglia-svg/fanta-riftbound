@@ -20,7 +20,7 @@ function removeLegacyAutoTrigger(s:any){
  if(Array.isArray(s._v48Triggers))s._v48Triggers=s._v48Triggers.filter((x:any)=>!isLegacy(x));
  if(Array.isArray(s.stack))s.stack=s.stack.filter((x:any)=>!isLegacy(x));
  if(isLegacy(s.pendingChoice))s.pendingChoice=null;
- if(!s.pendingChoice&&!s.stack?.length){s.priority=null;s.priorityPasses=0;}
+ if(!s.pendingChoice&&!s.stack?.length&&!s.combat){s.priority=null;s.priorityPasses=0;}
 }
 function applyTurnStartArmor(s:any){
  if(s?.status!=='main')return;
