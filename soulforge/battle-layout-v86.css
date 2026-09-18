@@ -12,7 +12,7 @@ body.sf-fantasy-game .sf-schematic-board .playerzone:before{display:none!importa
 body.sf-fantasy-game .sf-schematic-board .playerinfo{display:contents!important}
 body.sf-fantasy-game .sf-schematic-board .playerinfo>b{position:absolute;font:600 11px system-ui;color:#e4cba6;left:148px;padding:5px 10px;z-index:2}
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone .playerinfo>b{top:46px}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone .playerinfo>b{top:553px}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone .playerinfo>b{top:618px}
 body.sf-fantasy-game .sf-schematic-board .playerinfo>.sub,
 body.sf-fantasy-game .sf-schematic-board .sf-souls-label,
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-hand-count{display:none!important}
@@ -46,7 +46,7 @@ body.sf-fantasy-game .sf-schematic-board #passPriority,
 body.sf-fantasy-game .sf-schematic-board #passMain{width:112px!important;height:112px!important;border-radius:50%!important;white-space:normal;font-size:15px!important;padding:14px!important;background:radial-gradient(circle at 35% 25%,#f5cf7d,#ae7229)!important;color:#211606!important;border:2px solid #e8bd65!important;box-shadow:0 0 24px #d59a2529}
 body.sf-fantasy-game .sf-schematic-board .souls{position:absolute!important;right:0!important;width:146px;display:flex!important;justify-content:center!important;flex-wrap:wrap;gap:8px!important;margin:0!important;padding:5px}
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone .souls{top:278px!important}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone .souls{top:481px!important}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone .souls{top:546px!important}
 body.sf-fantasy-game .sf-schematic-board .soul{width:42px!important;height:42px!important;font-size:16px!important}
 body.sf-fantasy-game .sf-schematic-board .sf-fantasy-zones{display:contents!important}
 body.sf-fantasy-game .sf-schematic-board .sf-mini-zone{position:absolute!important;width:116px!important;height:128px!important;padding:73px 5px 5px!important;text-align:center!important}
@@ -59,9 +59,9 @@ body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="monster-g
 body.sf-fantasy-game .sf-schematic-board [data-kind="monster-grave"]:before{display:none!important}
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="monster-deck"]{top:261px;left:0}
 body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-deck"]{top:426px;left:0}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="deck"]{top:575px;left:126px}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="grave"]{top:575px;left:0}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-grave"]{top:575px;left:0;transform:translateY(73px);height:43px!important;padding:4px!important;background:#111!important}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="deck"]{top:640px;left:126px}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="grave"]{top:640px;left:0}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-grave"]{top:640px;left:0;transform:translateY(73px);height:43px!important;padding:4px!important;background:#111!important}
 body.sf-fantasy-game .sf-schematic-board>.side{max-width:1500px;margin:12px auto 0!important;display:block!important}
 body.sf-fantasy-game .sf-schematic-board .sf-layout-log{padding:9px 12px!important}
 .sf-layout-log summary{cursor:pointer;font-size:12px;color:#dbc59f}
@@ -115,3 +115,10 @@ body.sf-fantasy-game #app .sf-schematic-board .playerinfo>b{left:274px!important
  body.sf-fantasy-game #app .sf-schematic-board .sf-player-zone [data-kind="deck"]{left:76px!important}
  body.sf-fantasy-game #app .sf-schematic-board .playerinfo>b{left:164px!important}
 }
+
+/* Larger stack artwork with enough room for the full card. */
+body.sf-fantasy-game #app .sf-schematic-board>main>.chain-lane{height:181px!important;min-height:181px!important}
+body.sf-fantasy-game #app .sf-schematic-board .pending-zone{height:137px!important;min-height:137px!important;overflow-x:auto!important;overflow-y:hidden!important}
+body.sf-fantasy-game #app .sf-schematic-board .stack-stage{height:129px!important;min-height:129px!important;gap:14px!important}
+body.sf-fantasy-game #app .sf-schematic-board .stack-card{flex:0 0 96px!important;width:96px!important;height:129px!important;min-height:129px!important}
+body.sf-fantasy-game #app .sf-schematic-board .stack-card>img{width:96px!important;height:129px!important;object-fit:contain!important}
