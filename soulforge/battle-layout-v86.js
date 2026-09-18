@@ -14,6 +14,7 @@
    const strip=document.createElement('div');strip.className='sf-opponent-hand';strip.setAttribute('aria-label','Mano avversaria: '+count+' carte');
    strip.innerHTML='<span>Mano avversaria · '+count+'</span><div>'+Array.from({length:Math.min(12,count)},()=>'<i aria-hidden="true"></i>').join('')+'</div>';
    main.prepend(strip);
+   const controls=main.querySelector('.hand-title>.controls');if(controls){controls.classList.add('sf-battle-controls');main.append(controls);}
    const panel=grid.querySelector(':scope>.side>.panel');
    if(panel){const details=document.createElement('details');details.className='panel sf-layout-log';const summary=document.createElement('summary');summary.textContent='Log della partita';details.append(summary);for(const child of [...panel.children])if(child.tagName!=='H3')details.append(child);panel.replaceWith(details);}
    return template.innerHTML;

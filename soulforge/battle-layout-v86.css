@@ -89,3 +89,10 @@ body.sf-fantasy-game .sf-schematic-board .stack-owner,
 body.sf-fantasy-game .sf-schematic-board .effect-ribbon{display:none!important}
 body.sf-fantasy-game .sf-schematic-board .sf-mini-zone{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:2px!important}
 body.sf-fantasy-game .sf-schematic-board .sf-mini-zone[data-kind="monster-grave"]{min-height:43px!important;height:43px!important}
+
+body.sf-fantasy-game #app .game-grid.sf-schematic-board>main>.sf-battle-controls{grid-column:3!important;grid-row:3/5!important;align-self:center!important;position:static!important;width:146px!important;min-height:112px!important;margin:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;z-index:5}
+body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-mini-zone[data-kind="grave"]{height:90px!important;padding-top:54px!important}
+body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-mini-zone[data-kind="grave"]:before{height:43px!important;top:5px!important}
+body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-mini-zone[data-kind="monster-grave"]{transform:translateY(90px)!important}
+body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-opponent-zone .sf-mini-zone[data-kind="grave"] small{font-size:8px!important}
+@media(max-width:850px){body.sf-fantasy-game #app .game-grid.sf-schematic-board>main>.sf-battle-controls{width:88px!important}}
