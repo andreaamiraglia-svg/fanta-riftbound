@@ -122,3 +122,11 @@ body.sf-fantasy-game #app .sf-schematic-board .pending-zone{height:137px!importa
 body.sf-fantasy-game #app .sf-schematic-board .stack-stage{height:129px!important;min-height:129px!important;gap:14px!important}
 body.sf-fantasy-game #app .sf-schematic-board .stack-card{flex:0 0 96px!important;width:96px!important;height:129px!important;min-height:129px!important}
 body.sf-fantasy-game #app .sf-schematic-board .stack-card>img{width:96px!important;height:129px!important;object-fit:contain!important}
+
+/* Give the card lanes the space previously occupied by headings. */
+body.sf-fantasy-game #app .sf-schematic-board>main>.board>h3,
+body.sf-fantasy-game #app .sf-schematic-board>main>.chain-lane>h3,
+body.sf-fantasy-game #app .sf-schematic-board .stack-stage>.sub{display:none!important}
+body.sf-fantasy-game #app .sf-schematic-board .monsters{height:160px!important;min-height:160px!important}
+body.sf-fantasy-game #app .sf-schematic-board .pending-zone{height:157px!important;min-height:157px!important}
+body.sf-fantasy-game #app .sf-schematic-board .stack-stage{height:149px!important;min-height:149px!important}
