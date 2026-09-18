@@ -105,3 +105,13 @@ body.sf-fantasy-game #app .sf-schematic-board .champions>.champ .sf-champ-shell{
 body.sf-fantasy-game #app .sf-schematic-board .champions>.champ .sf-champ-shell .champ-art{width:116px!important;height:156px!important;max-height:156px!important;object-fit:contain!important}
 /* DOM order remains chronological so targeting references stay valid. */
 body.sf-fantasy-game #app .sf-schematic-board .stack-stage{flex-direction:row-reverse!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center!important;width:100%!important;overflow:visible!important}
+
+/* Reserve a separate left rail for the player's decks and graveyards. */
+body.sf-fantasy-game #app .sf-schematic-board>main{grid-template-columns:256px minmax(0,1fr) 146px!important;max-width:1630px!important}
+body.sf-fantasy-game #app .sf-schematic-board .sf-player-zone .champions{margin-left:0!important;width:100%!important}
+body.sf-fantasy-game #app .sf-schematic-board .playerinfo>b{left:274px!important}
+@media(max-width:850px){
+ body.sf-fantasy-game #app .sf-schematic-board>main{grid-template-columns:152px minmax(0,1fr) 88px!important}
+ body.sf-fantasy-game #app .sf-schematic-board .sf-player-zone [data-kind="deck"]{left:76px!important}
+ body.sf-fantasy-game #app .sf-schematic-board .playerinfo>b{left:164px!important}
+}
