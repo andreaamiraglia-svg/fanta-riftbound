@@ -78,3 +78,14 @@ body.sf-fantasy-game .sf-schematic-board .sf-layout-log{padding:9px 12px!importa
 }
 
 body.sf-fantasy-game .sf-schematic-board .sf-player-zone .champions{margin-left:126px!important;width:calc(100% - 126px)!important}
+
+/* Override legacy anchors for the new resource rail. */
+body.sf-fantasy-game #app .wrap{width:100%!important}
+body.sf-fantasy-game .sf-schematic-board .hand-title{position:static!important}
+body.sf-fantasy-game .sf-schematic-board .playerinfo{position:static!important}
+body.sf-fantasy-game .game-grid.sf-schematic-board .sf-player-zone .playerinfo>.souls,
+body.sf-fantasy-game .game-grid.sf-schematic-board .sf-opponent-zone .playerinfo>.souls{position:absolute!important;left:auto!important;bottom:auto!important;height:auto!important;min-height:0!important}
+body.sf-fantasy-game .sf-schematic-board .stack-owner,
+body.sf-fantasy-game .sf-schematic-board .effect-ribbon{display:none!important}
+body.sf-fantasy-game .sf-schematic-board .sf-mini-zone{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:2px!important}
+body.sf-fantasy-game .sf-schematic-board .sf-mini-zone[data-kind="monster-grave"]{min-height:43px!important;height:43px!important}
