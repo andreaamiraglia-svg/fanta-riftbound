@@ -191,7 +191,7 @@ function applySnowArmy(s:any,p:number,amount:number,replay:boolean){
  if(amount>1){s._v59Snow ||= [];s._v59Snow.push({player:p,amount:amount-1,afterTurn:Number(s.turn)})}
 }
 function queueSnowAtNewTurn(s:any,oldTurn:number){
- if(Number(s.turn)===oldTurn||s.status!=='main'||s.pendingChoice)return;
+ if(s.status!=='main'||s.pendingChoice)return;
  const due=(s._v59Snow||[]).filter((x:any)=>Number(x.afterTurn)<Number(s.turn));s._v59Snow=(s._v59Snow||[]).filter((x:any)=>Number(x.afterTurn)>=Number(s.turn));
   for(const x of due){s.stack ||= [];s.stack.push({uid:crypto.randomUUID(),kind:'effect',actor:Number(x.player),cardId:'esercito_tormenta_neve',effectId:'v59_esercito',effectName:'Esercito della Tormenta di Neve',targets:{},meta:{armor:Number(x.amount),replay:'1'},virtual:true});log(s,`Esercito della Tormenta di Neve viene rigiocato con ${x.amount} Armatura.`)}
  if(due.length){s.stackInitiator=Number(due[due.length-1].player);s.priority=other(Number(due[due.length-1].player));s.priorityPasses=0}
