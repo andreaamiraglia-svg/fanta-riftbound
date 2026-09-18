@@ -5,14 +5,14 @@ body.sf-fantasy-game .sf-schematic-board>main{display:grid!important;grid-templa
 body.sf-fantasy-game .sf-schematic-board>main>.sf-opponent-hand{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;gap:18px;height:38px;color:#dfc8a3;font-size:11px;text-transform:uppercase;letter-spacing:.09em}
 .sf-opponent-hand>div{display:flex;justify-content:center;padding:4px}
 .sf-opponent-hand i{display:block;width:23px;height:31px;margin-left:-6px;border:1px solid #9d7948;border-radius:3px;background:linear-gradient(135deg,#30241c,#0e1013);box-shadow:0 2px 6px #0008}
-body.sf-fantasy-game .sf-schematic-board>main>.playerzone{grid-column:2!important;min-height:162px!important;height:162px!important;padding:4px!important;margin:0!important;position:static!important;overflow:visible!important;border-radius:8px!important}
+body.sf-fantasy-game .sf-schematic-board>main>.playerzone{grid-column:2!important;min-height:190px!important;height:190px!important;padding:4px!important;margin:0!important;position:static!important;overflow:visible!important;border-radius:8px!important}
 body.sf-fantasy-game .sf-schematic-board>main>.sf-opponent-zone{grid-row:2!important}
 body.sf-fantasy-game .sf-schematic-board>main>.sf-player-zone{grid-row:5!important}
 body.sf-fantasy-game .sf-schematic-board .playerzone:before{display:none!important}
 body.sf-fantasy-game .sf-schematic-board .playerinfo{display:contents!important}
 body.sf-fantasy-game .sf-schematic-board .playerinfo>b{position:absolute;font:600 11px system-ui;color:#e4cba6;left:148px;padding:5px 10px;z-index:2}
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone .playerinfo>b{top:46px}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone .playerinfo>b{top:525px}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone .playerinfo>b{top:553px}
 body.sf-fantasy-game .sf-schematic-board .playerinfo>.sub,
 body.sf-fantasy-game .sf-schematic-board .sf-souls-label,
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-hand-count{display:none!important}
@@ -45,8 +45,8 @@ body.sf-fantasy-game .sf-schematic-board .hand-title>.controls{position:absolute
 body.sf-fantasy-game .sf-schematic-board #passPriority,
 body.sf-fantasy-game .sf-schematic-board #passMain{width:112px!important;height:112px!important;border-radius:50%!important;white-space:normal;font-size:15px!important;padding:14px!important;background:radial-gradient(circle at 35% 25%,#f5cf7d,#ae7229)!important;color:#211606!important;border:2px solid #e8bd65!important;box-shadow:0 0 24px #d59a2529}
 body.sf-fantasy-game .sf-schematic-board .souls{position:absolute!important;right:0!important;width:146px;display:flex!important;justify-content:center!important;flex-wrap:wrap;gap:8px!important;margin:0!important;padding:5px}
-body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone .souls{top:250px!important}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone .souls{top:453px!important}
+body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone .souls{top:278px!important}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone .souls{top:481px!important}
 body.sf-fantasy-game .sf-schematic-board .soul{width:42px!important;height:42px!important;font-size:16px!important}
 body.sf-fantasy-game .sf-schematic-board .sf-fantasy-zones{display:contents!important}
 body.sf-fantasy-game .sf-schematic-board .sf-mini-zone{position:absolute!important;width:116px!important;height:128px!important;padding:73px 5px 5px!important;text-align:center!important}
@@ -57,11 +57,11 @@ body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="deck"]{to
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="grave"]{top:63px;right:0;width:68px!important}
 body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="monster-grave"]{top:63px;right:0;width:68px!important;transform:translateY(73px);height:43px!important;padding:4px!important;background:#111!important}
 body.sf-fantasy-game .sf-schematic-board [data-kind="monster-grave"]:before{display:none!important}
-body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="monster-deck"]{top:233px;left:0}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-deck"]{top:398px;left:0}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="deck"]{top:547px;left:126px}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="grave"]{top:547px;left:0}
-body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-grave"]{top:547px;left:0;transform:translateY(73px);height:43px!important;padding:4px!important;background:#111!important}
+body.sf-fantasy-game .sf-schematic-board .sf-opponent-zone [data-kind="monster-deck"]{top:261px;left:0}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-deck"]{top:426px;left:0}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="deck"]{top:575px;left:126px}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="grave"]{top:575px;left:0}
+body.sf-fantasy-game .sf-schematic-board .sf-player-zone [data-kind="monster-grave"]{top:575px;left:0;transform:translateY(73px);height:43px!important;padding:4px!important;background:#111!important}
 body.sf-fantasy-game .sf-schematic-board>.side{max-width:1500px;margin:12px auto 0!important;display:block!important}
 body.sf-fantasy-game .sf-schematic-board .sf-layout-log{padding:9px 12px!important}
 .sf-layout-log summary{cursor:pointer;font-size:12px;color:#dbc59f}
@@ -96,3 +96,12 @@ body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-mini-zone[data-kind=
 body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-mini-zone[data-kind="monster-grave"]{transform:translateY(90px)!important}
 body.sf-fantasy-game #app .game-grid.sf-schematic-board .sf-opponent-zone .sf-mini-zone[data-kind="grave"] small{font-size:8px!important}
 @media(max-width:850px){body.sf-fantasy-game #app .game-grid.sf-schematic-board>main>.sf-battle-controls{width:88px!important}}
+
+/* Keep hit areas and artwork inside each lane, including tapped Champions. */
+body.sf-fantasy-game #app .wrap>.top{display:none!important}
+body.sf-fantasy-game #app .sf-schematic-board .champions{height:180px!important;min-height:180px!important;padding:4px 18px!important;overflow-y:hidden!important;align-items:center!important}
+body.sf-fantasy-game #app .sf-schematic-board .champions>.champ{flex:0 0 126px!important;width:126px!important;min-width:126px!important;max-width:126px!important;height:172px!important;min-height:172px!important}
+body.sf-fantasy-game #app .sf-schematic-board .champions>.champ .sf-champ-shell{width:116px!important;height:156px!important;min-height:156px!important;margin:auto!important}
+body.sf-fantasy-game #app .sf-schematic-board .champions>.champ .sf-champ-shell .champ-art{width:116px!important;height:156px!important;max-height:156px!important;object-fit:contain!important}
+/* DOM order remains chronological so targeting references stay valid. */
+body.sf-fantasy-game #app .sf-schematic-board .stack-stage{flex-direction:row-reverse!important;flex-wrap:nowrap!important;justify-content:flex-start!important;align-items:center!important;width:100%!important;overflow:visible!important}
