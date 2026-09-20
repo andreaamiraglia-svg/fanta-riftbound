@@ -5,11 +5,11 @@ const STYLE=`
 .sf-deck-view-title{min-width:0}.sf-deck-view-title h1{margin:5px 0 0;font-size:clamp(28px,4vw,46px);color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sf-deck-view-actions{display:flex;align-items:center;gap:10px;flex:none}
 .sf-deck-view-section{margin:0 0 34px}.sf-deck-view-section-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.08em;color:#e7e9ed;font-weight:900;font-size:13px}
-.sf-deck-view-count{color:#8e9aa8;font-size:11px}.sf-deck-view-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px;align-items:start}
-.sf-deck-view-grid.champions{grid-template-columns:repeat(2,minmax(140px,178px))}
-.sf-deck-view-card{min-width:0;position:relative;border:1px solid #343941;border-radius:8px;background:#090b0e;overflow:hidden;box-shadow:0 8px 18px #0007;transition:transform .14s ease,border-color .14s ease}
+.sf-deck-view-count{color:#8e9aa8;font-size:11px}.sf-deck-view-grid{display:grid;grid-template-columns:repeat(auto-fill,156px);gap:14px;align-items:start;justify-content:start}
+.sf-deck-view-grid.champions{grid-template-columns:repeat(2,280px)}
+.sf-deck-view-card{width:100%;min-width:0;position:relative;border:1px solid #343941;border-radius:8px;background:#090b0e;overflow:hidden;box-shadow:0 8px 18px #0007;transition:transform .14s ease,border-color .14s ease}
 .sf-deck-view-card:hover{transform:translateY(-5px);border-color:#aeb8c6;z-index:2}
-.sf-deck-view-card img{display:block;width:100%;height:auto;aspect-ratio:744/1039;object-fit:contain;background:#080a0d}
+.sf-deck-view-card img{display:block;width:100%;aspect-ratio:744/1039;object-fit:cover;object-position:center;background:#080a0d}
 .sf-deck-view-name{padding:7px 8px;color:#dfe3e8;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sf-deck-view-empty{padding:24px;border:1px dashed #3b424c;color:#9ea7b3}
 @media(max-width:620px){.sf-deck-view{width:min(100% - 20px,1440px);padding-top:20px}.sf-deck-view-top{align-items:flex-start;flex-direction:column}.sf-deck-view-actions{width:100%}.sf-deck-view-actions .btn{flex:1}.sf-deck-view-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.sf-deck-view-grid.champions{grid-template-columns:repeat(2,minmax(0,1fr))}.sf-deck-view-name{font-size:9px;padding:5px}}
