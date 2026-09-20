@@ -10,9 +10,13 @@ const STYLE=`
 .sf-deck-view-card{width:100%;min-width:0;position:relative;border:1px solid #343941;border-radius:8px;background:#090b0e;overflow:hidden;box-shadow:0 8px 18px #0007;transition:transform .14s ease,border-color .14s ease}
 .sf-deck-view-card:hover{transform:translateY(-5px);border-color:#aeb8c6;z-index:2}
 .sf-deck-view-card img{display:block;width:100%;aspect-ratio:744/1039;object-fit:cover;object-position:center;background:#080a0d}
-.sf-deck-view-name{padding:7px 8px;color:#dfe3e8;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-deck-view-grid:not(.champions) .sf-deck-view-card{height:246px}
+.sf-deck-view-grid:not(.champions) .sf-deck-view-card img{height:218px!important;aspect-ratio:auto!important}
+.sf-deck-view-grid.champions .sf-deck-view-card{height:419px}
+.sf-deck-view-grid.champions .sf-deck-view-card img{height:391px!important;aspect-ratio:auto!important}
+.sf-deck-view-name{box-sizing:border-box;height:28px;padding:7px 8px;color:#dfe3e8;font-size:11px;font-weight:750;line-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sf-deck-view-empty{padding:24px;border:1px dashed #3b424c;color:#9ea7b3}
-@media(max-width:620px){.sf-deck-view{width:min(100% - 20px,1440px);padding-top:20px}.sf-deck-view-top{align-items:flex-start;flex-direction:column}.sf-deck-view-actions{width:100%}.sf-deck-view-actions .btn{flex:1}.sf-deck-view-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.sf-deck-view-grid.champions{grid-template-columns:repeat(2,minmax(0,1fr))}.sf-deck-view-name{font-size:9px;padding:5px}}
+@media(max-width:620px){.sf-deck-view{width:min(100% - 20px,1440px);padding-top:20px}.sf-deck-view-top{align-items:flex-start;flex-direction:column}.sf-deck-view-actions{width:100%}.sf-deck-view-actions .btn{flex:1}.sf-deck-view-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.sf-deck-view-grid.champions{grid-template-columns:repeat(2,minmax(0,1fr))}.sf-deck-view-card,.sf-deck-view-grid:not(.champions) .sf-deck-view-card,.sf-deck-view-grid.champions .sf-deck-view-card{height:auto}.sf-deck-view-card img,.sf-deck-view-grid:not(.champions) .sf-deck-view-card img,.sf-deck-view-grid.champions .sf-deck-view-card img{height:auto!important;aspect-ratio:744/1039!important}.sf-deck-view-name{font-size:9px;padding:5px}}
 `;
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function header(){return `<header class="sf-home-header"><a class="sf-home-brand" href="/" aria-label="Champion of the Souls"><img src="/favicon-192.png?v=cs2" alt=""><span><strong>CHAMPION</strong><small>of the</small><b>SOULS</b></span></a><nav aria-label="Navigazione principale"><button data-view-nav="play">Play</button><button data-view-nav="decks" class="selected">Decks</button><button data-view-nav="leaderboard">Leaderboard</button></nav></header>`}
