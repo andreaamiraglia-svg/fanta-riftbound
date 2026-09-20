@@ -1,0 +1,45 @@
+(()=>{
+const STYLE=`
+.sf-leaderboard-main{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:48px 0 80px}
+.sf-leaderboard-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:24px}
+.sf-leaderboard-head h1{margin:0;color:#fff;font-size:clamp(32px,5vw,54px);letter-spacing:-.04em}
+.sf-leaderboard-head p{margin:7px 0 0;color:#9da3ad}
+.sf-rank-table{display:grid;gap:12px}
+.sf-rank-row{display:grid;grid-template-columns:70px minmax(220px,1fr) 112px 90px 90px 112px;gap:12px;align-items:stretch}
+.sf-rank-cell{min-height:66px;display:flex;align-items:center;justify-content:center;padding:12px 16px;background:linear-gradient(100deg,#ececec,#cfcfcf);color:#080808;font-size:19px;font-weight:800;border:1px solid #ffffff18}
+.sf-rank-name{justify-content:flex-start;font-size:21px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sf-rank-row.first .sf-rank-cell{background:linear-gradient(100deg,#f4ff72,#bdff00)}
+.sf-rank-row.second .sf-rank-cell{background:linear-gradient(100deg,#f3f3f3,#c9c9c9)}
+.sf-rank-row.third .sf-rank-cell{background:linear-gradient(100deg,#ac7600,#d7e975)}
+.sf-rank-pos{font-size:24px}.sf-rank-elo{font-size:22px}.sf-rank-empty{padding:52px 22px;text-align:center;border:1px solid #30343c;color:#aeb4bd;background:#12151a}
+.sf-rank-loading{opacity:.65}.sf-rank-error{padding:18px;border:1px solid #91323b;background:#3b171b;color:#ffd8dc}
+@media(max-width:760px){.sf-leaderboard-main{padding-top:28px}.sf-leaderboard-head{align-items:flex-start;flex-direction:column}.sf-rank-row{grid-template-columns:52px minmax(150px,1fr) 76px 64px}.sf-rank-row .sf-rank-losses,.sf-rank-row .sf-rank-rate{display:none}.sf-rank-cell{min-height:58px;padding:9px;font-size:15px}.sf-rank-name{font-size:17px}.sf-rank-pos,.sf-rank-elo{font-size:18px}}
+`;
+const escRank=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function row(x){
+ const cls=x.rank===1?'first':x.rank===2?'second':x.rank===3?'third':'';
+ return `<div class="sf-rank-row ${cls}"><div class="sf-rank-cell sf-rank-pos">${x.rank}°</div><div class="sf-rank-cell sf-rank-name" title="${escRank(x.name)}">${escRank(x.name)}</div><div class="sf-rank-cell sf-rank-elo">${x.elo}</div><div class="sf-rank-cell">${x.wins}</div><div class="sf-rank-cell sf-rank-losses">${x.losses}</div><div class="sf-rank-cell sf-rank-rate">${x.winRate}%</div></div>`;
+}
+async function renderLeaderboard(){
+ app.innerHTML=`<div class="sf-home">${homeHeader('leaderboard')}<main class="sf-leaderboard-main"><div class="sf-leaderboard-head"><div><h1>Leaderboard</h1><p>Classifica Elo delle partite completate.</p></div><div class="sf-home-hint">Elo iniziale 1000 · K 32</div></div><div id="sfRankStatus" class="sf-rank-empty sf-rank-loading">Caricamento classifica…</div></main></div>`;
+ bindHomeNav();
+ try{
+  const data=await post({action:'leaderboard'}),entries=Array.isArray(data.entries)?data.entries:[];
+  const box=document.querySelector('#sfRankStatus');if(!box)return;
+  if(!entries.length){box.className='sf-rank-empty';box.textContent='La classifica apparirà dopo la prima partita completata.';return}
+  box.outerHTML=`<div class="sf-rank-table"><div class="sf-rank-row sf-rank-labels"><div class="sf-rank-cell">#</div><div class="sf-rank-cell sf-rank-name">Nome giocatore</div><div class="sf-rank-cell">Elo</div><div class="sf-rank-cell">W</div><div class="sf-rank-cell sf-rank-losses">L</div><div class="sf-rank-cell sf-rank-rate">Win%</div></div>${entries.map(row).join('')}</div>`;
+ }catch(e){const box=document.querySelector('#sfRankStatus');if(box){box.className='sf-rank-error';box.textContent=e?.message||'Impossibile caricare la classifica.'}}
+}
+function install(){
+ if(typeof homeHeader!=='function'||typeof bindHomeNav!=='function')return false;
+ if(window.sfLeaderboardInstalled)return true;window.sfLeaderboardInstalled=true;
+ const style=document.createElement('style');style.id='sfLeaderboard87Style';style.textContent=STYLE;document.head.appendChild(style);
+ const oldHeader=homeHeader,oldBind=bindHomeNav;
+ homeHeader=function(tab){return oldHeader(tab).replace('</nav>',`<button data-home-tab="leaderboard" class="${tab==='leaderboard'?'selected':''}">Leaderboard</button></nav>`)};
+ bindHomeNav=function(){oldBind();const b=document.querySelector('[data-home-tab="leaderboard"]');if(b)b.onclick=renderLeaderboard};
+ window.sfRenderLeaderboard=renderLeaderboard;
+ if(!session?.state)renderLanding();
+ return true;
+}
+if(!install()){let tries=0;const timer=setInterval(()=>{if(install()||++tries>100)clearInterval(timer)},100)}
+})();
