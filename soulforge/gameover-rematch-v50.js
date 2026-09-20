@@ -1,5 +1,9 @@
 (()=>{
 let sending=false;
+let enhanceQueued=false;
+function setText(el,value){
+ if(el&&el.textContent!==value)el.textContent=value;
+}
 function ensureStyle(){
  if(document.getElementById('sfGameover50Style'))return;
  const s=document.createElement('style');s.id='sfGameover50Style';s.textContent=`
@@ -30,16 +34,19 @@ function enhance(){
  ensureStyle();
  const s=session?.state;if(!s||s.status!=='gameover')return;
  const heading=[...document.querySelectorAll('#app h1')].find(h=>/Hai vinto|Hai perso|Pareggio/i.test(h.textContent||''));
- const panel=heading?.closest('.panel');if(!panel)return;
+ const panel=document.querySelector('#sfBaseRematch')?.closest('.panel')||heading?.closest('.panel');if(!panel)return;
  if(!panel.classList.contains('sf-gameover-panel')){
-  const result=s.draw?'PAREGGIO':s.winner===session.player?'VITTORIA':'SCONFITTA';
+  const result=s.draw?'PAREGGIO':Number(s.winner)===Number(session.player)?'VITTORIA':'SCONFITTA';
   panel.className='sf-gameover-panel';
   panel.innerHTML='<header class="sf-gameover-header"><div class="sf-gameover-brand"><img src="/favicon-192.png?v=cs2" alt=""><span><strong>Champion</strong><small>of the</small><b>Souls</b></span></div></header><h1 class="sf-gameover-result '+(s.draw?'sf-draw':'')+'">'+result+'</h1><div class="sf-gameover-actions"><button id="sfHomeBtn" class="sf-home-primary">Home</button><button id="sfRematchBtn" class="sf-rematch-secondary">Rematch</button><div class="sf-rematch-state" aria-live="polite"></div></div>';
  }
  const info=panel.querySelector('.sf-rematch-state');
  const v=voteInfo(),btn=panel.querySelector('#sfRematchBtn');
- if(btn){btn.disabled=v.me||sending;btn.textContent=v.me?'Rematch richiesto':sending?'Richiesta…':'Rematch';}
- info.textContent=v.me&&!v.op?'In attesa che l’avversario accetti il rematch…':!v.me&&v.op?'L’avversario ha richiesto un rematch.':v.me&&v.op?'Avvio del rematch…':'';
+ if(btn){
+  const disabled=v.me||sending;if(btn.disabled!==disabled)btn.disabled=disabled;
+  setText(btn,v.me?'Rematch richiesto':sending?'Richiesta…':'Rematch');
+ }
+ setText(info,v.me&&!v.op?'In attesa che l’avversario accetti il rematch…':!v.me&&v.op?'L’avversario ha richiesto un rematch.':v.me&&v.op?'Avvio del rematch…':'');
 }
 async function rematch(){
  if(sending||session?.state?.status!=='gameover')return;
@@ -59,6 +66,9 @@ document.addEventListener('click',e=>{
  const r=e.target.closest?.('#sfRematchBtn');if(r){e.preventDefault();rematch();return;}
  const h=e.target.closest?.('#sfHomeBtn');if(h){e.preventDefault();home();}
 },true);
-const app=document.getElementById('app');if(app)new MutationObserver(()=>queueMicrotask(enhance)).observe(app,{subtree:true,childList:true});
+const app=document.getElementById('app');if(app)new MutationObserver(()=>{
+ if(enhanceQueued)return;enhanceQueued=true;
+ queueMicrotask(()=>{enhanceQueued=false;enhance()});
+}).observe(app,{subtree:true,childList:true});
 window.addEventListener('sf-blue-ready',enhance);setInterval(()=>{if(session?.state?.status==='gameover')enhance()},700);setTimeout(enhance,0);
 })();
