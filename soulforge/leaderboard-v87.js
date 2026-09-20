@@ -16,13 +16,26 @@ const STYLE=`
 @media(max-width:760px){.sf-leaderboard-main{padding-top:28px}.sf-leaderboard-head{align-items:flex-start;flex-direction:column}.sf-rank-row{grid-template-columns:52px minmax(150px,1fr) 76px 64px}.sf-rank-row .sf-rank-losses,.sf-rank-row .sf-rank-rate{display:none}.sf-rank-cell{min-height:58px;padding:9px;font-size:15px}.sf-rank-name{font-size:17px}.sf-rank-pos,.sf-rank-elo{font-size:18px}}
 `;
 const escRank=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function header(){return `<header class="sf-home-header"><a class="sf-home-brand" href="/" aria-label="Champion of the Souls"><img src="/favicon-192.png?v=cs2" alt=""><span><strong>CHAMPION</strong><small>of the</small><b>SOULS</b></span></a><nav aria-label="Navigazione principale"><button data-home-tab="play">Play</button><button data-home-tab="decks">Decks</button><button data-home-tab="leaderboard" class="selected">Leaderboard</button></nav></header>`}
+function bindRankNav(){
+ const play=document.querySelector('[data-home-tab="play"]'),decks=document.querySelector('[data-home-tab="decks"]'),rank=document.querySelector('[data-home-tab="leaderboard"]');
+ if(play)play.onclick=()=>renderLanding();
+ if(decks)decks.onclick=()=>window.sfDeckBuilder?.library?.();
+ if(rank)rank.onclick=renderLeaderboard;
+}
+function mountNav(){
+ const nav=document.querySelector('.sf-home-header nav');if(!nav)return;
+ let rank=nav.querySelector('[data-home-tab="leaderboard"]');
+ if(!rank){rank=document.createElement('button');rank.dataset.homeTab='leaderboard';rank.textContent='Leaderboard';nav.appendChild(rank)}
+ rank.onclick=renderLeaderboard;
+}
 function row(x){
  const cls=x.rank===1?'first':x.rank===2?'second':x.rank===3?'third':'';
  return `<div class="sf-rank-row ${cls}"><div class="sf-rank-cell sf-rank-pos">${x.rank}°</div><div class="sf-rank-cell sf-rank-name" title="${escRank(x.name)}">${escRank(x.name)}</div><div class="sf-rank-cell sf-rank-elo">${x.elo}</div><div class="sf-rank-cell">${x.wins}</div><div class="sf-rank-cell sf-rank-losses">${x.losses}</div><div class="sf-rank-cell sf-rank-rate">${x.winRate}%</div></div>`;
 }
 async function renderLeaderboard(){
- app.innerHTML=`<div class="sf-home">${homeHeader('leaderboard')}<main class="sf-leaderboard-main"><div class="sf-leaderboard-head"><div><h1>Leaderboard</h1><p>Classifica Elo delle partite completate.</p></div><div class="sf-home-hint">Elo iniziale 1000 · K 32</div></div><div id="sfRankStatus" class="sf-rank-empty sf-rank-loading">Caricamento classifica…</div></main></div>`;
- bindHomeNav();
+ app.innerHTML=`<div class="sf-home">${header()}<main class="sf-leaderboard-main"><div class="sf-leaderboard-head"><div><h1>Leaderboard</h1><p>Classifica Elo delle partite completate.</p></div><div class="sf-home-hint">Elo iniziale 1000 · K 32</div></div><div id="sfRankStatus" class="sf-rank-empty sf-rank-loading">Caricamento classifica…</div></main></div>`;
+ bindRankNav();
  try{
   const data=await post({action:'leaderboard'}),entries=Array.isArray(data.entries)?data.entries:[];
   const box=document.querySelector('#sfRankStatus');if(!box)return;
@@ -30,16 +43,8 @@ async function renderLeaderboard(){
   box.outerHTML=`<div class="sf-rank-table"><div class="sf-rank-row sf-rank-labels"><div class="sf-rank-cell">#</div><div class="sf-rank-cell sf-rank-name">Nome giocatore</div><div class="sf-rank-cell">Elo</div><div class="sf-rank-cell">W</div><div class="sf-rank-cell sf-rank-losses">L</div><div class="sf-rank-cell sf-rank-rate">Win%</div></div>${entries.map(row).join('')}</div>`;
  }catch(e){const box=document.querySelector('#sfRankStatus');if(box){box.className='sf-rank-error';box.textContent=e?.message||'Impossibile caricare la classifica.'}}
 }
-function install(){
- if(typeof homeHeader!=='function'||typeof bindHomeNav!=='function')return false;
- if(window.sfLeaderboardInstalled)return true;window.sfLeaderboardInstalled=true;
- const style=document.createElement('style');style.id='sfLeaderboard87Style';style.textContent=STYLE;document.head.appendChild(style);
- const oldHeader=homeHeader,oldBind=bindHomeNav;
- homeHeader=function(tab){return oldHeader(tab).replace('</nav>',`<button data-home-tab="leaderboard" class="${tab==='leaderboard'?'selected':''}">Leaderboard</button></nav>`)};
- bindHomeNav=function(){oldBind();const b=document.querySelector('[data-home-tab="leaderboard"]');if(b)b.onclick=renderLeaderboard};
- window.sfRenderLeaderboard=renderLeaderboard;
- if(!session?.state)renderLanding();
- return true;
-}
-if(!install()){let tries=0;const timer=setInterval(()=>{if(install()||++tries>100)clearInterval(timer)},100)}
+const style=document.createElement('style');style.id='sfLeaderboard87Style';style.textContent=STYLE;document.head.appendChild(style);
+window.sfRenderLeaderboard=renderLeaderboard;
+const root=document.getElementById('app');if(root)new MutationObserver(()=>mountNav()).observe(root,{childList:true,subtree:true});
+mountNav();setTimeout(mountNav,0);setTimeout(mountNav,500);
 })();
