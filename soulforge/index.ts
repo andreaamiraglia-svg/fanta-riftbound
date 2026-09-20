@@ -12,10 +12,18 @@ const cleanName=(v:any)=>String(v||'Giocatore').trim().slice(0,24)||'Giocatore';
 const cleanRoom=(v:any)=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 const roomCode=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const n of a)s+=chars[n%chars.length];return s;};
 const token=()=>crypto.randomUUID()+crypto.randomUUID().replaceAll('-','');
-const randomStartingPlayer=()=>{const a=new Uint8Array(1);crypto.getRandomValues(a);return a[0]<128?1:2;};
-const tossCoin=()=>randomStartingPlayer()===1?'testa':'croce';
+const tossCoin=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);return (a[0]&1)===0?'testa':'croce';};
 const otherPlayer=(p:number)=>p===1?2:1;
 const desiredFocus=(state:any)=>{const starter=Number(state?.startingPlayer)===2?2:1;return Number(state?.turn||1)%2===1?starter:otherPlayer(starter);};
+const rateFinishedGame=async(supabase:any,game:any,state:any)=>{
+ if(!state||state.status!=='gameover'||!game?.p2_name)return;
+ const matchId=String(state.ratingMatchId||'');
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(matchId))return;
+ const winner=state.draw?0:Number(state.winner);
+ if(![0,1,2].includes(winner))return;
+ const {error}=await supabase.rpc('record_soulforge_result',{p_match_id:matchId,p_room_id:game.id,p_p1_name:cleanName(game.p1_name),p_p2_name:cleanName(game.p2_name),p_winner:winner});
+ if(error)console.error('rating record failed',error.message);
+};
 const unique=(xs:any[])=>[...new Set((xs||[]).filter(Boolean).map(String))];
 const rematchDeck=(state:any,p:number)=>{
  const q=state?.players?.[String(p)];if(!q)return null;
@@ -52,9 +60,14 @@ Deno.serve(async(req:Request)=>{
  if(req.method==='GET'){try{const r=await fetch(APP_URL+'?v='+Date.now());if(!r.ok)throw new Error('Frontend HTTP '+r.status);const html=await r.text();return new Response(html,{status:200,headers:{...cors,'content-type':'text/html; charset=utf-8','content-disposition':'inline','cache-control':'no-store, no-cache, must-revalidate','x-content-type-options':'nosniff'}})}catch(e){return new Response('Errore caricamento frontend: '+(e instanceof Error?e.message:String(e)),{status:500,headers:{...cors,'content-type':'text/plain; charset=utf-8'}})}}
  if(req.method!=='POST')return err('Metodo non supportato.',405);
  const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});let body:any={};try{body=await req.json()}catch{return err('Richiesta non valida.')}const action=body.action;
+ if(action==='leaderboard'){
+  const {data,error}=await supabase.from('soulforge_ratings').select('display_name,elo,wins,losses,draws,games').gt('games',0).order('elo',{ascending:false}).order('wins',{ascending:false}).order('games',{ascending:true}).limit(100);
+  if(error)return err('Impossibile caricare la classifica.',500);
+  return json({entries:(data||[]).map((x:any,i:number)=>({rank:i+1,name:x.display_name,elo:x.elo,wins:x.wins,losses:x.losses,draws:x.draws,games:x.games,winRate:x.games?Math.round(x.wins*1000/x.games)/10:0}))});
+ }
  if(action==='create'){
   const name=cleanName(body.name);let code='';for(let i=0;i<8;i++){code=roomCode();const {data}=await supabase.from('soulforge_games').select('id').eq('room_code',code).maybeSingle();if(!data)break}
-  const p1Token=token();let state:any;try{state=newState(name,body.deck)}catch(e){return err(e instanceof Error?e.message:String(e))}
+  const p1Token=token();let state:any;try{state=newState(name,body.deck);state.ratingMatchId=crypto.randomUUID()}catch(e){return err(e instanceof Error?e.message:String(e))}
   const {error}=await supabase.from('soulforge_games').insert({room_code:code,p1_name:name,p1_token:p1Token,state,version:1});if(error)return err('Impossibile creare la stanza: '+error.message,500);return json({roomCode:code,token:p1Token,player:1,state:publicView(state,1),version:1})
  }
  const code=cleanRoom(body.roomCode);if(code.length!==6)return err('Codice stanza non valido.');const {data:game,error:fetchErr}=await supabase.from('soulforge_games').select('*').eq('room_code',code).maybeSingle();if(fetchErr||!game)return err('Stanza non trovata.',404);
@@ -62,8 +75,8 @@ Deno.serve(async(req:Request)=>{
   if(game.p2_token)return err('La stanza è già piena.',409);
   const name=cleanName(body.name),p2Token=token(),state=game.state;
   try{state.players['2']=newPlayer(name,body.deck)}catch(e){return err(e instanceof Error?e.message:String(e))}
-  const startingPlayer=randomStartingPlayer();
-  const result=startingPlayer===1?'testa':'croce';
+  const result=tossCoin();
+  const startingPlayer=result==='testa'?1:2;
   state.startingPlayer=startingPlayer;
   state.coinToss={id:crypto.randomUUID(),result,winner:startingPlayer};
   state.status='select';
@@ -78,6 +91,7 @@ Deno.serve(async(req:Request)=>{
   if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
   let state=game.state;
   if(state?.status!=='gameover')return err('Il rematch è disponibile solo a partita conclusa.');
+  await rateFinishedGame(supabase,game,state);
   state.rematchVotes ||= {};
   state.rematchVotes[String(p)]=true;
   if(state.rematchVotes['1']&&state.rematchVotes['2']){
@@ -85,11 +99,12 @@ Deno.serve(async(req:Request)=>{
    if(!d1||!d2)return err('Non riesco a ricostruire uno dei mazzi per il rematch. Tornate alla home e create una nuova stanza.');
    const n1=cleanName(state.players?.['1']?.name||game.p1_name),n2=cleanName(state.players?.['2']?.name||game.p2_name);
    let next:any;try{next=newState(n1,d1);next.players['2']=newPlayer(n2,d2)}catch(e){return err(e instanceof Error?e.message:String(e))}
-   const startingPlayer=randomStartingPlayer(),result=startingPlayer===1?'testa':'croce',winnerName=startingPlayer===1?n1:n2;
+   const result=tossCoin(),startingPlayer=result==='testa'?1:2,winnerName=startingPlayer===1?n1:n2;
    next.startingPlayer=startingPlayer;
    next.coinToss={id:crypto.randomUUID(),result,winner:startingPlayer};
    next.status='select';
    next.focus=startingPlayer;
+   next.ratingMatchId=crypto.randomUUID();
    next.log=[`Rematch tra ${n1} e ${n2}.`,`Lancio della moneta: ${result==='testa'?'TESTA':'CROCE'}. ${winnerName} inizierà per primo.`,`Scegliete le 6 carte iniziali.`];
    state=next;
   }
@@ -97,10 +112,14 @@ Deno.serve(async(req:Request)=>{
   if(error||!updated)return err('STATE_CONFLICT',409);
   return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version});
  }
- if(action==='get')return json({roomCode:code,player:p,state:publicView(game.state,p),version:game.version});
+ if(action==='get'){
+  await rateFinishedGame(supabase,game,game.state);
+  return json({roomCode:code,player:p,state:publicView(game.state,p),version:game.version});
+ }
  if(action==='move'){
   if(Number(body.version)!==Number(game.version))return err('STATE_CONFLICT',409);
   let state=game.state;
+  state.ratingMatchId ||= crypto.randomUUID();
   const beforeStatus=String(state?.status||'');
   const beforeTurn=Number(state?.turn||0);
   if(body.move?.type==='cast'&&body.move?.cardId==='sguardo_ninjitsu'){
@@ -110,7 +129,9 @@ Deno.serve(async(req:Request)=>{
   }
   try{state=act(state,p,body.move||{})}catch(e){return err(e instanceof Error?e.message:String(e))}
   state=alignFocusWithCoin(state,beforeStatus,beforeTurn);
-  const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('STATE_CONFLICT',409);return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version})
+  const {data:updated,error}=await supabase.from('soulforge_games').update({state,version:game.version+1,updated_at:new Date().toISOString()}).eq('id',game.id).eq('version',game.version).select('version').maybeSingle();if(error||!updated)return err('STATE_CONFLICT',409);
+  await rateFinishedGame(supabase,game,state);
+  return json({roomCode:code,player:p,state:publicView(state,p),version:updated.version})
  }
  return err('Azione sconosciuta.');
 });
