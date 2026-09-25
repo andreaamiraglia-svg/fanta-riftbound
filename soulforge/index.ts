@@ -9,6 +9,7 @@ const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'au
 const json=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'content-type':'application/json; charset=utf-8','cache-control':'no-store'}});
 const err=(message:string,status=400)=>json({error:message},status);
 const cleanName=(v:any)=>String(v||'Giocatore').trim().slice(0,24)||'Giocatore';
+const ratingKey=(v:any)=>String(v||'').trim().replace(/\s+/g,' ').toLowerCase();
 const cleanRoom=(v:any)=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 const roomCode=()=>{const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';const a=new Uint32Array(6);crypto.getRandomValues(a);for(const n of a)s+=chars[n%chars.length];return s;};
 const token=()=>crypto.randomUUID()+crypto.randomUUID().replaceAll('-','');
@@ -61,7 +62,20 @@ Deno.serve(async(req:Request)=>{
  if(req.method!=='POST')return err('Metodo non supportato.',405);
  const supabase=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});let body:any={};try{body=await req.json()}catch{return err('Richiesta non valida.')}const action=body.action;
  if(action==='leaderboard'){
-  const {data,error}=await supabase.from('soulforge_ratings').select('display_name,elo,wins,losses,draws,games').gt('games',0).order('elo',{ascending:false}).order('wins',{ascending:false}).order('games',{ascending:true}).limit(100);
+  const accountKeys=new Set<string>();
+  for(let page=1;page<=100;page++){
+   const {data:usersPage,error:usersError}=await supabase.auth.admin.listUsers({page,perPage:1000});
+   if(usersError)return err('Impossibile verificare gli account della classifica.',500);
+   const users=usersPage?.users||[];
+   for(const user of users){
+    if(!user.email_confirmed_at)continue;
+    const key=ratingKey(user.user_metadata?.display_name);
+    if(key)accountKeys.add(key);
+   }
+   if(users.length<1000)break;
+  }
+  if(!accountKeys.size)return json({entries:[]});
+  const {data,error}=await supabase.from('soulforge_ratings').select('name_key,display_name,elo,wins,losses,draws,games').in('name_key',[...accountKeys]).gt('games',0).order('elo',{ascending:false}).order('wins',{ascending:false}).order('games',{ascending:true}).limit(100);
   if(error)return err('Impossibile caricare la classifica.',500);
   return json({entries:(data||[]).map((x:any,i:number)=>({rank:i+1,name:x.display_name,elo:x.elo,wins:x.wins,losses:x.losses,draws:x.draws,games:x.games,winRate:x.games?Math.round(x.wins*1000/x.games)/10:0}))});
  }
