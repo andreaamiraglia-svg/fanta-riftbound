@@ -48,3 +48,10 @@ window.sfRenderLeaderboard=renderLeaderboard;
 const root=document.getElementById('app');if(root)new MutationObserver(()=>mountNav()).observe(root,{childList:true,subtree:true});
 mountNav();setTimeout(mountNav,0);setTimeout(mountNav,500);
 })();
+
+if(!document.querySelector('script[data-sf-account-loader]')){
+ const accountLoader=document.createElement('script');
+ accountLoader.src='/account-v94.js?v=4';
+ accountLoader.dataset.sfAccountLoader='1';
+ document.head.append(accountLoader);
+}
