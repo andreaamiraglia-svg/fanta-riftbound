@@ -1,10 +1,47 @@
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-
 const SUPABASE_URL='https://gmunayvayjzzyrigaesx.supabase.co';
 const SUPABASE_KEY='sb_publishable_fxZLiURzemtWXCWH2u3UKg_HHEniiMT';
-const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{
- auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
-});
+const SESSION_KEY='sf_account_session_v1';
+let accountSession=null;
+let refreshTimer=null;
+
+async function authRequest(path,{method='GET',body,token}={}){
+ const response=await fetch(SUPABASE_URL+'/auth/v1/'+path,{method,headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined});
+ const result=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(result.msg||result.error_description||result.message||result.error||'Errore di autenticazione.');
+ return result;
+}
+
+function saveAccountSession(value){
+ accountSession=value||null;
+ if(accountSession)localStorage.setItem(SESSION_KEY,JSON.stringify(accountSession));else localStorage.removeItem(SESSION_KEY);
+ scheduleRefresh();
+}
+
+function loadStoredSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{return null}}
+
+function scheduleRefresh(){
+ if(refreshTimer)clearTimeout(refreshTimer);refreshTimer=null;
+ if(!accountSession?.refresh_token)return;
+ const expiresAt=Number(accountSession.expires_at||0)*1000;
+ const wait=Math.max(30000,Math.min(2147483647,expiresAt-Date.now()-60000));
+ refreshTimer=setTimeout(()=>refreshAccount().catch(()=>setSignedOut()),wait);
+}
+
+async function refreshAccount(){
+ if(!accountSession?.refresh_token)return null;
+ const next=await authRequest('token?grant_type=refresh_token',{method:'POST',body:{refresh_token:accountSession.refresh_token}});
+ saveAccountSession(next);currentUser=next.user||null;maintainUi();return next;
+}
+
+function setSignedOut(){saveAccountSession(null);currentUser=null;maintainUi()}
+
+function sessionFromHash(){
+ if(!location.hash.includes('access_token='))return null;
+ const params=new URLSearchParams(location.hash.slice(1)),access_token=params.get('access_token'),refresh_token=params.get('refresh_token');
+ if(!access_token||!refresh_token)return null;
+ const expires_in=Number(params.get('expires_in')||3600),session={access_token,refresh_token,expires_in,expires_at:Math.floor(Date.now()/1000)+expires_in,user:null};
+ history.replaceState(null,'',location.pathname+location.search);return session;
+}
 
 const STYLE=`
 .sf-home-header{position:relative}
@@ -140,13 +177,13 @@ async function submitAuth(event){
  try{
   if(currentMode==='signup'){
    const name=String(data.get('displayName')||'').trim().slice(0,24);
-   const {data:result,error}=await supabase.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:location.origin+location.pathname}});
-   if(error)throw error;
-   if(result.session){currentUser=result.user;closeAuth();maintainUi()}
+   const redirect=encodeURIComponent(location.origin+location.pathname);
+   const result=await authRequest('signup?redirect_to='+redirect,{method:'POST',body:{email,password,data:{display_name:name}}});
+   if(result.access_token){saveAccountSession(result);currentUser=result.user||null;closeAuth();maintainUi()}
    else{form.hidden=true;message('Account creato. Controlla la tua email e apri il link di conferma, poi potrai effettuare il login.',true)}
   }else{
-   const {data:result,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;
-   currentUser=result.user;closeAuth();maintainUi();
+   const result=await authRequest('token?grant_type=password',{method:'POST',body:{email,password}});
+   saveAccountSession(result);currentUser=result.user||null;closeAuth();maintainUi();
   }
  }catch(error){message(friendlyError(error))}
  finally{authBusy=false;if(button?.isConnected){button.disabled=false;button.textContent=currentMode==='signup'?'Crea account':'Accedi'}}
@@ -154,7 +191,7 @@ async function submitAuth(event){
 
 async function logout(){
  if(authBusy)return;authBusy=true;
- try{const {error}=await supabase.auth.signOut();if(error)throw error;currentUser=null;closeAuth();maintainUi()}
+ try{if(accountSession?.access_token)await authRequest('logout',{method:'POST',token:accountSession.access_token});setSignedOut();closeAuth()}
  catch(error){message(friendlyError(error))}
  finally{authBusy=false}
 }
@@ -164,9 +201,16 @@ const observer=new MutationObserver(()=>maintainUi());
 
 async function init(){
  injectStyle();observer.observe(document.body,{childList:true,subtree:true});
- const {data}=await supabase.auth.getSession();currentUser=data.session?.user||null;maintainUi();
- supabase.auth.onAuthStateChange((_event,session)=>{currentUser=session?.user||null;queueMicrotask(maintainUi)});
+ accountSession=sessionFromHash()||loadStoredSession();
+ if(accountSession?.access_token){
+  try{
+   if(Number(accountSession.expires_at||0)*1000<Date.now()+60000)await refreshAccount();
+   else{const user=await authRequest('user',{token:accountSession.access_token});accountSession.user=user;saveAccountSession(accountSession);currentUser=user}
+  }catch{setSignedOut()}
+ }
+ maintainUi();
 }
 
 window.sfAccount={open:openAuth,close:closeAuth,getUser:()=>currentUser,getDisplayName:()=>currentUser?displayName():null};
+window.addEventListener('storage',event=>{if(event.key===SESSION_KEY){accountSession=loadStoredSession();currentUser=accountSession?.user||null;maintainUi()}});
 init().catch(error=>console.error('Account setup:',error));
