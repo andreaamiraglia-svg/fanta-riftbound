@@ -34,12 +34,12 @@ function row(x){
  return `<div class="sf-rank-row ${cls}"><div class="sf-rank-cell sf-rank-pos">${x.rank}°</div><div class="sf-rank-cell sf-rank-name" title="${escRank(x.name)}">${escRank(x.name)}</div><div class="sf-rank-cell sf-rank-elo">${x.elo}</div><div class="sf-rank-cell">${x.wins}</div><div class="sf-rank-cell sf-rank-losses">${x.losses}</div><div class="sf-rank-cell sf-rank-rate">${x.winRate}%</div></div>`;
 }
 async function renderLeaderboard(){
- app.innerHTML=`<div class="sf-home">${header()}<main class="sf-leaderboard-main"><div class="sf-leaderboard-head"><div><h1>Leaderboard</h1><p>Classifica Elo delle partite completate.</p></div><div class="sf-home-hint">Elo iniziale 1000 · K 32</div></div><div id="sfRankStatus" class="sf-rank-empty sf-rank-loading">Caricamento classifica…</div></main></div>`;
+ app.innerHTML=`<div class="sf-home">${header()}<main class="sf-leaderboard-main"><div class="sf-leaderboard-head"><div><h1>Leaderboard</h1><p>Classifica Elo degli account registrati con almeno una partita completata.</p></div><div class="sf-home-hint">Elo iniziale 1000 · K 32</div></div><div id="sfRankStatus" class="sf-rank-empty sf-rank-loading">Caricamento classifica…</div></main></div>`;
  bindRankNav();
  try{
   const data=await post({action:'leaderboard'}),entries=Array.isArray(data.entries)?data.entries:[];
   const box=document.querySelector('#sfRankStatus');if(!box)return;
-  if(!entries.length){box.className='sf-rank-empty';box.textContent='La classifica apparirà dopo la prima partita completata.';return}
+  if(!entries.length){box.className='sf-rank-empty';box.textContent='La classifica apparirà quando un account registrato completa la sua prima partita.';return}
   box.outerHTML=`<div class="sf-rank-table"><div class="sf-rank-row sf-rank-labels"><div class="sf-rank-cell">#</div><div class="sf-rank-cell sf-rank-name">Nome giocatore</div><div class="sf-rank-cell">Elo</div><div class="sf-rank-cell">W</div><div class="sf-rank-cell sf-rank-losses">L</div><div class="sf-rank-cell sf-rank-rate">Win%</div></div>${entries.map(row).join('')}</div>`;
  }catch(e){const box=document.querySelector('#sfRankStatus');if(box){box.className='sf-rank-error';box.textContent=e?.message||'Impossibile caricare la classifica.'}}
 }
