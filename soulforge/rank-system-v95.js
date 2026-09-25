@@ -18,39 +18,57 @@ const RANKS=[
 const STYLE=`
 .sf-ranked-home{position:relative;min-height:100vh}
 .sf-ranked-home .sf-home-play{max-width:none;width:min(900px,45vw);margin:66px 0 0 clamp(34px,4.8vw,100px);padding:0 20px 48px}
-.sf-rank-home-stage{position:absolute;top:122px;right:3.2vw;width:45vw;min-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none}
-.sf-rank-current-icon{width:clamp(145px,11vw,220px);height:clamp(145px,11vw,220px);object-fit:contain;filter:drop-shadow(0 8px 10px #0008)}
-.sf-rank-progress-row{width:min(760px,92%);display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:18px;align-items:center;margin-top:38px}
-.sf-rank-progress{position:relative;height:86px;border-radius:999px;background:#8f3e3e;overflow:hidden;box-shadow:inset 0 0 0 2px #8c3d3d}
-.sf-rank-progress-fill{position:absolute;inset:0 auto 0 0;background:#16e6d4;border-radius:999px;min-width:0;transition:width .45s ease}
-.sf-rank-progress-label{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:950 clamp(28px,3vw,50px)/1 system-ui,sans-serif;letter-spacing:-.05em;text-shadow:-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000,3px 3px 0 #000,0 4px 0 #000;z-index:2}
-.sf-rank-next-icon{width:100px;height:100px;object-fit:contain;filter:drop-shadow(0 5px 6px #0008)}
-.sf-rank-title{margin-top:12px;color:#eee;font:850 18px/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em}
-.sf-rank-max .sf-rank-progress-row{grid-template-columns:minmax(0,1fr)}
+.sf-rank-home-stage{position:absolute;top:118px;right:3.2vw;width:45vw;min-height:500px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none}
+.sf-rank-home-wrap,.sf-rank-result-wrap{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.sf-rank-current-icon{width:clamp(145px,11vw,215px);height:clamp(145px,11vw,215px);object-fit:contain;filter:drop-shadow(0 8px 10px #0008);flex:0 0 auto}
+.sf-rank-progress-row{width:min(620px,92%);display:grid;grid-template-columns:minmax(300px,1fr) 96px;gap:22px;align-items:center;justify-content:center;margin-top:30px}
+.sf-rank-progress{position:relative;width:100%;min-width:0;height:68px;border-radius:999px;background:#8f3e3e;overflow:hidden;border:2px solid #a34a4a;box-shadow:inset 0 3px 9px #0006,0 7px 20px #0004}
+.sf-rank-progress-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#13e7d4,#21d9cb);border-radius:999px;box-shadow:inset 0 0 10px #fff4;transition:width .45s ease}
+.sf-rank-progress-label{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:0 18px;box-sizing:border-box;overflow:visible;white-space:nowrap;color:#fff;font:950 clamp(28px,2.4vw,42px)/1 system-ui,sans-serif;letter-spacing:-.035em;text-shadow:-3px -3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000,3px 3px 0 #000,0 4px 6px #000a;pointer-events:none}
+.sf-rank-next-icon{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 5px 7px #0008);flex:0 0 auto}
+.sf-rank-title{margin-top:14px;color:#f4f4f4;font:900 24px/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;text-shadow:0 3px 8px #0008}
+.sf-rank-max .sf-rank-progress-row{grid-template-columns:minmax(300px,1fr)}
 .sf-rank-max .sf-rank-next-icon{display:none}
 .sf-rank-max .sf-rank-progress-fill{width:100%!important}
-.sf-ranked-gameover .sf-gameover-result{margin:34px 20px 0!important;transform:none!important}
-.sf-ranked-gameover .sf-rank-result-wrap{display:flex;flex-direction:column;align-items:center;margin-top:18px;width:min(760px,90vw)}
-.sf-ranked-gameover .sf-rank-current-icon{width:150px;height:150px}
-.sf-ranked-gameover .sf-rank-progress-row{margin-top:20px;width:100%;grid-template-columns:minmax(0,1fr) 88px}
-.sf-ranked-gameover .sf-rank-progress{height:66px}
-.sf-ranked-gameover .sf-rank-next-icon{width:88px;height:88px}
+.sf-ranked-gameover .sf-gameover-result{margin:36px 20px 0!important;transform:none!important}
+.sf-ranked-gameover .sf-rank-result-wrap{width:min(720px,90vw);margin:26px auto 0!important}
+.sf-ranked-gameover .sf-rank-current-icon{width:145px;height:145px}
+.sf-ranked-gameover .sf-rank-progress-row{width:min(620px,100%);grid-template-columns:minmax(300px,1fr) 92px;gap:20px;margin-top:20px}
+.sf-ranked-gameover .sf-rank-progress{height:64px}
+.sf-ranked-gameover .sf-rank-next-icon{width:92px;height:92px}
 .sf-ranked-gameover .sf-rank-progress-label{font-size:36px}
-.sf-ranked-gameover .sf-gameover-actions{margin:28px 20px 54px!important}
-.sf-ranked-gameover .sf-home-primary{min-width:310px!important;min-height:112px!important;font-size:42px!important}
+.sf-ranked-gameover .sf-rank-title{font-size:25px}
+.sf-ranked-gameover .sf-gameover-actions{margin:32px 20px 48px!important;gap:14px!important}
+.sf-ranked-gameover .sf-home-primary{min-width:300px!important;min-height:100px!important;font-size:40px!important}
 .sf-leaderboard-rank-icon{width:42px;height:42px;object-fit:contain;margin-right:9px;vertical-align:middle;filter:drop-shadow(0 2px 2px #0005)}
-@media(max-width:1100px){.sf-ranked-home .sf-home-play{width:auto;margin:36px 18px 0;padding:0}.sf-rank-home-stage{position:relative;top:auto;right:auto;width:auto;min-height:0;margin:36px 18px 50px}.sf-rank-progress-row{width:min(700px,96%)}.sf-rank-current-icon{width:150px;height:150px}}
-@media(max-width:640px){.sf-rank-progress-row{grid-template-columns:minmax(0,1fr) 70px;gap:8px}.sf-rank-progress{height:62px}.sf-rank-next-icon{width:70px;height:70px}.sf-rank-progress-label{font-size:27px}.sf-ranked-gameover .sf-rank-progress-row{grid-template-columns:minmax(0,1fr) 68px}.sf-ranked-gameover .sf-rank-next-icon{width:68px;height:68px}.sf-ranked-gameover .sf-rank-progress-label{font-size:27px}}
+@media(max-width:1100px){
+ .sf-ranked-home .sf-home-play{width:auto;margin:36px 18px 0;padding:0}
+ .sf-rank-home-stage{position:relative;top:auto;right:auto;width:auto;min-height:0;margin:36px 18px 50px}
+ .sf-rank-home-wrap{width:min(720px,100%)}
+ .sf-rank-current-icon{width:145px;height:145px}
+ .sf-rank-progress-row{width:min(600px,96%)}
+}
+@media(max-width:640px){
+ .sf-rank-progress-row,.sf-ranked-gameover .sf-rank-progress-row{width:100%;grid-template-columns:minmax(190px,1fr) 68px;gap:10px}
+ .sf-rank-progress{height:54px}
+ .sf-rank-next-icon,.sf-ranked-gameover .sf-rank-next-icon{width:68px;height:68px}
+ .sf-rank-progress-label,.sf-ranked-gameover .sf-rank-progress-label{font-size:25px;padding:0 10px}
+ .sf-rank-current-icon,.sf-ranked-gameover .sf-rank-current-icon{width:115px;height:115px}
+ .sf-rank-title,.sf-ranked-gameover .sf-rank-title{font-size:20px}
+ .sf-rank-max .sf-rank-progress-row{grid-template-columns:minmax(190px,1fr)}
+}
 `;
 let cache={name:'',points:0,at:0};
 let running=false;
 const norm=s=>String(s||'').trim().replace(/\s+/g,' ').toLowerCase();
+const getSession=()=>{try{return typeof session!=='undefined'?session:window.session}catch{return window.session}};
 function currentRank(points){
  points=Math.max(0,Number(points)||0);
  for(let i=RANKS.length-1;i>=0;i--)if(points>=RANKS[i].min)return {...RANKS[i],index:i};
  return {...RANKS[0],index:0};
 }
 function progress(points){
+ points=Math.max(0,Number(points)||0);
  const rank=currentRank(points),nextRank=RANKS[rank.index+1]||null;
  if(!nextRank)return {rank,nextRank:null,pct:100,label:`${points} PUNTI`};
  const span=rank.next-rank.min,inside=Math.max(0,points-rank.min),pct=Math.max(0,Math.min(100,inside/span*100));
@@ -82,18 +100,21 @@ async function mountHome(){
  let stage=home.querySelector('.sf-rank-home-stage');
  if(!stage){stage=document.createElement('aside');stage.className='sf-rank-home-stage';home.appendChild(stage)}
  const points=await ownPoints();if(points==null)return;
- stage.innerHTML=rankMarkup(points,'home');
+ const key=String(points);
+ if(stage.dataset.points!==key){stage.dataset.points=key;stage.innerHTML=rankMarkup(points,'home')}
 }
 async function mountGameover(){
- const s=window.session?.state;if(!s||s.status!=='gameover')return;
+ const s=getSession();
+ if(!s?.state||s.state.status!=='gameover')return;
  if(!window.sfAccount?.getUser?.())return;
  const panel=document.querySelector('.sf-gameover-panel');if(!panel)return;
+ panel.classList.add('sf-ranked-gameover');
  const points=await ownPoints(true);if(points==null)return;
- const result=s.draw?'PAREGGIO':Number(s.winner)===Number(window.session.player)?'VITTORIA':'SCONFITTA';
- if(panel.dataset.rankVersion===`${window.session.version}:${points}:${result}`)return;
- panel.dataset.rankVersion=`${window.session.version}:${points}:${result}`;
- panel.className='sf-gameover-panel sf-ranked-gameover';
- panel.innerHTML=`<header class="sf-gameover-header"><div class="sf-gameover-brand"><img src="/favicon-192.png?v=cs2" alt=""><span><strong>Champion</strong><small>of the</small><b>Souls</b></span></div></header><h1 class="sf-gameover-result ${s.draw?'sf-draw':''}">${result}</h1>${rankMarkup(points,'result')}<div class="sf-gameover-actions"><button id="sfHomeBtn" class="sf-home-primary">Home</button></div>`;
+ let wrap=panel.querySelector('.sf-rank-result-wrap');
+ const resultHeading=panel.querySelector('.sf-gameover-result');
+ if(!wrap){wrap=document.createElement('div');wrap.className='sf-rank-result-wrap';if(resultHeading)resultHeading.insertAdjacentElement('afterend',wrap);else panel.querySelector('.sf-gameover-actions')?.insertAdjacentElement('beforebegin',wrap)}
+ const key=`${s.version||''}:${points}`;
+ if(wrap.dataset.rankKey!==key){wrap.dataset.rankKey=key;wrap.outerHTML=rankMarkup(points,'result')}
 }
 function decorateLeaderboard(){
  document.querySelectorAll('.sf-rank-row:not(.sf-rank-labels)').forEach(row=>{
@@ -107,6 +128,7 @@ async function maintain(){
  if(running)return;running=true;
  try{await mountHome();await mountGameover();decorateLeaderboard()}finally{running=false}
 }
+const oldStyle=document.getElementById('sfRank95Style');if(oldStyle)oldStyle.remove();
 const st=document.createElement('style');st.id='sfRank95Style';st.textContent=STYLE;document.head.appendChild(st);
 const obs=new MutationObserver(()=>queueMicrotask(maintain));obs.observe(document.body,{childList:true,subtree:true});
 window.sfRankSystem={ranks:RANKS,currentRank,progress,refresh:()=>{cache.at=0;return maintain()}};
