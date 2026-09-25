@@ -1,3 +1,4 @@
+(()=>{
 const SUPABASE_URL='https://gmunayvayjzzyrigaesx.supabase.co';
 const SUPABASE_KEY='sb_publishable_fxZLiURzemtWXCWH2u3UKg_HHEniiMT';
 const SESSION_KEY='sf_account_session_v1';
@@ -214,3 +215,4 @@ async function init(){
 window.sfAccount={open:openAuth,close:closeAuth,getUser:()=>currentUser,getDisplayName:()=>currentUser?displayName():null};
 window.addEventListener('storage',event=>{if(event.key===SESSION_KEY){accountSession=loadStoredSession();currentUser=accountSession?.user||null;maintainUi()}});
 init().catch(error=>console.error('Account setup:',error));
+})();
