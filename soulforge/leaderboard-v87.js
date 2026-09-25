@@ -51,7 +51,7 @@ mountNav();setTimeout(mountNav,0);setTimeout(mountNav,500);
 
 if(!document.querySelector('script[data-sf-account-loader]')){
  const accountLoader=document.createElement('script');
- accountLoader.src='/account-v94.js?v=4';
+ accountLoader.src='/account-v94.js?v=5';
  accountLoader.dataset.sfAccountLoader='1';
  document.head.append(accountLoader);
 }
