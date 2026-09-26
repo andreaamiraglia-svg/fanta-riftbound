@@ -14,13 +14,17 @@ export const newState:any=base.newState;
 const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const log=(s:any,msg:string)=>{s.log ||= [];s.log.push(msg);if(s.log.length>220)s.log=s.log.slice(-220)};
 
-function sourceActorBeforeMove(state:any,p:number,move:any){
+function sourceActorBeforeMove(state:any,p:number,move:any):number|null{
  if(move?.type==='pass_priority'&&state?.stack?.length){
   const top=state.stack[state.stack.length-1];
+  const sourceId=String(top?.sourceCardId||top?.cardId||'');
+  // actor indica chi prende le decisioni per il trigger, non chi ha compiuto l'azione.
+  // Se la fonte è un Mostro, eventuali morti causate dal nuovo POW non appartengono a nessun giocatore.
+  if(top?.kind==='effect'&&MONSTER_DEFS?.[sourceId])return null;
   const actor=Number(top?.actor);
   if(actor===1||actor===2)return actor;
  }
- return p===1||p===2?p:1;
+ return p===1||p===2?p:null;
 }
 
 /*
@@ -32,7 +36,7 @@ function sourceActorBeforeMove(state:any,p:number,move:any){
  senza danni non crea una Ferita automatica (gli effetti che feriscono a 0 POW,
  come Hilda Superiore, continuano a farlo esplicitamente).
 */
-function enforceDamageThresholds(state:any,killer:number){
+function enforceDamageThresholds(state:any,killer:number|null){
  let changed=true,guard=0;
  while(changed&&guard++<24){
   changed=false;
