@@ -390,7 +390,8 @@ export function act(state:any,p0:any,move:any){
   if(Number(state.priority)!==p)throw new Error('Non hai priorità.');
   preResolveCustom(state,top,ctx);
  }
- const reducerActor=(top&&(top.kind==='card'||top.kind==='effect'))?Number(top.actor):null;
+ const topSourceId=String(top?.sourceCardId||top?.cardId||'');
+ const reducerActor=(top&&(top.kind==='card'||top.kind==='effect')&&!(top.kind==='effect'&&MONSTER_DEFS?.[topSourceId]))?Number(top.actor):null;
  let out:any;
  out=withAdjustedCastCost(state,p,move,()=>base.act(state,p,move));
  if(move?.type==='cast'&&String(move.cardId)==='bang')payBangDiscard(state,p,move);
