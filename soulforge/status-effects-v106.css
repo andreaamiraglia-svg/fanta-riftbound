@@ -1,0 +1,12 @@
+/* Buff/debuff HUD v106 */
+body.sf-fantasy-game .champions{padding-bottom:64px!important}
+.sf-effects-tray{position:absolute;left:50%;top:calc(100% + 3px);transform:translateX(-50%);z-index:70;width:190px;display:flex;flex-direction:column;gap:3px;pointer-events:none}
+.sf-effect-row{display:flex;align-items:center;gap:5px;min-height:20px;padding:3px 6px;border:1px solid rgba(255,255,255,.15);border-radius:6px;background:rgba(10,12,17,.94);box-shadow:0 2px 7px rgba(0,0,0,.45);font-size:8px;line-height:1.15;color:#eee;white-space:normal}
+.sf-effect-row b{font-size:9px;white-space:nowrap}.sf-effect-row small{font-size:7px;color:#c9cbd1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sf-effect-row.sf-buff{border-color:rgba(81,213,138,.55)}.sf-effect-row.sf-debuff{border-color:rgba(237,91,91,.62)}.sf-effect-row.sf-status{border-color:rgba(231,177,94,.62)}
+.sf-effect-row.sf-passive{border-style:dashed}.sf-effect-empty{display:none}
+.sf-monster-effects{position:relative!important;left:auto!important;top:auto!important;transform:none!important;width:100%!important;margin-top:6px!important;z-index:4!important}
+.sf-monster-effects .sf-effect-row{font-size:8px}.sf-monster-effects .sf-effect-row small{white-space:normal}
+.sf-charge-stat{border-color:#d6a748!important}.sf-charge-stat .sf-hud-label,.sf-charge-stat .sf-card-stat-label{color:#f0c96a!important}
+.sf-preview-effects{display:grid;gap:6px;margin-top:14px}.sf-preview-effects-title{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:#e7b15e;font-weight:900}.sf-preview-effect{padding:7px 9px;border:1px solid #3b404b;border-radius:8px;background:#151922;font-size:12px;line-height:1.35}.sf-preview-effect.sf-buff{border-color:#315d45}.sf-preview-effect.sf-debuff{border-color:#6b3434}.sf-preview-effect.sf-status{border-color:#725a32}.sf-preview-effect strong{display:block}.sf-preview-effect span{color:#b9bec8}
+@media(max-width:1099px){body.sf-fantasy-game .champions{padding-bottom:58px!important}.sf-effects-tray{width:160px}.sf-effect-row{font-size:7px;padding:3px 5px}.sf-effect-row b{font-size:8px}}
