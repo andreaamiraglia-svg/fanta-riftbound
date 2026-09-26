@@ -158,7 +158,10 @@ export function newState(...args:any[]){const s=(base.newState as any)(...args);
 export function act(state:any,p0:any,move0:any){
  const p=Number(p0),move=clone(move0||{});normalize(state);const before=snapshot(state),oldTurn=Number(state.turn||0);
  const top=move.type==='pass_priority'&&state.stack?.length?clone(state.stack[state.stack.length-1]):null;
- const eventActor=top&&(top.kind==='card'||top.kind==='effect')?Number(top.actor):(p===1||p===2?p:null);
+ const topSourceId=String(top?.sourceCardId||top?.cardId||'');
+ const monsterSource=!!(top&&top.kind==='effect'&&MONSTER_DEFS?.[topSourceId]);
+ // actor di un trigger Mostro serve per priorità/scelte, ma il Mostro non è una "tua fonte".
+ const eventActor=monsterSource?null:(top&&(top.kind==='card'||top.kind==='effect')?Number(top.actor):(p===1||p===2?p:null));
  if(move.type==='activate_champion'&&String(move.champId)==='aurelius'&&champ(state,p,'aurelius')?.superior)return activateAurelius(state,p);
  if(move.type==='activate_champion'&&String(move.champId)==='valtheris'&&champ(state,p,'valtheris')?.superior)throw new Error('Valtheris Superiore non possiede più Protettore dell’Anima.');
  let grave:null|{id:string}=null;
