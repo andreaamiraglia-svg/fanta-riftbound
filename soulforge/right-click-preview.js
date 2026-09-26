@@ -12,7 +12,15 @@ const CHAMPION_TEXT={
 };
 const FILE_TO_ID=Object.fromEntries([...Object.entries(OLD_ART),...Object.entries(V18_ART),...Object.entries(BLUE_ART)].map(([id,file])=>[file,id]));
 let opened=false,openedMode=null,hoverTimer=null,hoverRoot=null,hoverX=0,hoverY=0;
-function artUrl(id){try{const u=window.sfArtUrl21?.(id);if(u)return u}catch{}return V18_ART[id]?V18_BASE+V18_ART[id]:(BLUE_ART[id]?OLD_BASE+BLUE_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''))}
+function findChampion(id){try{for(const p of [1,2]){const c=session.state?.players?.[String(p)]?.champions?.find(x=>String(x.id)===String(id));if(c)return c}}catch{}return null}
+function artUrl(id,ref=null){
+ try{
+  const runtime=ref?.runtime||((ref?.kind==='champion'||window.sfChampionSuperior105?.DATA?.[String(id)])?findChampion(id):null);
+  if(runtime&&window.sfChampionSuperior105?.artFor){const u=window.sfChampionSuperior105.artFor(String(id),runtime);if(u)return u}
+  const u=window.sfArtUrl21?.(id);if(u)return u
+ }catch{}
+ return V18_ART[id]?V18_BASE+V18_ART[id]:(BLUE_ART[id]?OLD_BASE+BLUE_ART[id]:(OLD_ART[id]?OLD_BASE+OLD_ART[id]:''))
+}
 function box(){let b=document.getElementById('sfRightPreview');if(!b){b=document.createElement('div');b.id='sfRightPreview';b.className='sf-preview';b.style.zIndex='10050';document.body.appendChild(b)}return b}
 function safe(v){try{return typeof esc==='function'?esc(v):String(v??'')}catch{return String(v??'')}}
 function n(v,d=0){const x=Number(v);return Number.isFinite(x)?x:d}
@@ -21,20 +29,19 @@ function refFromTarget(t){
  const mEl=t.closest('[data-monster-uid]');
  if(mEl?.dataset.monsterUid){try{const m=session.state?.board?.monsters?.find(x=>String(x.uid)===String(mEl.dataset.monsterUid));if(m)return{id:m.cardId,kind:'monster',runtime:m}}catch{}}
  const cEl=t.closest('[data-champ-id]');
- if(cEl?.dataset.champId){try{const owner=Number(cEl.dataset.owner),c=session.state?.players?.[String(owner)]?.champions?.find(x=>String(x.id)===String(cEl.dataset.champId));if(c)return{id:c.id,kind:'champion',runtime:c,owner}}catch{}return{id:cEl.dataset.champId,kind:'champion'}}
+ if(cEl?.dataset.champId){try{const owner=Number(cEl.dataset.owner),c=session.state?.players?.[String(owner)]?.champions?.find(x=>String(x.id)===String(cEl.dataset.champId));if(c)return{id:c.id,kind:'champion',runtime:c,owner}}catch{}return{id:cEl.dataset.champId,kind:'champion',runtime:findChampion(cEl.dataset.champId)}}
  const p=t.closest('[data-preview-card]');if(p?.dataset.previewCard)return{id:p.dataset.previewCard};
  const h=t.closest('[data-hand-card]');if(h?.dataset.handCard)return{id:h.dataset.handCard};
  const s=t.closest('[data-select-card]');if(s?.dataset.selectCard)return{id:s.dataset.selectCard};
  const im=t.closest('img');if(!im)return null;const file=decodeURIComponent((im.currentSrc||im.src||'').split('/').pop()?.split('?')[0]||'');return FILE_TO_ID[file]?{id:FILE_TO_ID[file]}:null;
 }
 function previewRoot(t){if(!(t instanceof Element))return null;return t.closest('[data-monster-uid],[data-champ-id],[data-preview-card],[data-hand-card],[data-select-card]')||t.closest('img')}
-function findChampion(id){try{for(const p of [1,2]){const c=session.state?.players?.[String(p)]?.champions?.find(x=>String(x.id)===String(id));if(c)return c}}catch{}return null}
 function info(ref){const id=ref?.id;if(!id)return{kind:'image',id:'',name:''};try{
  if(ref.kind==='monster'){const d=session.state?.monsterDefs?.[id]||{};return{kind:'monster',...d,...(ref.runtime||{}),id,name:ref.runtime?.name||d.name||id,text:d.text||ref.runtime?.text||''}}
- if(ref.kind==='champion'){const d=session.state?.championDefs?.[id]||{};const r=ref.runtime||findChampion(id)||{};return{kind:'champion',...d,...r,id,name:r.name||d.name||id,text:CHAMPION_TEXT[id]||r.text||d.text||''}}
+ if(ref.kind==='champion'){const d=session.state?.championDefs?.[id]||{};const r=ref.runtime||findChampion(id)||{};return{kind:'champion',...d,...r,id,name:r.name||d.name||id,text:r.text||d.text||CHAMPION_TEXT[id]||''}}
  const c=session.state?.cardDefs?.[id];if(c)return{kind:'card',...c};
  const m=session.state?.monsterDefs?.[id];if(m){const r=session.state?.board?.monsters?.find(x=>String(x.cardId)===String(id));return{kind:'monster',...m,...(r||{}),id,name:r?.name||m.name||id,text:m.text||''}}
- const d=session.state?.championDefs?.[id];if(d){const r=findChampion(id)||{};return{kind:'champion',...d,...r,id,name:r.name||d.name||id,text:CHAMPION_TEXT[id]||''}}
+ const d=session.state?.championDefs?.[id];if(d){const r=findChampion(id)||{};return{kind:'champion',...d,...r,id,name:r.name||d.name||id,text:r.text||d.text||CHAMPION_TEXT[id]||''}}
  }catch{}return{kind:'image',id,name:id}}
 function stat(type,label,value){return `<div class="sf-preview-stat sf-preview-stat--${type}"><span>${safe(label)}</span><b>${safe(value)}</b></div>`}
 function statBlock(c){
@@ -51,18 +58,29 @@ function description(text){const t=String(text??'').trim();return `<div class="s
 function details(c){
  if(c.kind==='card')return `<h3>${safe(c.name)}</h3><div class="tag">${safe(c.type||'Carta')} • ${typeof speedLabel==='function'?speedLabel(c.speed||'base'):safe(c.speed||'')} • Costo ${safe(c.effectiveCost??c.cost??0)}</div>${description(c.text||'')}`;
  if(c.kind==='monster')return `<h3>${safe(c.name)}</h3><div class="tag">Mostro</div>${statBlock(c)}${description(c.text||'')}`;
- if(c.kind==='champion')return `<h3>${safe(c.name)}</h3><div class="tag">Campione${c.tapped?' • Tappato':''}${c.defeated?' • Sconfitto':''}</div>${statBlock(c)}${description(c.text||'')}`;
+ if(c.kind==='champion')return `<h3>${safe(c.name)}</h3><div class="tag">Campione${c.superior?' • Superiore':''}${c.tapped?' • Tappato':''}${c.defeated?' • Sconfitto':''}</div>${statBlock(c)}${description(c.text||'')}`;
  return `<h3>${safe(c.name||c.id)}</h3>${description('')}`;
 }
-function show(ref,x,y,mode='context'){if(!ref?.id)return;const url=artUrl(ref.id);if(!url)return;const c=info(ref),b=box();b.innerHTML=`<img src="${url}" alt="${safe(c.name||ref.id)}"><div class="ptext">${details(c)}<div class="tiny sf-preview-help">Tasto destro per i dettagli • Click / ESC per chiudere</div></div>`;const w=Math.min(820,innerWidth*.94),h=Math.min(560,innerHeight*.92);let left=x+18,top=y-100;if(left+w>innerWidth-16)left=Math.max(16,x-w-18);if(top+h>innerHeight-16)top=Math.max(16,innerHeight-h-16);if(top<16)top=16;b.style.left=left+'px';b.style.top=top+'px';b.style.setProperty('display','flex','important');b.style.pointerEvents='none';b.classList.add('show');opened=true;openedMode=mode}
+function show(ref,x,y,mode='context'){if(!ref?.id)return;const url=artUrl(ref.id,ref);if(!url)return;const c=info(ref),b=box();if(c.kind==='champion')document.querySelector('#sfPreview')?.classList.remove('show');b.innerHTML=`<img src="${url}" alt="${safe(c.name||ref.id)}"><div class="ptext">${details(c)}<div class="tiny sf-preview-help">Tasto destro per i dettagli • Click / ESC per chiudere</div></div>`;const w=Math.min(820,innerWidth*.94),h=Math.min(560,innerHeight*.92);let left=x+18,top=y-100;if(left+w>innerWidth-16)left=Math.max(16,x-w-18);if(top+h>innerHeight-16)top=Math.max(16,innerHeight-h-16);if(top<16)top=16;b.style.left=left+'px';b.style.top=top+'px';b.style.setProperty('display','flex','important');b.style.pointerEvents='none';b.classList.add('show');opened=true;openedMode=mode}
 function close(){const b=document.getElementById('sfRightPreview');if(!b)return;b.classList.remove('show');b.style.removeProperty('display');opened=false;openedMode=null}
 function cancelHoverTimer(){if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=null}}
 function leaveHoverRoot(root,related){if(!root||root!==hoverRoot)return;if(related instanceof Node&&root.contains(related))return;cancelHoverTimer();hoverRoot=null;if(opened&&openedMode==='hover')close()}
 
 document.addEventListener('contextmenu',e=>{
- const root=e.target instanceof Element?e.target.closest('.hand-card[data-hand-card]'):null;
+ const target=e.target instanceof Element?e.target:null;
+ const champRoot=target?.closest('.champ,[data-champ-id]');
+ if(champRoot){
+  const ref=refFromTarget(champRoot);
+  if(ref?.kind==='champion'&&ref.id){
+   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();cancelHoverTimer();hoverRoot=null;close();
+   if(window.sfChampionSuperior105?.open)window.sfChampionSuperior105.open(ref.id,ref.runtime||findChampion(ref.id));
+   else show(ref,e.clientX,e.clientY,'context');
+   return;
+  }
+ }
+ const root=target?.closest('.hand-card[data-hand-card]');
  if(!root)return;
- const ref=refFromTarget(root);if(!ref?.id||!artUrl(ref.id))return;
+ const ref=refFromTarget(root);if(!ref?.id||!artUrl(ref.id,ref))return;
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
  cancelHoverTimer();hoverRoot=null;show(ref,e.clientX,e.clientY,'context');
 },true);
@@ -75,7 +93,7 @@ document.addEventListener('mouseover',e=>{
  hoverTimer=setTimeout(()=>{
   hoverTimer=null;
   if(hoverRoot!==root||!root.isConnected)return;
-  const ref=refFromTarget(root);if(!ref?.id||!artUrl(ref.id))return;
+  const ref=refFromTarget(root);if(!ref?.id||!artUrl(ref.id,ref))return;
   show(ref,hoverX,hoverY,'hover');
  },1000);
 },true);
