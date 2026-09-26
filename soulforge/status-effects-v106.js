@@ -4,7 +4,7 @@ const num=v=>Number.isFinite(Number(v))?Number(v):0;
 function fxLabel(f){
  const source=String(f?.source||'Effetto');const who=String(f?.sourcePlayer||'');
  if(f?.stat==='passive'){
-  const text=String(f?.text||'');const ability=(text.split('—')[0]||'Passiva').trim();return{main:ability||'Passiva',sub:`Passiva${source?' • '+source:''}`};
+  const text=String(f?.text||''),parts=text.split('—'),ability=parts.length>1?parts[0].trim():'Passiva';return{main:ability||'Passiva',sub:source||'Passiva'};
  }
  return{main:String(f?.label||'Effetto'),sub:[source,who].filter(Boolean).join(' • ')};
 }
