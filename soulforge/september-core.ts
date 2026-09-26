@@ -39,22 +39,26 @@ woundChampion=function(s,p,c,source=''){
 const oldKill61=killMonster;
 killMonster=function(s,killer,m,reason='',grantSoul=true,kingOverride){
  if(!m||!monster(s,m.uid))return;
- const dead=clone(m);
- const effectiveKiller=s.monsterSource61?Number(s.monsterSource61.owner):killer;
- const grants=grantSoul&&m.noSoulsTurn!==s.turn&&!s.monsterSource61;
+ const dead=clone(m),monsterCaused=!!s.monsterSource61;
+ // Il proprietario del Mostro resta disponibile solo per le scelte tecniche del suo effetto:
+ // la morte NON è una kill del giocatore e non genera Anime/trigger "hai ucciso".
+ const effectiveKiller=monsterCaused?Number(s.monsterSource61.owner):killer;
+ const grants=grantSoul&&m.noSoulsTurn!==s.turn&&!monsterCaused;
  if(!grants){s.noSoulDeaths61 ||= [];s.noSoulDeaths61.push(m.uid)}
  const out=oldKill61(s,effectiveKiller,m,reason,grants,kingOverride);
- if(s.monsterSource61&&MONSTER_DEFS[dead.cardId]?.lascito==='sciamano')
-  for(let i=0;i<1+(kingOverride??kingsInPlay(s));i++)s.triggerQueue.push({actor:effectiveKiller,sourceCardId:dead.cardId,effectId:'lascito_sciamano',effectName:'Lascito — Sciamano del Sole'});
- rules61.dead?.(s,dead,effectiveKiller);
+ // Gli osservatori di morte non devono ricevere un giocatore-killer quando la fonte è un Mostro.
+ rules61.dead?.(s,dead,monsterCaused?null:effectiveKiller);
  return out;
 };
 const oldEffect61=resolveEffect;
 resolveEffect=function(s,item){
  if(rules61.effect?.(s,item))return;
  const source=MONSTER_DEFS[item.sourceCardId];
- if(source&&String(item.effectId).startsWith('enter_'))s.monsterSource61={owner:item.actor,cardId:source.id};
- try{return oldEffect61(s,item)}finally{delete s.monsterSource61}
+ // Qualsiasi abilità proveniente da un Mostro è una fonte neutrale: actor serve soltanto
+ // per priorità/scelte, non significa che l'effetto sia compiuto dal suo proprietario.
+ const previous=s.monsterSource61;
+ if(source)s.monsterSource61={owner:item.actor,cardId:source.id};
+ try{return oldEffect61(s,item)}finally{if(previous)s.monsterSource61=previous;else delete s.monsterSource61}
 };
 const oldEnter61=processMonsterEnter;
 processMonsterEnter=function(s,m){
@@ -78,7 +82,8 @@ resolveCombat=function(s){
   const m=monster(s,c.attacker.uid),d=c.target?.type==='champion'?champ(s,c.target.player,c.target.champId):null;
   if(m&&d&&!d.defeated&&!c.cancelled){
    const n=currentMonsterPow(s,m),retaliation=d.counterattack||d.counterattackTurn===s.turn||d.septemberCounterTurn===s.turn?currentPow(s,c.target.player,d):0;
-   damageChampion(s,c.target.player,d.id,n,MONSTER_DEFS[m.cardId]?.name);
+   const previous=s.monsterSource61;s.monsterSource61=m;
+   try{damageChampion(s,c.target.player,d.id,n,MONSTER_DEFS[m.cardId]?.name)}finally{if(previous)s.monsterSource61=previous;else delete s.monsterSource61}
    if(retaliation>0)damageMonster(s,c.target.player,m.uid,retaliation,d.name);
   }
   s.combat=null;s.stackInitiator=c.initiator;afterTopResolution(s);return;
