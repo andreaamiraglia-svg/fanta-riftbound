@@ -51,7 +51,6 @@ const colorLabel=(c:string)=>c==='red'?'Rossa':c==='green'?'Verde':c==='black'?'
 function rawChampionPow(s:any,p:number,c:any){
  if(!c)return 0;
  let v=Number(c.basePow??CHAMPION_DEFS?.[c.id]?.basePow??0)+Number(c.tempPow||0);
- if(String(c.id)==='kael'&&(player(s,p)?.hand?.length||0)===0&&s?.status==='main')v+=3;
  return v;
 }
 function rawMonsterPow(s:any,m:any){
@@ -147,7 +146,7 @@ function woundChampionLocal(s:any,p:number,c:any,source:string){return engine61.
 function damageChampionLocal(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
 function addLyrandelTrigger(s:any,p:number,uid:string){
  const q=player(s,p),lyr=champ(s,p,'lyrandel');
- if(!q||!lyr||lyr.defeated||q.lyrandelUsed||!monster(s,uid))return;
+ if(!q||!lyr||lyr.defeated||lyr.superior||q.lyrandelUsed||!monster(s,uid))return;
  q.lyrandelUsed=true;s.triggerQueue ||= [];
  s.triggerQueue.push({actor:p,sourceCardId:'lyrandel',effectId:'lyrandel_bonus',choiceType:'monsterUids',meta:{uids:[uid]},effectName:'Effetto di Lyrandel'});
 }
@@ -255,15 +254,7 @@ function discardedFromHand(before:any,state:any,p:number){
  for(const [id,n] of bh){const left=Math.max(0,n-(ah.get(id)||0)),added=Math.max(0,(ag.get(id)||0)-(bg.get(id)||0)),k=Math.min(left,added);for(let i=0;i<k;i++)out.push(id)}
  return out;
 }
-function triggerScarlet(s:any,p:number,discarded:string[]){
- if(!discarded.length)return;const q=player(s,p),c=champ(s,p,'scarlet');
- if(!q||!c||c.defeated||Number(q._scarletTriggeredTurn)===Number(s.turn))return;
- q._scarletTriggeredTurn=Number(s.turn);
- const i=(q.deck||[]).findIndex((id:string)=>CARD_DEFS[id]?.color==='red');
- if(i<0){log(s,'Fuoco e Fiamme non trova una carta Rossa nel Mazzo.');return;}
- const [id]=q.deck.splice(i,1);q.hand.push(id);q._scarletDiscounts ||= {};q._scarletDiscounts[id]=Number(s.turn);
- log(s,`Fuoco e Fiamme: ${q.name} pesca ${CARD_DEFS[id]?.name||id}; costa 1 Anima Rossa in meno per questo turno.`);
-}
+function triggerScarlet(_s:any,_p:number,_discarded:string[]){/* Implementata in game-v68. */}
 
 function snapshotState(s:any){
  const snap:any={hand:{1:clone(player(s,1)?.hand||[]),2:clone(player(s,2)?.hand||[])},grave:{1:clone(player(s,1)?.grave||[]),2:clone(player(s,2)?.grave||[])},champions:new Map(),monsters:new Map()};
@@ -342,6 +333,7 @@ function triggerGrinn(s:any,before:any,deaths:any[],eventTurn:number){
  if(!deaths.some(d=>Number(d.pow||0)>=4))return;
  for(const p of [1,2]){
   const b=before.champions.get(`${p}:grinn`),now=champ(s,p,'grinn'),wasActive=!!b&&!b.defeated,activeNow=!!now&&!now.defeated;
+  if(now?.superior)continue;
   const q=player(s,p);if(!q||(!wasActive&&!activeNow)||Number(q._grinnTriggeredTurn)===Number(eventTurn))continue;
   q._grinnTriggeredTurn=Number(eventTurn);q._grinnDiscountTurn=Number(eventTurn);
   log(s,`Risata Omicida: le Magie di costo 3 o superiore di ${q.name} costano 1 Anima in meno per questo turno.`);
@@ -350,7 +342,7 @@ function triggerGrinn(s:any,before:any,deaths:any[],eventTurn:number){
 
 function queueHildaAttacks(s:any,before:any,actor:number|null){
  if(actor!==1&&actor!==2)return;
- const hBefore=before.champions.get(`${actor}:hilda`),h=champ(s,actor,'hilda');if((!hBefore||hBefore.defeated)&&(!h||h.defeated))return;
+ const hBefore=before.champions.get(`${actor}:hilda`),h=champ(s,actor,'hilda');if(h?.superior||((!hBefore||hBefore.defeated)&&(!h||h.defeated)))return;
  const targets:any[]=[];
  for(const [key,b] of before.champions){if(b.player!==other(actor)||b.defeated)continue;const c=champ(s,b.player,b.id);if(!c||c.defeated)continue;const after=rawChampionPow(s,b.player,c);if(after<=0&&after<Number(b.pow))targets.push({type:'champion',player:b.player,champId:b.id})}
  for(const [uid,b] of before.monsters){const m=monster(s,uid);if(!m)continue;const after=rawMonsterPow(s,m);if(after<=0&&after<Number(b.pow))targets.push({type:'monster',uid})}
@@ -370,19 +362,7 @@ function tryStartHildaAttack(s:any){
  }
 }
 
-function reviveTorvaldIfNeeded(s:any,before:any,oldStatus:any,logStart:number,eventTurn:number){
- for(const p of [1,2]){
-  const b=before.champions.get(`${p}:torvald`),c=champ(s,p,'torvald');if(!b||b.defeated||!c||!c.defeated)continue;
-  if(Number(c._torvaldRevivedTurn)===Number(eventTurn))continue;
-  c._torvaldRevivedTurn=Number(eventTurn);c._torvaldTemporaryLifeTurn=Number(eventTurn);c.defeated=false;c.tapped=false;c.damage=0;c.wounds=Math.max(0,Number(c.hp||3)-1);
-  log(s,`${c.name}: Ascia Inarrestabile lo riporta in vita e lo stappa fino alla fine del turno.`);
- }
- const anyTemp=[1,2].some(p=>{const c=champ(s,p,'torvald');return c&&!c.defeated&&Number(c._torvaldTemporaryLifeTurn)===Number(eventTurn)});
- if(anyTemp&&s.status==='gameover'){
-  const losers=[1,2].filter(p=>{const starters=(player(s,p)?.champions||[]).filter((c:any)=>!c.supportChampion);return starters.length&&starters.every((c:any)=>c.defeated)});
-  if(!losers.length){s.status=oldStatus==='gameover'?'main':oldStatus;s.winner=null;const prefix=(s.log||[]).slice(0,logStart);const tail=(s.log||[]).slice(logStart).filter((x:any)=>!String(x).includes('vince la partita'));s.log=[...prefix,...tail]}
- }
-}
+function reviveTorvaldIfNeeded(_s:any,_before:any,_oldStatus:any,_logStart:number,_eventTurn:number){/* Ascia Furia/Furia Inarrestabile sono in game-v68. */}
 function expireTorvaldAtTurnChange(s:any,oldTurn:number){
  if(Number(s.turn)===Number(oldTurn))return;
  for(const p of [1,2]){const c=champ(s,p,'torvald');if(!c)continue;if(Number(c._torvaldTemporaryLifeTurn)===Number(oldTurn)&&!c.defeated){c.defeated=true;c.tapped=true;c.damage=0;c.wounds=Number(c.hp||3);log(s,`${c.name} muore alla fine del turno dopo Ascia Inarrestabile.`)}delete c._torvaldTemporaryLifeTurn}

@@ -1,8 +1,7 @@
 colors)
     souls[c] = 3; return { name, souls, recycleCount: 0, deckColors: [...cfg.colors], champions: cfg.champions.map(freshChampion), deck: shuffle(cfg.cards), grave: [], hand: [], selected: false, monsterDeck: shuffle(cfg.monsters), monsterGrave: [], banishedMonsters: [], fireCloud: false, lyrandelUsed: false, firstMagicCast: false, killedMonsterThisTurn: false }; }
 export function newState(name, deckConfig) { return { status: 'waiting', turn: 1, focus: 1, priority: null, priorityPasses: 0, mainPasses: 0, stack: [], stackInitiator: null, combat: null, pendingChoice: null, winner: null, players: { '1': newPlayer(name, deckConfig), '2': null }, board: { monsters: [] }, triggerQueue: [], enterQueue: [], delayedKills: [], endTurnPending: false, log: [`Partita creata da ${name}.`] }; }
-export function currentPow(s, p, c) { let v = (c?.basePow || 0) + (c?.tempPow || 0); if (c?.id === 'kael' && pl(s, p)?.hand?.length === 0 && s.status === 'main')
-    v += 3; return Math.max(0, v); }
+export function currentPow(s, p, c) { const v = (c?.basePow || 0) + (c?.tempPow || 0); return Math.max(0, v); }
 function griffins(s) { return (s.board.monsters || []).filter((x) => x.cardId === 'grifone_della_tempesta').length; }
 function reductionAmount(s, n) { return Math.max(0, n) + griffins(s); }
 export function currentMonsterPow(s, m) { const d = MONSTER_DEFS[m?.cardId]; if (!d)
@@ -50,7 +49,7 @@ function recordLyrandel(s, p, uid0, n, allow = true) { if (!allow || n !== 1 || 
     return; const e = s._damageEvent; if (e && e.player === p && !e.uids.includes(uid0))
     e.uids.push(uid0); }
 function endDamageEvent(s) { const e = s._damageEvent; delete s._damageEvent; if (!e?.uids?.length)
-    return; const q = pl(s, e.player), lyr = champ(s, e.player, 'lyrandel'); if (!q || q.lyrandelUsed || !lyr || lyr.defeated)
+    return; const q = pl(s, e.player), lyr = champ(s, e.player, 'lyrandel'); if (!q || q.lyrandelUsed || !lyr || lyr.defeated || lyr.superior)
     return; const ids = e.uids.filter((u) => !!monster(s, u)); if (!ids.length)
     return; q.lyrandelUsed = true; s.triggerQueue.push({ actor: e.player, sourceCardId: 'lyrandel', effectId: 'lyrandel_bonus', choiceType: 'monsterUids', meta: { uids: ids }, effectName: 'Effetto di Lyrandel' }); log(s, `${lyr.name} attiva la sua abilità.`); }
 function applyMonsterDamage(s, m, n) { if (!m || n <= 0)

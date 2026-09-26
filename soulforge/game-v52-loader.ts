@@ -27,7 +27,7 @@ const player=(s:any,p:number)=>s?.players?.[String(p)]||null;
 const champ=(s:any,p:number,id:any)=>(player(s,p)?.champions||[]).find((c:any)=>String(c?.id)===String(id));
 const log=(s:any,msg:string)=>{s.log ||= [];s.log.push(msg);if(s.log.length>180)s.log=s.log.slice(-180)};
 
-function championPow(s:any,p:number,c:any){if(!c)return 1;let v=Number(c.basePow??CHAMPION_DEFS?.[c.id]?.basePow??0)+Number(c.tempPow||0);if(String(c.id)==='kael'&&(player(s,p)?.hand?.length||0)===0&&s?.status==='main')v+=3;return Math.max(1,v)}
+function championPow(s:any,p:number,c:any){if(!c)return 1;const v=Number(c.basePow??CHAMPION_DEFS?.[c.id]?.basePow??0)+Number(c.tempPow||0);return Math.max(1,v)}
 function terminalGameover(s:any){if(!s?.players)return;for(const p of [1,2]){const starters=(player(s,p)?.champions||[]).filter((c:any)=>!c.supportChampion);if(starters.length&&starters.every((c:any)=>!!c.defeated)){const win=other(p);if(s.status!=='gameover'||Number(s.winner)!==win){s.status='gameover';s.winner=win;const last=String((s.log||[])[(s.log||[]).length-1]||'');if(!last.includes('vince la partita'))log(s,`${player(s,win)?.name||`Giocatore ${win}`} vince la partita!`)}s.priority=null;s.priorityPasses=0;s.mainPasses=0;s.stack=[];s.stackInitiator=null;s.combat=null;s.pendingChoice=null;s.triggerQueue=[];s.enterQueue=[];s.delayedKills=[];s.endTurnPending=false;return}}}
 function woundChampion(s:any,p:number,c:any,source:string){return engine61.wound(s,p,c,source);}
 function damageChampion(s:any,p:number,id:string,n:number,source:string){return engine61.damageChampion(s,p,id,n,source);}
@@ -37,7 +37,7 @@ function resetTurnFlags(s:any,oldTurn:number){if(Number(s?.turn)===Number(oldTur
 function ghoulDiscount(s:any,p:number,c:any){const q=player(s,p);if(!q||!c||c.type!=='Magia'||Number(c.cost||0)<3)return 0;return Number(q._ghoulDiscountTurn)===Number(s.turn)?Math.max(0,Number(q._ghoulDiscountAmount||0)):0}
 function withGhoulAdjustedCast(s:any,p:number,move:any,fn:()=>any){if(move?.type!=='cast')return fn();const c=CARD_DEFS?.[String(move.cardId||'')],q=player(s,p);if(!c||!q)return fn();const gh=ghoulDiscount(s,p,c);if(!gh)return fn();const original=Number(c.cost||0);const grinn=(c.type==='Magia'&&original>=3&&Number(q._grinnDiscountTurn)===Number(s.turn))?1:0;const oldGrinn=q._grinnDiscountTurn;c.cost=Math.max(0,original-gh-grinn);if(grinn)q._grinnDiscountTurn=-999999;try{return fn()}finally{c.cost=original;if(oldGrinn===undefined)delete q._grinnDiscountTurn;else q._grinnDiscountTurn=oldGrinn}}
 
-function applyScarletDiscard(s:any,p:number){const q=player(s,p),c=champ(s,p,'scarlet');if(!q||!c||c.defeated||Number(q._scarletTriggeredTurn)===Number(s.turn))return;q._scarletTriggeredTurn=Number(s.turn);const i=(q.deck||[]).findIndex((id:string)=>CARD_DEFS[id]?.color==='red');if(i<0){log(s,'Fuoco e Fiamme non trova una carta Rossa nel Mazzo.');return}const[id]=q.deck.splice(i,1);q.hand ||= [];q.hand.push(id);log(s,`Fuoco e Fiamme: ${q.name} pesca ${CARD_DEFS[id]?.name||id}.`)}
+function applyScarletDiscard(_s:any,_p:number){/* Implementata in game-v68. */}
 function queueMinotauroDiscards(s:any,owner:number){s._v52MinotauroDiscards ||= [];for(const p of [owner,other(owner)])if((player(s,p)?.hand||[]).length)s._v52MinotauroDiscards.push({player:p})}
 function resumeMinotauroPriority(s:any){
  if(s.status!=='main'||s.pendingChoice||s._v52MinotauroDiscards?.length)return;

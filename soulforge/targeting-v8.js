@@ -157,17 +157,18 @@ function installChooser(){
  const current=window.chooseForCard;
  if(current?.__sfTargetV8)return;
  const previousChoose=current;
- const wrapped=function(id){
-  const card=playerState(session.player)?.handCards?.find(c=>c.id===id);
+ const wrapped=function(id,moveType='cast'){
+  const card=playerState(session.player)?.handCards?.find(c=>c.id===id)||session.state?.cardDefs?.[id];
   if(!card)return;
   const steps=TARGET_STEPS[card.effect];
-  if(!steps?.length){cancel();hardCancelAttack();return previousChoose?.(id)}
+  if(!steps?.length){cancel();hardCancelAttack();if(moveType==='cast_from_grave')return move({type:'cast_from_grave',cardId:id,targets:{}});return previousChoose?.(id)}
   hardCancelAttack();cancel();
-  tgt={cardId:id,effect:card.effect,steps,index:0,targets:{},chosen:[],valid:[],openedModal:false};
+  tgt={cardId:id,effect:card.effect,moveType,steps,index:0,targets:{},chosen:[],valid:[],openedModal:false};
   refreshUI();draw();
  };
  wrapped.__sfTargetV8=true;
  window.chooseForCard=wrapped;
+ window.sfBeginCardTargeting=(id,moveType='cast')=>wrapped(id,moveType);
 }
 installChooser();
 window.addEventListener('sf-blue-ready',()=>setTimeout(installChooser,0));
@@ -183,11 +184,11 @@ document.addEventListener('click',e=>{
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
  const step=tgt.steps[tgt.index],value=descriptor(step,el);if(value==null)return;
  tgt.targets[step.key]=value;tgt.chosen.push({step,value});tgt.index++;
- if(tgt.index>=tgt.steps.length){const cardId=tgt.cardId,targets={...tgt.targets},opened=!!tgt.openedModal;cancel(false);hardCancelAttack();if(opened){try{closeModal()}catch{}}move({type:'cast',cardId,targets});return}
+ if(tgt.index>=tgt.steps.length){const cardId=tgt.cardId,moveType=tgt.moveType||'cast',targets={...tgt.targets},opened=!!tgt.openedModal;cancel(false);hardCancelAttack();if(opened){try{closeModal()}catch{}}move({type:moveType,cardId,targets});return}
  refreshUI();draw();
 },true);
 
 const prevRender=render;
-render=function(){prevRender();if(tgt){setTimeout(()=>{const stillInHand=playerState(session.player)?.handCards?.some(c=>c.id===tgt?.cardId);if(!stillInHand){cancel();return}refreshUI();draw()},25)}};
+render=function(){prevRender();if(tgt){setTimeout(()=>{const stillAvailable=tgt?.moveType==='cast_from_grave'?(playerState(session.player)?.graveCards||[]).some(c=>c.id===tgt?.cardId):playerState(session.player)?.handCards?.some(c=>c.id===tgt?.cardId);if(!stillAvailable){cancel();return}refreshUI();draw()},25)}};
 setTimeout(()=>{injectStyle();if(tgt)refreshUI()},20);
 })();

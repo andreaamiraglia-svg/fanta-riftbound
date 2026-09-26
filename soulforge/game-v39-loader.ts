@@ -26,7 +26,6 @@ const other=(p:number)=>p===1?2:1;
 const champ=(s:any,p:number,id:string)=>(s?.players?.[String(p)]?.champions||[]).find((c:any)=>String(c?.id)===String(id));
 function rawPow(s:any,p:number,c:any){
  let v=Number(c?.basePow||0)+Number(c?.tempPow||0);
- if(c?.id==='kael'&&(s?.players?.[String(p)]?.hand?.length||0)===0&&s?.status==='main')v+=3;
  return v;
 }
 function log(s:any,msg:string){if(Array.isArray(s?.log))s.log.push(msg)}

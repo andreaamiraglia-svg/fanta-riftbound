@@ -76,7 +76,6 @@ const colorLabel=(c:string)=>c==='red'?'Rossa':c==='green'?'Verde':c==='black'?'
 
 function currentChampionPow(s:any,p:number,c:any){
  let n=Number(c?.basePow??CHAMPION_DEFS?.[c?.id]?.basePow??0)+Number(c?.tempPow||0);
- if(String(c?.id)==='kael'&&(player(s,p)?.hand?.length||0)===0&&s?.status==='main')n+=3;
  return Math.max(1,n);
 }
 function currentMonsterPow(s:any,m:any){
@@ -382,12 +381,7 @@ function damageMonster(s:any,killer:number,uid:string,n:number,source:string){
  for(const cervo of abilitySources61(s).filter((x:any)=>x.cardId==='cervo_antico'&&x.uid!==m.uid))queueEffect(s,Number(cervo.owner),cervo.cardId,'cervo_antico_pow','Effetto — Cervo Antico',{}, {targetUid:String(m.uid)});
 }
 
-function applyScarletDiscard(s:any,p:number){
- const q=player(s,p),c=champ(s,p,'scarlet');if(!q||!c||c.defeated||Number(q._scarletTriggeredTurn)===Number(s.turn))return;
- q._scarletTriggeredTurn=Number(s.turn);const i=(q.deck||[]).findIndex((id:string)=>CARD_DEFS[id]?.color==='red');
- if(i<0){log(s,'Fuoco e Fiamme non trova una carta Rossa nel Mazzo.');return}
- const[id]=q.deck.splice(i,1);q.hand ||= [];q.hand.push(id);log(s,`Fuoco e Fiamme: ${q.name} pesca ${cardName(id)}.`);
-}
+function applyScarletDiscard(_s:any,_p:number){/* Implementata in game-v68. */}
 function addMonsterFromGrave(s:any,p:number,id:string){
  const q=player(s,p),index=(q?.monsterGrave||[]).indexOf(id);if(index<0||Number(MONSTER_DEFS?.[id]?.pow)>2)return null;
  q.monsterGrave.splice(index,1);const m={uid:crypto.randomUUID(),cardId:id,owner:p,damage:0,tempPow:0,powMod:0,armor:0};

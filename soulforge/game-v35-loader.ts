@@ -27,7 +27,6 @@ export function newState(name:any,deckConfig:any){const s=base.newState(name,dec
 
 function rawChampionPow(state:any,p:number,c:any){
  let v=Number(c?.basePow||0)+Number(c?.tempPow||0);
- if(c?.id==='kael'&&(state?.players?.[String(p)]?.hand?.length||0)===0&&state?.status==='main')v+=3;
  return v;
 }
 function rawMonsterPow(state:any,m:any){

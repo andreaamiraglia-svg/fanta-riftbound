@@ -52,7 +52,6 @@ export const STARTER_DECK=Object.keys(CARD_DEFS).filter(id=>!CARD_DEFS[id]?.toke
 
 function currentChampionPow(s:any,p:number,c:any){
  let n=Number(c?.basePow??CHAMPION_DEFS?.[c?.id]?.basePow??0)+Number(c?.tempPow||0);
- if(String(c?.id)==='kael'&&(player(s,p)?.hand?.length||0)===0&&s?.status==='main')n+=3;
  return Math.max(1,n);
 }
 function currentMonsterPow(s:any,m:any){
@@ -153,9 +152,6 @@ function payAdditionalCosts(s:any,p:number,a:any){
  if(a?.type!=='cast'||String(a.cardId)!=='arrivano_i_pirati')return;
  const q=player(s,p),id=String(a.targets?.discardId||''),i=q?.hand?.indexOf(id)??-1;if(i<0)return;
  q.hand.splice(i,1);q.grave ||= [];q.grave.push(id);log(s,`${q.name} scarta ${CARD_DEFS[id]?.name||id} come costo aggiuntivo di Arrivano i Pirati.`);
- const scarlet=champ(s,p,'scarlet');if(!scarlet||scarlet.defeated||Number(q._scarletTriggeredTurn)===Number(s.turn))return;
- q._scarletTriggeredTurn=Number(s.turn);const j=(q.deck||[]).findIndex((x:string)=>CARD_DEFS[x]?.color==='red');
- if(j<0){log(s,'Fuoco e Fiamme non trova una carta Rossa nel Mazzo.');return}const[drawn]=q.deck.splice(j,1);q.hand.push(drawn);log(s,`Fuoco e Fiamme: ${q.name} pesca ${CARD_DEFS[drawn]?.name||drawn}.`);
 }
 
 function markProvocation(c:any,turn:number){if(Number(c._v59ProvTurn)!==turn){c._v59ProvPrev=!!c.provocazione;c._v59ProvTurn=turn}c.provocazione=true}

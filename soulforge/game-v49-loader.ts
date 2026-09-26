@@ -24,6 +24,7 @@ function normalizeTorvaldPlayer(q:any,turn?:number){
   if(!q)return;
   for(const c of q.champions||[]){
     if(String(c?.id)!=='torvald')continue;
+    if(c?.superior)continue;
     c.basePow=4;
     c.hp=2;
     c.wounds=Math.max(0,Math.min(Number(c.wounds||0),2));
