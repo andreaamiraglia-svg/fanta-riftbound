@@ -14,30 +14,78 @@ const DATA={
 };
 const url=file=>BASE+file.split('/').map(encodeURIComponent).join('/');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const runtime=(id,owner)=>{try{return session?.state?.players?.[String(owner)]?.champions?.find(c=>String(c.id)===id)||null}catch{return null}};
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const runtime=(id,owner)=>{try{return session?.state?.players?.[String(owner)]?.champions?.find(c=>String(c.id)===String(id))||null}catch{return null}};
 const idFrom=el=>String(el?.dataset?.champId||el?.dataset?.previewId||el?.dataset?.deckId||el?.dataset?.previewCard||'');
-function liveFor(el,id){const owner=Number(el?.dataset?.owner);return owner===1||owner===2?runtime(id,owner):null}
-function artFor(id,live){const d=DATA[id];return d?url(d[live?.superior?'superior':'base'][4]):''}
+function artFor(id,live){const d=DATA[String(id)];return d?url(d[live?.superior?'superior':'base'][4]):''}
 
-function patchCard(el){
- if(!(el instanceof Element))return;const id=idFrom(el),d=DATA[id];if(!d)return;const src=artFor(id,liveFor(el,id));let img=el.matches('img')?el:el.querySelector(':scope > img,.sf-card-shell > img,img');if(!img)return;if(img.src!==src)img.src=src;img.dataset.sfChampion105=id;
+function ownerForZone(zone){
+ try{
+  if(zone?.classList?.contains('sf-player-zone'))return Number(session.player);
+  if(zone?.classList?.contains('sf-opponent-zone'))return Number(session.player)===1?2:1;
+  const zones=[...document.querySelectorAll('.game-grid main > .playerzone')];
+  const i=zones.indexOf(zone);if(i===0)return Number(session.player)===1?2:1;if(i===zones.length-1)return Number(session.player);
+ }catch{}
+ return 0;
 }
-function patch(root=document){const sel='[data-champ-id],[data-preview-id],[data-deck-id],[data-preview-card]';if(root instanceof Element&&root.matches(sel))patchCard(root);root.querySelectorAll?.(sel).forEach(patchCard)}
-function installResolver(){const prev=window.sfArtUrl21;if(prev?.__sfChampion105)return;const fn=id=>DATA[String(id)]?url(DATA[String(id)].base[4]):(typeof prev==='function'?prev(id):'');fn.__sfChampion105=true;fn.__previous=prev;window.sfArtUrl21=fn}
+function identifyGameChampion(el){
+ const card=el?.closest?.('.champ');if(!card)return null;
+ let id=String(card.dataset.champId||''),owner=Number(card.dataset.owner||0),live=id&&owner?runtime(id,owner):null;
+ const zone=card.closest('.playerzone');if(owner!==1&&owner!==2)owner=ownerForZone(zone);
+ const champs=owner===1||owner===2?(session?.state?.players?.[String(owner)]?.champions||[]):[];
+ if(!live&&id)live=champs.find(c=>String(c.id)===id)||null;
+ if(!live){
+  const title=norm(card.querySelector('h3')?.textContent||'');
+  live=champs.find(c=>norm(c.name)===title)||champs.find(c=>{const d=DATA[String(c.id)];return d&&(norm(d.base[0])===title||norm(d.superior[0])===title)})||null;
+ }
+ if(!live){
+  const all=[...zone?.querySelectorAll?.('.champ')||[]],i=all.indexOf(card);if(i>=0)live=champs[i]||null;
+ }
+ if(!live||!DATA[String(live.id)])return null;
+ id=String(live.id);card.dataset.champId=id;if(owner===1||owner===2)card.dataset.owner=String(owner);
+ return{card,id,owner,live};
+}
+function identifyDeckChampion(el){
+ const card=el?.closest?.('[data-deck-kind="champions"],[data-deck-id],[data-preview-id]');if(!card)return null;
+ const id=String(card.dataset.deckId||card.dataset.previewId||card.dataset.champId||'');if(!DATA[id])return null;return{card,id,owner:0,live:null};
+}
+function identify(el){return identifyGameChampion(el)||identifyDeckChampion(el)}
+
+function ensureGameImage(card,id,live){
+ const src=artFor(id,live);if(!src)return;
+ let img=card.querySelector('img.champ-art,img[data-sf-champion-art],.sf-card-shell > img');
+ if(!img){img=document.createElement('img');img.className='champ-art';const h=card.querySelector('h3');if(h)card.insertBefore(img,h);else card.prepend(img)}
+ img.classList.add('champ-art');img.dataset.sfChampionArt=id;img.dataset.sfChampion105=id;
+ if(img.getAttribute('src')!==src)img.setAttribute('src',src);
+ img.alt=live?.name||DATA[id][live?.superior?'superior':'base'][0];
+}
+function bindAndPatchGame(){
+ document.querySelectorAll('.champ').forEach(card=>{const info=identifyGameChampion(card);if(info)ensureGameImage(info.card,info.id,info.live)});
+}
+function patchDeck(){
+ document.querySelectorAll('[data-deck-kind="champions"],[data-deck-id]').forEach(card=>{const info=identifyDeckChampion(card);if(!info)return;const src=artFor(info.id,null),img=card.matches('img')?card:card.querySelector('img');if(img&&src&&img.getAttribute('src')!==src)img.setAttribute('src',src)});
+}
+function installResolver(){
+ const prev=window.sfArtUrl21;if(prev?.__sfChampion105)return;
+ const fn=id=>DATA[String(id)]?url(DATA[String(id)].base[4]):(typeof prev==='function'?prev(id):'');fn.__sfChampion105=true;fn.__previous=prev;window.sfArtUrl21=fn;
+}
 
 function ensureModal(){let el=document.getElementById('sfChampion105');if(el)return el;el=document.createElement('div');el.id='sfChampion105';el.className='sf105-overlay';el.innerHTML='<div class="sf105-dialog" role="dialog" aria-modal="true"><button class="sf105-close" aria-label="Chiudi">×</button><div class="sf105-main"></div><aside class="sf105-versions"></aside></div>';document.body.appendChild(el);el.querySelector('.sf105-close').onclick=close;el.addEventListener('click',e=>{if(e.target===el)close()});return el}
 let current=null;
-function stats(version,live,isCurrent){const pow=isCurrent&&live?Number(live.pow??live.basePow):version[1],hp=version[2],w=isCurrent&&live?Number(live.wounds||0):0,damage=isCurrent&&live?Number(live.damage||0):0,armor=isCurrent&&live?Number(live.armor||0):0;return `<div class="sf105-stats"><span>POW <b>${pow}</b></span><span>HP <b>${Math.max(0,hp-w)}/${hp}</b></span><span>Ferite <b>${w}</b></span><span>Danni <b>${damage}</b></span>${armor?`<span>Armatura <b>${armor}</b></span>`:''}</div>`}
+function stats(version,live,isCurrent){const pow=isCurrent&&live?Number(live.pow??live.basePow):version[1],hp=version[2],w=isCurrent&&live?Number(live.wounds||0):0,damage=isCurrent&&live?Number(live.damage||0):0,armor=isCurrent&&live?Number(live.armor||0):0;return `<div class="sf105-stats"><span>POW <b>${pow}</b></span><span>HP <b>${Math.max(0,hp-w)}/${hp}</b></span><span>Ferite <b>${w}</b></span><span>Danni <b>${damage}/${Math.max(0,pow)}</b></span>${armor?`<span>Armatura <b>${armor}</b></span>`:''}</div>`}
 function render(which){
- const {id,live}=current,d=DATA[id],version=d[which],isCurrent=!!live&&((which==='superior')===!!live.superior),modal=ensureModal();
+ if(!current)return;const {id,live}=current,d=DATA[id],version=d[which],isCurrent=!!live&&((which==='superior')===!!live.superior),modal=ensureModal();
  modal.querySelector('.sf105-main').innerHTML=`<img src="${url(version[4])}" alt="${esc(version[0])}"><div class="sf105-copy"><div class="sf105-kicker">${which==='superior'?'Versione Superiore':'Versione base'}${isCurrent?' • Stato attuale':''}</div><h2>${esc(version[0])}</h2>${stats(version,live,isCurrent)}<p>${esc(version[3])}</p></div>`;
- modal.querySelector('.sf105-versions').innerHTML=['base','superior'].map(key=>{const v=d[key];return `<button class="sf105-version ${key===which?'active':''}" data-sf105-version="${key}"><img src="${url(v[4])}" alt=""><span>${key==='superior'?'Superiore':'Base'}</span></button>`}).join('');
+ modal.querySelector('.sf105-versions').innerHTML=['base','superior'].map(key=>{const v=d[key];return `<button class="sf105-version ${key===which?'active':''}" data-sf105-version="${key}"><img src="${url(v[4])}" alt="${esc(v[0])}"><span>${key==='superior'?'Superiore':'Base'}</span></button>`}).join('');
  modal.querySelectorAll('[data-sf105-version]').forEach(b=>b.onclick=()=>render(b.dataset.sf105Version));
 }
-function open(id,live){current={id,live};const modal=ensureModal();modal.classList.add('show');document.body.classList.add('sf105-open');render(live?.superior?'superior':'base')}
+function open(id,live){if(!DATA[String(id)])return;current={id:String(id),live:live||null};const modal=ensureModal();modal.classList.add('show');document.body.classList.add('sf105-open');render(live?.superior?'superior':'base')}
 function close(){document.getElementById('sfChampion105')?.classList.remove('show');document.body.classList.remove('sf105-open');current=null}
 
-document.addEventListener('contextmenu',e=>{const el=e.target instanceof Element?e.target.closest('[data-champ-id],[data-preview-id],[data-deck-id],[data-preview-card]'):null,id=idFrom(el);if(!DATA[id])return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open(id,liveFor(el,id))},true);
+document.addEventListener('contextmenu',e=>{
+ const info=e.target instanceof Element?identify(e.target):null;if(!info)return;
+ e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();open(info.id,info.live);
+},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')close()},true);
 
 function openGraveCast(){
@@ -57,9 +105,10 @@ function addAbilities(){
   }
  }catch{}
 }
-function refresh(root=document){installResolver();patch(root);addAbilities()}
+function refresh(){installResolver();bindAndPatchGame();patchDeck();addAbilities()}
 installResolver();refresh();
-new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n instanceof Element)patch(n);queueMicrotask(addAbilities)}).observe(document.documentElement,{childList:true,subtree:true});
-setTimeout(refresh,100);setTimeout(refresh,600);setTimeout(refresh,1800);
-window.sfChampionSuperior105={DATA,artFor,open,patch};
+new MutationObserver(()=>queueMicrotask(refresh)).observe(document.documentElement,{childList:true,subtree:true});
+setInterval(refresh,250);
+setTimeout(refresh,50);setTimeout(refresh,350);setTimeout(refresh,1000);
+window.sfChampionSuperior105={DATA,artFor,open,patch:refresh,refresh};
 })();
